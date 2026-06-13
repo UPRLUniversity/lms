@@ -1,59 +1,81 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# UPRL LMS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The Learning Management System for the **University of Public Relations and
+Leadership (UPRL)**, Nigeria. _Creativity, Competence, Character._
 
-## About Laravel
+Built on Laravel 12, Blade, Alpine.js and Tailwind CSS v3.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Local setup
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**Prerequisites:** PHP 8.2+, Composer, Node 18+ & npm, and a MySQL 8 server.
 
-## Learning Laravel
+```bash
+# 1. Clone and enter the project
+git clone <repo-url> uprl-lms
+cd uprl-lms
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+# 2. Install dependencies
+composer install
+npm install
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# 3. Environment
+cp .env.example .env
+php artisan key:generate
+#   Then edit .env and set your MySQL credentials:
+#     DB_DATABASE=uprl_lms
+#     DB_USERNAME=<your-mysql-user>
+#     DB_PASSWORD=<your-mysql-password>
 
-## Laravel Sponsors
+# 4. Create the database (no mysql CLI needed — uses PHP's PDO)
+php -r "require 'vendor/autoload.php'; \$e=(require 'config/database.php')['connections']['mysql']; new PDO('mysql:host='.\$e['host'].';port='.\$e['port'], \$e['username'], \$e['password']) and (new PDO('mysql:host='.\$e['host'].';port='.\$e['port'], \$e['username'], \$e['password']))->exec('CREATE DATABASE IF NOT EXISTS '.\$e['database'].' CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');"
+#   (Or just create a database named `uprl_lms` in phpMyAdmin / your GUI.)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# 5. Migrate and seed demo data
+php artisan migrate --seed
 
-### Premium Partners
+# 6. Build front-end assets
+npm run build
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# 7. Serve
+php artisan serve
+```
 
-## Contributing
+Open <http://127.0.0.1:8000>.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Demo credentials
 
-## Code of Conduct
+| Email             | Password   |
+| ----------------- | ---------- |
+| `admin@uprl.test` | `password` |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+After signing in you land on the styled dashboard at `/dashboard`.
 
-## Security Vulnerabilities
+---
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Development workflow
 
-## License
+- `npm run dev` — Vite dev server with hot reload (run alongside `php artisan serve`).
+- `php artisan test` — run the test suite (PHPUnit, in-memory SQLite).
+- `php artisan migrate:fresh --seed` — reset the database to a clean demo state.
+- **`/styleguide`** — the living design reference (every component and brand
+  token). Available in local/testing environments only.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Brand & design system
+
+- Brand colour tokens live in **one place**: the `:root` block of
+  [`resources/css/app.css`](resources/css/app.css), surfaced to Tailwind in
+  [`tailwind.config.js`](tailwind.config.js) (`crimson`, `ink`, `surface`,
+  `card`, `success`, `gold`, `line`). Never hard-code hex in views.
+- Logo files go in [`public/images/brand/`](public/images/brand/) — see the
+  README there. The app falls back to an inline monogram until real artwork is
+  supplied, with no code change needed when you add the files.
+- Reusable UI lives under `<x-ui.*>` (button, card, badge, input, field, modal,
+  empty-state, stat, icon). Browse them all at `/styleguide`.
+
+## Project docs
+
+- [`docs/audit.md`](docs/audit.md) — audit of the starting template.
+- [`docs/decisions.md`](docs/decisions.md) — running log of engineering decisions.
+- [`CLAUDE.md`](CLAUDE.md) — the project constitution (conventions, brand, DoD).

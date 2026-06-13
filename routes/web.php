@@ -17,4 +17,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Living design reference — registered only in local/testing so it never ships to production.
+if (app()->environment(['local', 'testing'])) {
+    Route::get('/styleguide', fn () => view('styleguide'))->name('styleguide');
+}
+
 require __DIR__.'/auth.php';

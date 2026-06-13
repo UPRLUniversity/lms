@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,11 +16,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Demo account so the human can sign in and click through the shell.
+        // Roles arrive in a later section; for now this is just an authenticated user.
+        // Idempotent so re-running `db:seed` won't collide on the unique email.
+        User::updateOrCreate(
+            ['email' => 'admin@uprl.test'],
+            [
+                'name' => 'Demo Admin',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+            ],
+        );
     }
 }
