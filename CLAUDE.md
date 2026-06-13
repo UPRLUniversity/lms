@@ -43,6 +43,29 @@ Competence, Character". This file governs every session. Re-read it before actin
 - Tests: use whatever runner the template has (Pest preferred if present,
   PHPUnit otherwise). Factories for every model.
 
+## Storage Conventions (disk/strategy per purpose — never one global backend)
+
+- All file I/O goes through a thin service layer, NOT the Cloudinary/S3 SDK in
+  controllers or models. Define:
+  - MediaUploadService (interface + Cloudinary implementation) for PUBLIC images:
+    avatars, course covers, lesson inline images, certificate signature images.
+    Returns a stored reference (public_id/url + metadata) persisted in DB.
+    Cloudinary handles responsive derivatives + WebP/AVIF + CDN. Verify the
+    current Cloudinary Laravel package state before choosing package vs raw SDK.
+  - A PRIVATE disk (local now; private S3-compatible bucket later) for SENSITIVE
+    files: assignment submissions and generated certificate PDFs. These are
+    served ONLY via signed/temporary URLs gated by Policy — never a public CDN URL.
+- VIDEO is embed-first: YouTube/Vimeo URL parsing + embed is the primary path.
+  Self-hosted/uploaded video is the exception; if ever needed for access control,
+  use a dedicated video host (Mux/Bunny/Cloudflare Stream), not Cloudinary.
+- Still store original filename + a hashed/stored key in the DB; validate
+  mime/type/size server-side; re-validate on every upload path.
+- Rich-editor image uploads route through MediaUploadService (Cloudinary), never
+  base64-inlined into content HTML.
+- Config: a `config/media.php` (or settings) maps purpose -> driver so the human
+  can switch a purpose's backend without code changes. Document required env keys
+  (CLOUDINARY_URL etc.) in .env.example and README.
+
 ## UPRL Brand System (use everywhere, no exceptions)
 
 - Define as CSS custom properties / Tailwind theme tokens in ONE place:
@@ -70,6 +93,20 @@ Competence, Character". This file governs every session. Re-read it before actin
 - Accessibility is non-negotiable: semantic HTML, labels on every input,
   WCAG AA contrast (test crimson-on-white combinations), full keyboard
   operability, `prefers-reduced-motion` respected.
+
+## Rich Text Editor (single, consistent)
+
+- TinyMCE is the ONLY rich-text editor in the app, wrapped in one shared
+  component <x-ui.rich-editor> with a shared config. Used for every rich field
+  (course/lesson/assignment/forum/message/announcement/essay-guidance).
+- Confirm current TinyMCE licensing/hosting (self-hosted OSS build vs cloud API
+  key) before integration; document the choice in docs/decisions.md.
+- MANDATORY server-side HTML sanitization on save for ALL rich fields via an
+  allow-list purifier (e.g. mews/purifier), plus TinyMCE valid_elements. Client
+  sanitization is never trusted. User-facing fields (forum, messaging) are the
+  highest-risk and must be covered by tests asserting script/style stripping.
+- In-editor image uploads go through MediaUploadService (Cloudinary), not base64.
+- Render stored rich HTML through the same sanitizer/escaping helper everywhere.
 
 ## Roles (single university — no multi-tenancy)
 
