@@ -12,6 +12,7 @@ class StyleguideTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeInOrder([
+            'Logo variants',
             'Colour tokens',
             'Typography',
             'Buttons',

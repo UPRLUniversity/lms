@@ -29,9 +29,22 @@ return [
     */
 
     'logos' => [
-        'primary' => 'images/brand/logo.svg',       // full lockup, dark text — light backgrounds
-        'mark' => 'images/brand/logo-mark.svg',      // standalone crest/sunburst mark
-        'white' => 'images/brand/logo-white.svg',    // reversed lockup — crimson/dark backgrounds
+        'color' => 'images/brand/uprl-logo-color.png',   // full lockup, dark text — LIGHT backgrounds
+        'white' => 'images/brand/uprl-logo-white.png',   // reversed knockout lockup — CRIMSON / DARK backgrounds
+        'mark' => 'images/brand/uprl-mark.png',          // standalone crest mark — collapsed sidebar / compact
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Favicons / touch icons
+    |--------------------------------------------------------------------------
+    | Wired into every layout <head> via layouts.partials.favicons.
+    */
+
+    'icons' => [
+        'favicon' => 'images/brand/favicon.ico',
+        'favicon_png' => 'images/brand/favicon-32.png',
+        'apple_touch' => 'images/brand/apple-touch-icon.png',
     ],
 
 ];

@@ -10,6 +10,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|fraunces:600,700&display=swap" rel="stylesheet" />
 
+        @include('layouts.partials.favicons')
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans bg-surface text-ink antialiased">
@@ -19,7 +21,7 @@
             <main class="flex min-h-screen flex-col justify-center px-6 py-12 sm:px-12 lg:min-h-0">
                 <div class="mx-auto w-full max-w-md">
                     <a href="{{ url('/') }}" class="inline-flex rounded-lg focus-ring" aria-label="{{ config('brand.name') }} home">
-                        <x-brand.logo />
+                        <x-brand.logo variant="color" alt="" class="h-16 w-auto" />
                     </a>
 
                     <div class="mt-8">
@@ -33,7 +35,7 @@
                 <x-brand.sunburst class="pointer-events-none absolute -right-16 -top-16 h-80 w-80 text-white/10" />
 
                 <div class="relative">
-                    <x-brand.logo variant="white" />
+                    <x-brand.logo variant="white" class="h-20 w-auto" />
                 </div>
 
                 <div class="relative max-w-md">

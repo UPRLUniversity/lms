@@ -9,6 +9,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700|fraunces:600,700&display=swap" rel="stylesheet" />
 
+        @include('layouts.partials.favicons')
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans bg-surface text-ink antialiased">
@@ -27,13 +29,33 @@
 
         <header class="border-b border-line bg-card">
             <div class="mx-auto max-w-5xl px-6 py-8">
-                <x-brand.logo />
+                <x-brand.logo variant="color" class="h-12 w-auto" />
                 <h1 class="mt-4 font-display text-3xl font-semibold text-ink">Design system</h1>
                 <p class="mt-1 text-ink/70">The living reference for UPRL LMS brand tokens and UI components. Dev-only.</p>
             </div>
         </header>
 
         <main class="mx-auto max-w-5xl space-y-16 px-6 py-12">
+
+            {{-- Logo variants --}}
+            <section aria-labelledby="sg-logo">
+                <h2 id="sg-logo" class="font-display text-xl font-semibold text-ink">Logo variants</h2>
+                <p class="mt-1 text-sm text-ink/70">Background-aware. Use <code>color</code> on light surfaces, <code>white</code> on crimson/dark, <code>mark</code> when space is tight.</p>
+                <div class="mt-5 grid gap-4 sm:grid-cols-3">
+                    <div class="flex flex-col items-center gap-3 rounded-xl border border-line bg-surface p-6">
+                        <x-brand.logo variant="color" class="h-16 w-auto" />
+                        <span class="text-xs text-ink/70">color · on light</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 rounded-xl bg-gradient-to-br from-crimson to-crimson-dark p-6">
+                        <x-brand.logo variant="white" class="h-16 w-auto" />
+                        <span class="text-xs text-white/80">white · on crimson</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 rounded-xl border border-line bg-surface p-6">
+                        <x-brand.logo variant="mark" class="h-16 w-16" />
+                        <span class="text-xs text-ink/70">mark · compact</span>
+                    </div>
+                </div>
+            </section>
 
             {{-- Colour tokens --}}
             <section aria-labelledby="sg-tokens">

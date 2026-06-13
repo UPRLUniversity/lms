@@ -20,8 +20,8 @@
     {{-- Brand --}}
     <div class="flex h-16 shrink-0 items-center border-b border-line px-4">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 rounded-lg focus-ring" aria-label="{{ config('brand.name') }} — Dashboard">
-            <span :class="collapsed ? 'lg:hidden' : ''"><x-brand.logo /></span>
-            <span class="hidden" :class="collapsed ? 'lg:inline-flex' : 'lg:hidden'"><x-brand.logo variant="mark" /></span>
+            <span :class="collapsed ? 'lg:hidden' : ''"><x-brand.logo variant="color" alt="" class="h-12 w-auto" /></span>
+            <span class="hidden" :class="collapsed ? 'lg:inline-flex' : 'lg:hidden'"><x-brand.logo variant="mark" alt="" class="h-9 w-9" /></span>
         </a>
     </div>
 

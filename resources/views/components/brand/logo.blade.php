@@ -1,17 +1,20 @@
 @props([
-    'variant' => 'primary',
+    'variant' => 'color',
+    // Pass alt="" when the logo sits inside an already-labelled link (decorative).
+    'alt' => null,
 ])
 
 @php
-    $path = config("brand.logos.$variant", config('brand.logos.primary'));
+    $path = config("brand.logos.$variant", config('brand.logos.color'));
     $exists = $path && file_exists(public_path($path));
-    $reversed = $variant === 'white';   // reversed lockup sits on dark surfaces
+    $reversed = $variant === 'white';   // reversed knockout lockup sits on dark surfaces
     $markOnly = $variant === 'mark';    // symbol only, no wordmark
+    $altText = $alt ?? config('brand.university');
 @endphp
 
 @if ($exists)
     <img src="{{ asset($path) }}"
-         alt="{{ config('brand.university') }}"
+         alt="{{ $altText }}"
          {{ $attributes->merge(['class' => 'h-9 w-auto']) }}>
 @else
     {{-- Inline fallback monogram so the app is presentable before real artwork lands. --}}
