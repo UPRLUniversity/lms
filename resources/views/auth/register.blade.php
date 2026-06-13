@@ -1,4 +1,9 @@
 <x-guest-layout>
+    <div class="mb-6">
+        <h1 class="font-display text-2xl font-semibold text-ink">Create your account</h1>
+        <p class="mt-1 text-sm text-ink/70">Join {{ config('brand.short') }} and start learning.</p>
+    </div>
+
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
@@ -40,7 +45,7 @@
         </div>
 
         <div class="flex items-center justify-end mt-4">
-            <a class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800" href="{{ route('login') }}">
+            <a class="rounded-md text-sm text-ink/70 underline hover:text-crimson focus-ring" href="{{ route('login') }}">
                 {{ __('Already registered?') }}
             </a>
 
