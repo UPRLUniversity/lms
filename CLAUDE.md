@@ -108,6 +108,19 @@ Competence, Character". This file governs every session. Re-read it before actin
 - In-editor image uploads go through MediaUploadService (Cloudinary), not base64.
 - Render stored rich HTML through the same sanitizer/escaping helper everywhere.
 
+## Canonical primitives (Section 0.5 — depend on these, never reinvent)
+
+- **All public image uploads** go through `App\Services\Media\MediaUploadService`
+  (`upload($file, MediaPurpose, $owner)`); **all private/sensitive files** through
+  `App\Services\Media\PrivateFileService` (`store`, signed `temporaryUrl`, gated
+  `download`). Never call the storage/Cloudinary SDK directly in controllers/models.
+  Purpose → disk/visibility/mime/size is configured once in `config/media.php`.
+  Attach files to owners with the `HasMedia` trait + polymorphic `media` table.
+- **All rich-text input** uses `<x-ui.rich-editor>` (the only editor). **Every rich
+  attribute** is cast with `App\Casts\RichHtml` (`RichHtml::class` or `:basic`) so it
+  is sanitized on save, and rendered through `<x-ui.prose>`. In-editor images post to
+  `editor.upload` → `MediaUploadService`, never base64.
+
 ## Roles (single university — no multi-tenancy)
 
 super-admin, admin, instructor, student, auditor (read-only observer).

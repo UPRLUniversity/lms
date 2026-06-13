@@ -39,6 +39,66 @@
     .focus-ring {
         @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson focus-visible:ring-offset-2 focus-visible:ring-offset-surface;
     }
+
+    /*
+     * Rendered rich-text content (via <x-ui.prose>). Brand typography, ~72ch
+     * reading width for lesson content. Output is already sanitized on save.
+     */
+    .uprl-prose {
+        @apply max-w-[72ch] leading-relaxed text-ink;
+    }
+    .uprl-prose > * + * {
+        @apply mt-4;
+    }
+    .uprl-prose h2 {
+        @apply font-display text-2xl font-semibold mt-8;
+    }
+    .uprl-prose h3 {
+        @apply font-display text-xl font-semibold mt-6;
+    }
+    .uprl-prose h4 {
+        @apply font-display text-lg font-semibold mt-6;
+    }
+    .uprl-prose a {
+        @apply text-crimson underline underline-offset-2 hover:text-crimson-dark;
+    }
+    .uprl-prose ul {
+        @apply list-disc pl-6;
+    }
+    .uprl-prose ol {
+        @apply list-decimal pl-6;
+    }
+    .uprl-prose li {
+        @apply mt-1;
+    }
+    .uprl-prose blockquote {
+        @apply border-l-4 border-crimson/30 pl-4 italic text-ink/80;
+    }
+    .uprl-prose code {
+        @apply rounded bg-ink/5 px-1.5 py-0.5 text-sm;
+    }
+    .uprl-prose pre {
+        @apply rounded-xl bg-ink/5 p-4 overflow-x-auto text-sm;
+    }
+    .uprl-prose pre code {
+        @apply bg-transparent p-0;
+    }
+    .uprl-prose img {
+        @apply rounded-xl max-w-full h-auto;
+    }
+    .uprl-prose table {
+        @apply w-full border-collapse text-sm;
+    }
+    .uprl-prose th,
+    .uprl-prose td {
+        @apply border border-line px-3 py-2 text-left;
+    }
+    .uprl-prose th {
+        @apply bg-surface font-semibold;
+    }
+    .uprl-prose hr {
+        @apply border-line my-8;
+    }
 }
 
 /* Respect users who prefer reduced motion. */

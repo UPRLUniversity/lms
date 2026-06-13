@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/media/{media}/download', [MediaController::class, 'download'])
         ->middleware('can:view,media')
         ->name('media.download');
+
+    // In-editor image uploads (TinyMCE) → MediaUploadService.
+    Route::post('/editor/upload', [EditorUploadController::class, 'store'])->name('editor.upload');
 });
 
 // Short-lived signed access to a private file (PrivateFileService::temporaryUrl).
