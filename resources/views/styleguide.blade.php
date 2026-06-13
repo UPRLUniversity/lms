@@ -152,10 +152,10 @@
                     <x-ui.field name="sg_name" label="Full name" placeholder="Ada Lovelace" required />
                     <x-ui.field name="sg_email" label="Email" type="email" hint="We'll never share it." placeholder="you@uprl.edu.ng" />
 
-                    {{-- Error state (illustrative) --}}
+                    {{-- Password field with show/hide toggle, in an error state --}}
                     <div class="space-y-1.5">
                         <label for="sg_err" class="block text-sm font-medium text-ink">Password</label>
-                        <x-ui.input id="sg_err" type="password" :invalid="true" aria-describedby="sg_err-error" />
+                        <x-ui.password id="sg_err" name="sg_password" :invalid="true" aria-describedby="sg_err-error" />
                         <p id="sg_err-error" class="text-sm text-crimson">Password must be at least 8 characters.</p>
                     </div>
 
