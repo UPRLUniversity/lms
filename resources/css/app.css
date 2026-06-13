@@ -1,3 +1,54 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * UPRL brand tokens — the single source of truth.
+ * Stored as space-separated RGB channels so Tailwind opacity modifiers
+ * (e.g. bg-crimson/10) resolve via rgb(var(--uprl-*) / <alpha-value>).
+ * Hex values are kept here in comments only; never hard-code hex in views.
+ */
+:root {
+    --uprl-crimson: 200 16 46;       /* #C8102E — primary: buttons, active states, progress */
+    --uprl-crimson-dark: 158 11 34;  /* #9E0B22 — hover / pressed */
+    --uprl-ink: 28 25 23;            /* #1C1917 — headings, body text */
+    --uprl-surface: 250 249 246;     /* #FAF9F6 — app background (warm off-white) */
+    --uprl-card: 255 255 255;        /* #FFFFFF — card surfaces */
+    --uprl-green: 15 107 62;         /* #0F6B3E — success, completion ticks */
+    --uprl-gold: 201 162 39;         /* #C9A227 — certificates, achievement accents */
+    --uprl-border: 231 229 228;      /* #E7E5E4 — hairlines, dividers */
+}
+
+@layer base {
+    body {
+        @apply bg-surface text-ink antialiased;
+    }
+
+    h1, h2, h3, h4 {
+        @apply font-display text-ink;
+    }
+
+    /* Hide Alpine-cloaked elements until Alpine initialises (prevents flash). */
+    [x-cloak] {
+        display: none !important;
+    }
+}
+
+@layer components {
+    /* One consistent focus ring for every interactive element. */
+    .focus-ring {
+        @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-crimson focus-visible:ring-offset-2 focus-visible:ring-offset-surface;
+    }
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}
