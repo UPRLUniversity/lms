@@ -14,6 +14,7 @@ enum MediaPurpose: string
     case CourseCovers = 'course_covers';
     case LessonImages = 'lesson_images';
     case EditorUploads = 'editor_uploads';
+    case LessonMedia = 'lesson_media';
     case LessonResources = 'lesson_resources';
     case Submissions = 'submissions';
     case Certificates = 'certificates';

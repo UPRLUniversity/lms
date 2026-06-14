@@ -72,4 +72,17 @@ class PrivateFileService
     {
         return Storage::disk($media->disk)->download($media->path, $media->original_name);
     }
+
+    /**
+     * Remove the underlying private file and its Media record. Used when a lesson's
+     * file is replaced or the lesson is changed to a non-file type.
+     */
+    public function delete(Media $media): void
+    {
+        if ($media->path && Storage::disk($media->disk)->exists($media->path)) {
+            Storage::disk($media->disk)->delete($media->path);
+        }
+
+        $media->delete();
+    }
 }
