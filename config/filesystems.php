@@ -47,6 +47,18 @@ return [
             'report' => false,
         ],
 
+        // Sensitive files (submissions, certificates, lesson resources). Never
+        // public — served only via PrivateFileService temporary/gated URLs.
+        // S3-compatible later by swapping this disk's driver in env/config.
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'serve' => true,
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -201,6 +201,61 @@
                 </div>
             </section>
 
+            {{-- Rich text editor --}}
+            <section aria-labelledby="sg-editor">
+                <h2 id="sg-editor" class="font-display text-xl font-semibold text-ink">Rich text editor</h2>
+                <p class="mt-1 text-sm text-ink/70">
+                    The single <code>&lt;x-ui.rich-editor&gt;</code> (self-hosted TinyMCE). Content is
+                    sanitized on save by the <code>RichHtml</code> cast and rendered via <code>&lt;x-ui.prose&gt;</code>.
+                </p>
+
+                <div class="mt-5 grid gap-8 lg:grid-cols-2">
+                    <x-ui.rich-editor
+                        name="sg_lesson_body"
+                        label="Lesson content (full profile)"
+                        profile="full"
+                        hint="Headings, lists, links, images, tables, code."
+                        :value="'<h2>Welcome to the module</h2><p>Edit me — this is the <strong>full</strong> academic toolbar.</p><ul><li>Lists</li><li>Links &amp; images</li></ul>'" />
+
+                    <x-ui.rich-editor
+                        name="sg_forum_reply"
+                        label="Forum reply (basic profile)"
+                        profile="basic"
+                        :height="220"
+                        hint="Reduced toolbar for forums & messages — no images or tables."
+                        :value="'<p>A <em>reduced</em> toolbar for user-generated posts.</p>'" />
+                </div>
+            </section>
+
+            {{-- Rendered rich HTML (output chokepoint) --}}
+            <section aria-labelledby="sg-prose">
+                <h2 id="sg-prose" class="font-display text-xl font-semibold text-ink">Rendered content (prose)</h2>
+                <p class="mt-1 text-sm text-ink/70">Stored HTML rendered through <code>&lt;x-ui.prose&gt;</code>.</p>
+                <div class="mt-5">
+                    <x-ui.card>
+                        <x-ui.prose :html="'<h2>Course overview</h2><p>This is how saved lesson content renders: <a href=\'#\'>links</a>, <strong>emphasis</strong>, and lists.</p><ul><li>One</li><li>Two</li></ul><blockquote>Creativity, Competence, Character.</blockquote>'" />
+                    </x-ui.card>
+                </div>
+            </section>
+
+            {{-- Shared foundations note --}}
+            <section aria-labelledby="sg-foundations">
+                <h2 id="sg-foundations" class="font-display text-xl font-semibold text-ink">Shared foundations</h2>
+                <x-ui.card class="mt-5">
+                    <div class="space-y-3 text-sm text-ink/80">
+                        <p><strong class="text-ink">Public images</strong> (avatars, covers, lesson/editor images, signatures):
+                            inject <code>App\Services\Media\MediaUploadService</code> and call
+                            <code>upload($file, MediaPurpose::Avatars, $owner)</code>. Never touch the storage/Cloudinary SDK directly.</p>
+                        <p><strong class="text-ink">Private files</strong> (submissions, certificates, lesson resources):
+                            inject <code>App\Services\Media\PrivateFileService</code> — <code>store(...)</code>, then
+                            <code>temporaryUrl($media)</code> or the policy-gated <code>media.download</code> route. Never a public URL.</p>
+                        <p><strong class="text-ink">Rich text</strong>: use <code>&lt;x-ui.rich-editor&gt;</code> for input,
+                            cast the attribute with <code>RichHtml::class</code> (or <code>:basic</code>), and render with
+                            <code>&lt;x-ui.prose&gt;</code>.</p>
+                    </div>
+                </x-ui.card>
+            </section>
+
             {{-- Icons --}}
             <section aria-labelledby="sg-icons">
                 <h2 id="sg-icons" class="font-display text-xl font-semibold text-ink">Icons</h2>
@@ -208,7 +263,7 @@
                     @foreach (['home','book','graduation','users','chart','cog','bell','user','check','certificate','inbox','logout'] as $icon)
                         <span class="flex flex-col items-center gap-1">
                             <x-ui.icon :name="$icon" class="h-6 w-6" />
-                            <span class="text-[10px] text-ink/40">{{ $icon }}</span>
+                            <span class="text-[10px] text-ink/70">{{ $icon }}</span>
                         </span>
                     @endforeach
                 </div>

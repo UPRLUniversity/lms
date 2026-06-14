@@ -74,6 +74,29 @@ After signing in you land on the styled dashboard at `/dashboard`.
 - Reusable UI lives under `<x-ui.*>` (button, card, badge, input, field, modal,
   empty-state, stat, icon). Browse them all at `/styleguide`.
 
+## Shared foundations (files & rich text)
+
+Two canonical primitives every feature reuses (see [`CLAUDE.md`](CLAUDE.md)):
+
+- **File storage** — `MediaUploadService` for public images, `PrivateFileService`
+  for sensitive files. Purpose → disk/visibility/mime/size is configured once in
+  [`config/media.php`](config/media.php). Run `php artisan storage:link` once so
+  public files are web-served.
+- **Rich text** — `<x-ui.rich-editor>` (self-hosted TinyMCE, no cloud key) +
+  the `RichHtml` cast (sanitizes on save via [`config/purifier.php`](config/purifier.php))
+  + `<x-ui.prose>` for output. Try both editor profiles at `/styleguide`.
+
+### Env keys
+
+```dotenv
+# Backend for PUBLIC images: "local" (default; dev/test, no account) or "cloudinary"
+MEDIA_DRIVER=local
+# Only needed when MEDIA_DRIVER=cloudinary (from the Cloudinary dashboard)
+CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
+```
+
+Private files always use the local `private` disk (S3-compatible later via config).
+
 ## Project docs
 
 - [`docs/audit.md`](docs/audit.md) — audit of the starting template.

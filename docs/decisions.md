@@ -33,3 +33,29 @@ Decisions made where CLAUDE.md allowed discretion. Newest at the bottom.
 9. **Logo files referenced via `config/brand.php`** + `<x-brand.logo>` with a
    file-exists check and an inline SVG fallback, so dropping real logo files
    into `public/images/brand/` requires zero code changes.
+
+## Section 0.5 — Shared Foundations (Storage + Rich Text) (2026-06-13)
+
+1. **Cloudinary via the official `cloudinary/cloudinary_php` SDK directly**, not
+   the `cloudinary-labs/cloudinary-laravel` wrapper. We already wrap every upload
+   behind our own `MediaUploadService` interface, so the wrapper's facade/provider
+   add no value and one more dependency to track; the first-party SDK (v3.1) is
+   actively maintained and keeps the test/local path (Local driver) free of any
+   Cloudinary service-provider boot.
+2. **TinyMCE self-hosted OSS (GPLv2+) build via npm + Vite** (v8.6), no cloud API
+   key. Required `license_key: 'gpl'` for v7+. Bundled deterministically with
+   Vite `?inline` skin/content CSS (no HTTP skin fetch), lazy-loaded as its own
+   chunk only on pages that contain `[data-rich-editor]`.
+3. **Sanitizer: `mews/purifier`** (v3.4, wraps ezyang/htmlpurifier). Profiles
+   `rich`/`basic` in `config/purifier.php` mirror the editor's `valid_elements`.
+   Applied centrally via the `RichHtml` Eloquent cast (sanitize on `set`).
+4. **Image dimensions via native `getimagesize()`**, not intervention/image:
+   v4 requires PHP 8.3 (we're on 8.2) and v3 is EOL. The Local driver records
+   width/height only; Cloudinary handles responsive derivatives in production.
+   No server-side resizing now.
+5. **Private temporary URLs implemented with signed routes** (`URL::temporarySignedRoute`)
+   rather than a disk driver's `temporaryUrl`, so they work locally and under
+   `Storage::fake` without an S3-compatible backend, and never expose a public URL.
+6. **Test images use a committed PNG fixture** (`tests/Fixtures/pixel.png`) instead
+   of `UploadedFile::fake()->image()`, so the suite needs no GD extension (the app
+   reads dimensions with `getimagesize()`, which is GD-independent).
