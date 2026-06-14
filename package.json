@@ -19,6 +19,8 @@
         "vite": "^7.0.7"
     },
     "dependencies": {
+        "@alpinejs/collapse": "^3.14.9",
+        "sortablejs": "^1.15.6",
         "sweetalert2": "^11.26.25"
     }
 }

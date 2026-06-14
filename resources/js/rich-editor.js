@@ -4,6 +4,10 @@
 
 import tinymce from 'tinymce';
 
+// Expose the instance so the course builder can sync lesson content into the
+// editor (setContent on open) and flush it back (save) before an AJAX submit.
+window.tinymce = tinymce;
+
 // Core: model, theme, icons.
 import 'tinymce/models/dom';
 import 'tinymce/themes/silver';
