@@ -1,6 +1,10 @@
 <x-app-layout title="Profile">
     <div class="mx-auto max-w-3xl space-y-6">
         <x-ui.card>
+            @include('profile.partials.update-avatar-form')
+        </x-ui.card>
+
+        <x-ui.card>
             <div class="max-w-xl">
                 @include('profile.partials.update-profile-information-form')
             </div>

@@ -1,12 +1,5 @@
 @php
     $user = auth()->user();
-    $initials = \Illuminate\Support\Str::of($user?->name ?? '')
-        ->explode(' ')
-        ->filter()
-        ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))
-        ->take(2)
-        ->implode('');
-    $initials = $initials !== '' ? $initials : 'U';
 @endphp
 
 <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-card/90 px-4 backdrop-blur sm:px-6">
@@ -46,9 +39,7 @@
         <x-dropdown align="right" width="48">
             <x-slot name="trigger">
                 <button type="button" class="flex items-center gap-2 rounded-xl p-1 pr-2 hover:bg-ink/5 focus-ring" aria-label="Account menu">
-                    <span class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-crimson text-sm font-semibold text-white" aria-hidden="true">
-                        {{ $initials }}
-                    </span>
+                    <x-ui.avatar :user="$user" size="sm" />
                     <span class="hidden text-left sm:block">
                         <span class="block text-sm font-medium leading-tight text-ink">{{ $user?->name }}</span>
                         <span class="block text-xs leading-tight text-ink/70">{{ $user?->email }}</span>
