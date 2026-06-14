@@ -1,8 +1,12 @@
 @php
     $user = auth()->user();
-    $navItems = collect(config('navigation'))->filter(function ($item) {
-        // Until spatie roles arrive, show items flagged for everyone.
-        return in_array('*', $item['roles'] ?? [], true);
+    $navItems = collect(config('navigation'))->filter(function ($item) use ($user) {
+        $roles = $item['roles'] ?? [];
+
+        // '*' means everyone; otherwise the user must hold one of the listed roles.
+        // Students never match admin items; the auditor only matches what it's
+        // granted (and reaches those screens read-only).
+        return in_array('*', $roles, true) || (bool) $user?->hasAnyRole($roles);
     });
 @endphp
 

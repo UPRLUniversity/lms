@@ -40,11 +40,19 @@ return [
         'roles' => ['student'],
     ],
     [
+        // Auditor is intentionally included — it sees the people list read-only.
         'label' => 'People',
         'icon' => 'users',
-        'route' => null,
-        'match' => 'people.*',
-        'roles' => ['admin', 'super-admin', 'instructor'],
+        'route' => 'admin.users.index',
+        'match' => 'admin.users.*',
+        'roles' => ['admin', 'super-admin', 'auditor'],
+    ],
+    [
+        'label' => 'Invitations',
+        'icon' => 'inbox',
+        'route' => 'admin.invitations.index',
+        'match' => 'admin.invitations.*',
+        'roles' => ['admin', 'super-admin'],
     ],
     [
         'label' => 'Reports',
