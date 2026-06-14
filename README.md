@@ -46,11 +46,38 @@ Open <http://127.0.0.1:8000>.
 
 ### Demo credentials
 
-| Email             | Password   |
-| ----------------- | ---------- |
-| `admin@uprl.test` | `password` |
+Every seeded account uses the password **`password`**. Roles drive what each
+account can see and do (see _Identity & access_ below).
 
-After signing in you land on the styled dashboard at `/dashboard`.
+| Role        | Email(s)                                  | Notes                              |
+| ----------- | ----------------------------------------- | ---------------------------------- |
+| super-admin | `superadmin@uprl.test`                    | Bypasses every authorization check |
+| admin       | `admin1@uprl.test`, `admin2@uprl.test`    | Full user management & invitations |
+| instructor  | `instructor1@uprl.test` … `instructor4@…` | Teaching permissions               |
+| student     | `student1@uprl.test` … `student25@…`      | Default self-registration role     |
+| auditor     | `auditor@uprl.test`                       | Read-only observer                 |
+
+`student25@uprl.test` is seeded **deactivated** to demonstrate the login block
+(it is rejected with a clear message); the other 24 students are active.
+
+After signing in you land on the styled dashboard at `/dashboard`. The sidebar is
+role-aware — students never see admin navigation; the auditor sees the people list
+read-only.
+
+### Identity & access (Section 1)
+
+- **Roles & permissions** via `spatie/laravel-permission`. The matrix is seeded by
+  [`RolesAndPermissionsSeeder`](database/seeders/RolesAndPermissionsSeeder.php);
+  granular permissions are defined in [`app/Enums/Permission.php`](app/Enums/Permission.php).
+  The auditor receives only `*.view` permissions.
+- **Self-registration** creates a verified-pending **student**; email must be
+  verified before the app unlocks.
+- **Admin invitations** (`/admin/invitations`) e-mail a signed, single-use,
+  7-day-expiring link; the invitee sets their own password. Only a super-admin may
+  grant/invite the `admin` or `super-admin` roles.
+- **Deactivation, not deletion** — `/admin/users` toggles `is_active`; a
+  deactivated user is rejected at login and any live session is ended on the next
+  request.
 
 ---
 
@@ -61,6 +88,29 @@ After signing in you land on the styled dashboard at `/dashboard`.
 - `php artisan migrate:fresh --seed` — reset the database to a clean demo state.
 - **`/styleguide`** — the living design reference (every component and brand
   token). Available in local/testing environments only.
+- **`/mail-preview/{invitation|verify|reset}`** — render the branded transactional
+  e-mails in the browser (local/testing only).
+
+### Mail & the queue
+
+Mail/notifications are **queued** (`QUEUE_CONNECTION=database`) so nothing blocks a
+request. In production run a worker: `php artisan queue:work` (or `composer dev`,
+which runs `php artisan serve`, `queue:listen` and `npm run dev` together).
+
+For quick local dev the shipped `.env` uses `QUEUE_CONNECTION=sync`, so queued mail
+(e.g. invitations) sends inline with **no worker needed**. SMTP settings live in
+`.env` (`MAIL_*`). Branded e-mail templates live in
+[`resources/views/vendor/mail`](resources/views/vendor/mail) with the theme at
+`html/themes/uprl.css`.
+
+### Live admin tables
+
+`/admin/users` and `/admin/invitations` use a reusable Alpine `dataTable`
+([`resources/js/data-table.js`](resources/js/data-table.js)): search, role filter,
+column sorting, pagination and row actions all fetch a server-rendered partial and
+swap it in place — **no full-page reload**, with the address bar kept shareable.
+Sort/pagination are real `<a data-nav href>` links and row actions are
+`<form data-ajax>`, so everything still works with JavaScript disabled.
 
 ## Brand & design system
 
