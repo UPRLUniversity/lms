@@ -1,8 +1,16 @@
 <?php
 
 use App\Enums\Role;
+use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CatalogueController;
+use App\Http\Controllers\Courses\CourseController;
+use App\Http\Controllers\Courses\CourseCurriculumController;
+use App\Http\Controllers\Courses\CourseWorkflowController;
+use App\Http\Controllers\Courses\LessonController;
+use App\Http\Controllers\Courses\ModuleController;
 use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ProfileController;
@@ -16,6 +24,16 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Public course catalogue (guest-visible)
+|--------------------------------------------------------------------------
+| Only published + publicly-visible courses are ever listed; CatalogueController
+| 404s a direct slug to anything else.
+*/
+Route::get('/courses', [CatalogueController::class, 'index'])->name('catalogue.index');
+Route::get('/courses/{course}', [CatalogueController::class, 'show'])->name('catalogue.show');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -60,6 +78,72 @@ Route::middleware(['auth', 'verified', 'permission:users.view'])
         Route::post('invitations', [InvitationController::class, 'store'])->name('invitations.store');
         Route::post('invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('invitations.resend');
         Route::delete('invitations/{invitation}', [InvitationController::class, 'destroy'])->name('invitations.destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin — academic structure (faculties & departments)
+|--------------------------------------------------------------------------
+| Admins manage; auditors view read-only. Each action is authorized in the
+| controller via Faculty/DepartmentPolicy (super-admin bypasses).
+*/
+Route::middleware(['auth', 'verified'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('faculties', [FacultyController::class, 'index'])->name('faculties.index');
+        Route::get('faculties/create', [FacultyController::class, 'create'])->name('faculties.create');
+        Route::post('faculties', [FacultyController::class, 'store'])->name('faculties.store');
+        Route::get('faculties/{faculty}/edit', [FacultyController::class, 'edit'])->name('faculties.edit');
+        Route::put('faculties/{faculty}', [FacultyController::class, 'update'])->name('faculties.update');
+        Route::delete('faculties/{faculty}', [FacultyController::class, 'destroy'])->name('faculties.destroy');
+
+        Route::get('departments/create', [DepartmentController::class, 'create'])->name('departments.create');
+        Route::post('departments', [DepartmentController::class, 'store'])->name('departments.store');
+        Route::get('departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit');
+        Route::put('departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
+        Route::delete('departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Course builder & publishing workflow (instructors + admins)
+|--------------------------------------------------------------------------
+| The instructor list, the builder (settings + curriculum), per-type lesson
+| authoring (AJAX), drag-reorder persistence and the draft → review → published
+| workflow. Every action is authorized through CoursePolicy.
+*/
+Route::middleware(['auth', 'verified'])
+    ->prefix('manage')
+    ->group(function () {
+        Route::get('courses', [CourseController::class, 'index'])->name('courses.index');
+        Route::get('courses/create', [CourseController::class, 'create'])->name('courses.create');
+        Route::post('courses', [CourseController::class, 'store'])->name('courses.store');
+        Route::get('courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit');
+        Route::put('courses/{course}', [CourseController::class, 'update'])->name('courses.update');
+        Route::delete('courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
+
+        // Curriculum — outline partial (AJAX refresh) + whole-outline reorder.
+        Route::get('courses/{course}/curriculum', [CourseCurriculumController::class, 'show'])->name('courses.curriculum');
+        Route::post('courses/{course}/curriculum/reorder', [CourseCurriculumController::class, 'reorder'])->name('courses.curriculum.reorder');
+
+        // Modules (AJAX).
+        Route::post('courses/{course}/modules', [ModuleController::class, 'store'])->name('modules.store');
+        Route::patch('courses/{course}/modules/{module}', [ModuleController::class, 'update'])->name('modules.update');
+        Route::delete('courses/{course}/modules/{module}', [ModuleController::class, 'destroy'])->name('modules.destroy');
+
+        // Lessons (AJAX; store/update are multipart for file-type lessons).
+        Route::get('courses/{course}/lessons/{lesson}', [LessonController::class, 'show'])->name('lessons.show');
+        Route::post('courses/{course}/modules/{module}/lessons', [LessonController::class, 'store'])->name('lessons.store');
+        Route::post('courses/{course}/lessons/{lesson}', [LessonController::class, 'update'])->name('lessons.update');
+        Route::delete('courses/{course}/lessons/{lesson}', [LessonController::class, 'destroy'])->name('lessons.destroy');
+
+        // Publishing workflow.
+        Route::post('courses/{course}/submit', [CourseWorkflowController::class, 'submit'])->name('courses.submit');
+        Route::post('courses/{course}/publish', [CourseWorkflowController::class, 'publish'])->name('courses.publish');
+        Route::post('courses/{course}/return', [CourseWorkflowController::class, 'returnToDraft'])->name('courses.return');
+        Route::post('courses/{course}/archive', [CourseWorkflowController::class, 'archive'])->name('courses.archive');
+        Route::post('courses/{course}/restore', [CourseWorkflowController::class, 'restore'])->name('courses.restore');
     });
 
 // Short-lived signed access to a private file (PrivateFileService::temporaryUrl).

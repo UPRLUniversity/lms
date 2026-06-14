@@ -26,11 +26,25 @@ return [
         'roles' => ['*'],
     ],
     [
-        'label' => 'Courses',
+        'label' => 'Catalogue',
         'icon' => 'book',
-        'route' => null,
-        'match' => 'courses.*',
+        'route' => 'catalogue.index',
+        'match' => 'catalogue.*',
         'roles' => ['*'],
+    ],
+    [
+        'label' => 'Teaching',
+        'icon' => 'pencil',
+        'route' => 'courses.index',
+        'match' => 'courses.*',
+        'roles' => ['instructor', 'admin', 'super-admin', 'auditor'],
+    ],
+    [
+        'label' => 'Academic structure',
+        'icon' => 'graduation',
+        'route' => 'admin.faculties.index',
+        'match' => 'admin.faculties.*',
+        'roles' => ['admin', 'super-admin', 'auditor'],
     ],
     [
         'label' => 'My Learning',
