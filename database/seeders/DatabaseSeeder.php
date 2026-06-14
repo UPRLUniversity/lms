@@ -40,6 +40,9 @@ class DatabaseSeeder extends Seeder
         // Deactivate the last student so the login-deactivation gate is
         // demonstrable without inflating the roster beyond the spec's counts.
         User::where('email', 'student25@uprl.test')->update(['is_active' => false]);
+
+        // Academic structure + a clickable course catalogue.
+        $this->call(CourseSeeder::class);
     }
 
     /**

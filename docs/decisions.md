@@ -130,3 +130,55 @@ Decisions made where CLAUDE.md allowed discretion. Newest at the bottom.
    crimson hero with the rotating sunburst motif, values (Creativity/Competence/
    Character), feature highlights and a CTA, all auth-aware (guests see register/
    login; signed-in users see "Continue learning"). Login now links to register.
+
+## Section 2 — Courses, Curriculum & Catalogue (2026-06-14)
+
+1. **Four PHP backed enums** model course state: `CourseStatus`
+   (draft|review|published|archived, with an `allowedTransitions()` table that is the
+   single guard for every status write), `CourseLevel`, `CourseVisibility`
+   (public-catalogue|enrolled-only) and `LessonType`. A course reaches the public
+   catalogue only when it is BOTH published AND publicly visible (the `inCatalogue`
+   scope) — the two are independent so an instructor can keep a published course
+   off the public listing.
+2. **Status is only ever written by `CoursePublishingService`.** Controllers call
+   `submitForReview`/`publish`/`returnToDraft`/`archive`/`restore`; each guards the
+   transition table and `publish` re-checks the publish rules (≥1 module, ≥1 lesson,
+   summary, cover) so an empty course can never go live even if forced into review.
+   The return-to-draft note is required and stored on `courses.review_note`, shown
+   in-app on the builder (notifications arrive in Section 8).
+3. **The builder persists structure per-action, not via a giant dirty form.** Each
+   curriculum edit (add/rename/delete module, add/edit/delete lesson, drag-reorder)
+   posts immediately over AJAX and the outline partial is re-fetched and swapped —
+   the same server-renders-the-partial pattern the Section-1 data tables use, so it
+   degrades gracefully and there is no "unsaved curriculum" to lose. The **settings
+   tab** is the one explicit-save surface, with a `beforeunload` dirty-state guard.
+   This split is deliberate and consistent within each surface.
+4. **Drag-and-drop reorder via SortableJS** (new dep, ~12kb gzipped, lazy-loaded as
+   its own chunk only inside the builder). One `reorder` endpoint accepts the whole
+   outline (`order => [{module_id, lessons:[…]}]`) and persists module positions,
+   lesson positions and cross-module moves in a transaction — and ignores any
+   module/lesson id that doesn't belong to the course (a crafted payload can't
+   re-home another course's content). `@alpinejs/collapse` was added for the
+   catalogue/builder accordions.
+5. **Lesson files use a new private `MediaPurpose::LessonMedia`** (PDF/document/
+   audio + the exceptional self-hosted video), stored via the Section-0.5
+   `PrivateFileService` — never a public CDN URL. The size ceiling is
+   `LESSON_MEDIA_MAX_KB` (default 25MB) so the human can raise it for video without
+   a code change. Video is **embed-first**: `VideoEmbedService` parses YouTube/Vimeo
+   to a privacy-friendly `youtube-nocookie`/`player.vimeo` embed, used for the live
+   builder preview, the catalogue free-preview player and the lesson page. A 30MB or
+   wrong-type upload is rejected with a clear message (request `max` rule + the
+   service's per-purpose mime allow-list). Added `PrivateFileService::delete()` to
+   replace/clean up a lesson's file when its type changes.
+6. **Policies, not inline checks.** `CoursePolicy` encodes "instructors manage only
+   their own, admins manage all, auditors read-only, the publishing decision is
+   admin-only"; `FacultyPolicy`/`DepartmentPolicy` are admin-manage / auditor-view.
+   `viewAny` excludes students from the management area (they browse the public
+   catalogue, which needs no policy). All auto-discovered by Laravel.
+7. **The builder is also the admin review screen.** Rather than a separate queue,
+   admins open any course's builder and the publish / return-with-note / archive
+   panel appears (gated by the `review` ability). The instructor course list shows
+   own courses; for admins it shows every course.
+8. **Course description is the only `RichHtml` course field**; lesson text content is
+   `RichHtml::class` too (sanitized on save, rendered through `<x-ui.prose>`). Summary,
+   module/department descriptions and learning objectives are plain escaped text.
