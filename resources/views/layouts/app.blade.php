@@ -49,5 +49,8 @@
                 {{ $slot }}
             </main>
         </div>
+
+        {{-- Global top-right toast stack (server flashes + JS `toast` events). --}}
+        <x-ui.toasts />
     </body>
 </html>

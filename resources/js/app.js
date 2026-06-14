@@ -1,8 +1,13 @@
 import './bootstrap';
+import './confirm'; // exposes window.uprlConfirm (branded SweetAlert2)
 
 import Alpine from 'alpinejs';
+import dataTable from './data-table';
 
 window.Alpine = Alpine;
+
+// Reusable live-table component (search/sort/filter/paginate without reloads).
+Alpine.data('dataTable', dataTable);
 
 Alpine.start();
 
