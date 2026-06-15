@@ -51,4 +51,60 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
         $response->assertRedirect('/');
     }
+
+    public function test_successful_login_records_audit_columns(): void
+    {
+        $user = User::factory()->create([
+            'last_login_at' => null,
+            'last_login_ip' => null,
+        ]);
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $user->refresh();
+        $this->assertNotNull($user->last_login_at);
+        $this->assertNotNull($user->last_login_ip);
+    }
+
+    public function test_login_is_rate_limited_after_repeated_failures(): void
+    {
+        $user = User::factory()->create();
+
+        // Five failures trip the 5-attempt throttle; the sixth is locked out.
+        foreach (range(1, 5) as $attempt) {
+            $this->post('/login', [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'wrong-password',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertStringContainsString(
+            'Too many login attempts',
+            session('errors')->first('email'),
+        );
+        $this->assertGuest();
+    }
+
+    public function test_remember_me_issues_the_remember_cookie(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'remember' => 'on',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertCookie(auth()->guard()->getRecallerName());
+    }
 }

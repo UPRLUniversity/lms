@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
@@ -41,6 +42,10 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        // Public self-registration always lands as a student; elevated roles are
+        // only ever granted by an admin (user management) or an invitation.
+        $user->assignRole(Role::Student->value);
 
         event(new Registered($user));
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\Auth\InvitationAcceptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -12,6 +13,14 @@ use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
+    // Accept an admin invitation: signed link → set password → active account.
+    Route::get('invitations/{invitation}/accept', [InvitationAcceptController::class, 'show'])
+        ->middleware('signed')
+        ->name('invitations.accept');
+
+    Route::post('invitations/{invitation}/accept', [InvitationAcceptController::class, 'store'])
+        ->name('invitations.accept.store');
+
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');
 

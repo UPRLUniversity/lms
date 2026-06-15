@@ -50,7 +50,25 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Deactivated accounts authenticate but are not allowed in. Checked only
+        // after valid credentials so it doesn't leak which e-mails exist.
+        if (! Auth::user()->is_active) {
+            Auth::logout();
+
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => __('This account has been deactivated. Please contact an administrator.'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
+
+        // Login auditing.
+        Auth::user()->forceFill([
+            'last_login_at' => now(),
+            'last_login_ip' => $this->ip(),
+        ])->save();
     }
 
     /**

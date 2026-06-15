@@ -47,4 +47,13 @@
             </x-primary-button>
         </div>
     </form>
+
+    @if (Route::has('register'))
+        <p class="mt-8 border-t border-line pt-6 text-center text-sm text-ink/70">
+            New to {{ config('brand.short') }}?
+            <a href="{{ route('register') }}" class="rounded font-medium text-crimson underline hover:text-crimson-dark focus-ring">
+                {{ __('Create an account') }}
+            </a>
+        </p>
+    @endif
 </x-guest-layout>

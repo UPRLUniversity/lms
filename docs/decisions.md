@@ -59,3 +59,126 @@ Decisions made where CLAUDE.md allowed discretion. Newest at the bottom.
 6. **Test images use a committed PNG fixture** (`tests/Fixtures/pixel.png`) instead
    of `UploadedFile::fake()->image()`, so the suite needs no GD extension (the app
    reads dimensions with `getimagesize()`, which is GD-independent).
+
+## Section 1 — Identity & Access (2026-06-14)
+
+1. **`spatie/laravel-permission` v6** for roles/permissions. Five roles are a fixed
+   string-backed `App\Enums\Role`; granular permissions are `App\Enums\Permission`.
+   The matrix lives in one idempotent `RolesAndPermissionsSeeder`. The auditor is
+   read-only *by construction* — it receives only the `*.view` permission subset.
+2. **Super-admin via `Gate::before`**, not a wildcard permission — it short-circuits
+   every policy/ability check. The privilege-escalation rule ("only a super-admin
+   may grant/invite admin or super-admin") is a single `grantRole` ability
+   (`Gate::define('grantRole', [UserPolicy::class, 'grantRole'])`) reused by the
+   store/update/invite FormRequests.
+3. **Adapted Breeze, did not fork it.** `User` now implements `MustVerifyEmail`
+   (verification was previously inert); registration assigns the `student` role;
+   the deactivation gate + login auditing live in the existing `LoginRequest`.
+4. **Deactivation, never deletion.** An `is_active` flag gates login (in
+   `LoginRequest`, only after valid credentials so it doesn't leak which emails
+   exist) and a global `EnsureUserIsActive` web middleware ends a live session the
+   moment an admin flips the flag. `UserPolicy` forbids self-deactivation and an
+   admin deactivating a super-admin.
+5. **`email_verified_at` kept guarded** (not added to `$fillable`). Admin-created
+   users, accepted invitations and seeded demo accounts are marked verified through
+   `markEmailAsVerified()` rather than mass assignment — mass-assigning it silently
+   no-ops and would have left every seeded account stuck behind the verify gate.
+6. **Invitations store only a SHA-256 hash of the token**; the raw token exists
+   only inside the e-mailed `temporarySignedRoute` link (signed + 7-day expiry +
+   single-use). Acceptance is constant-time (`hash_equals`) and transactional.
+   `UserInvitation` is itself `Notifiable` so the queued mail routes to its email.
+7. **Avatars reuse the Section-0.5 `MediaUploadService`** (purpose `Avatars`,
+   configured to 256×256) — no new storage path. Replacing an avatar destroys the
+   previous Media (file + row) first, so a user keeps exactly one. The 256px resize
+   is a Cloudinary transformation in production; the local driver stores as-is.
+8. **`bio` is a plain `text` column with a textarea**, not a TinyMCE/`RichHtml`
+   field. A short self-description isn't worth the rich-editor surface (or its XSS
+   risk); it's escaped on output like any plain string.
+
+## Section 1 — Feedback follow-ups (2026-06-14)
+
+1. **Queued mail kept; local dev defaults to `sync`.** Invitations are queued
+   (`ShouldQueue`), so without a worker they sat in the `jobs` table undelivered —
+   verification mail arrived only because the framework sends it synchronously. The
+   architecture (queued database driver) is unchanged for production; the local
+   `.env` now ships `QUEUE_CONNECTION=sync` so queued mail sends inline with no
+   worker. `.env.example` stays `database` with a comment pointing at `queue:work`.
+2. **Branded transactional e-mail via a published markdown theme** (`uprl.css`)
+   rather than bespoke Mailables — verification, password reset and invitations all
+   inherit it. Crimson header band, serif headings (Georgia/Times fallback, since
+   e-mail clients ignore web fonts), gold motto in the footer. Voice for the
+   framework's own mails is set with `VerifyEmail/ResetPassword::toMailUsing()`.
+   Local `/mail-preview/{type}` route renders them for eyeballing.
+3. **Live admin tables via a reusable Alpine `dataTable` + server partials**, not a
+   third-party datatable lib and not Livewire/Inertia. The index action returns the
+   `_table` partial for AJAX (`X-Requested-With`/`wantsJson`) and the full page
+   otherwise; search/role/sort/pagination and row actions fetch-and-swap with no
+   reload, syncing the URL via `history.replaceState`. Sort/pagination stay real
+   `<a data-nav href>` links and actions stay `<form data-ajax>`, so the table is
+   fully functional without JavaScript (progressive enhancement). Sortable columns
+   are whitelisted server-side (`name`/`status`/`last_login`) — an unknown `sort`
+   falls back to `name`, so the query is injection-safe.
+4. **Single feedback + confirmation system.** All action feedback now flows through
+   one global, self-dismissing **top-right toast** stack (`<x-ui.toasts>`, Alpine):
+   it renders `session('status')` flashes on load and listens for a `toast` window
+   event, so server redirects and AJAX actions look identical. Inline flash banners
+   and the old bottom-right toast were removed. All confirmation/destructive dialogs
+   use **branded SweetAlert2** (`resources/js/confirm.js` → `window.uprlConfirm`,
+   crimson buttons, serif title) instead of native `confirm()`. These are the
+   user's standing UI preferences (saved to assistant memory for consistency).
+5. **Custom branded landing page** replaces the Laravel starter `welcome` view —
+   crimson hero with the rotating sunburst motif, values (Creativity/Competence/
+   Character), feature highlights and a CTA, all auth-aware (guests see register/
+   login; signed-in users see "Continue learning"). Login now links to register.
+
+## Section 2 — Courses, Curriculum & Catalogue (2026-06-14)
+
+1. **Four PHP backed enums** model course state: `CourseStatus`
+   (draft|review|published|archived, with an `allowedTransitions()` table that is the
+   single guard for every status write), `CourseLevel`, `CourseVisibility`
+   (public-catalogue|enrolled-only) and `LessonType`. A course reaches the public
+   catalogue only when it is BOTH published AND publicly visible (the `inCatalogue`
+   scope) — the two are independent so an instructor can keep a published course
+   off the public listing.
+2. **Status is only ever written by `CoursePublishingService`.** Controllers call
+   `submitForReview`/`publish`/`returnToDraft`/`archive`/`restore`; each guards the
+   transition table and `publish` re-checks the publish rules (≥1 module, ≥1 lesson,
+   summary, cover) so an empty course can never go live even if forced into review.
+   The return-to-draft note is required and stored on `courses.review_note`, shown
+   in-app on the builder (notifications arrive in Section 8).
+3. **The builder persists structure per-action, not via a giant dirty form.** Each
+   curriculum edit (add/rename/delete module, add/edit/delete lesson, drag-reorder)
+   posts immediately over AJAX and the outline partial is re-fetched and swapped —
+   the same server-renders-the-partial pattern the Section-1 data tables use, so it
+   degrades gracefully and there is no "unsaved curriculum" to lose. The **settings
+   tab** is the one explicit-save surface, with a `beforeunload` dirty-state guard.
+   This split is deliberate and consistent within each surface.
+4. **Drag-and-drop reorder via SortableJS** (new dep, ~12kb gzipped, lazy-loaded as
+   its own chunk only inside the builder). One `reorder` endpoint accepts the whole
+   outline (`order => [{module_id, lessons:[…]}]`) and persists module positions,
+   lesson positions and cross-module moves in a transaction — and ignores any
+   module/lesson id that doesn't belong to the course (a crafted payload can't
+   re-home another course's content). `@alpinejs/collapse` was added for the
+   catalogue/builder accordions.
+5. **Lesson files use a new private `MediaPurpose::LessonMedia`** (PDF/document/
+   audio + the exceptional self-hosted video), stored via the Section-0.5
+   `PrivateFileService` — never a public CDN URL. The size ceiling is
+   `LESSON_MEDIA_MAX_KB` (default 25MB) so the human can raise it for video without
+   a code change. Video is **embed-first**: `VideoEmbedService` parses YouTube/Vimeo
+   to a privacy-friendly `youtube-nocookie`/`player.vimeo` embed, used for the live
+   builder preview, the catalogue free-preview player and the lesson page. A 30MB or
+   wrong-type upload is rejected with a clear message (request `max` rule + the
+   service's per-purpose mime allow-list). Added `PrivateFileService::delete()` to
+   replace/clean up a lesson's file when its type changes.
+6. **Policies, not inline checks.** `CoursePolicy` encodes "instructors manage only
+   their own, admins manage all, auditors read-only, the publishing decision is
+   admin-only"; `FacultyPolicy`/`DepartmentPolicy` are admin-manage / auditor-view.
+   `viewAny` excludes students from the management area (they browse the public
+   catalogue, which needs no policy). All auto-discovered by Laravel.
+7. **The builder is also the admin review screen.** Rather than a separate queue,
+   admins open any course's builder and the publish / return-with-note / archive
+   panel appears (gated by the `review` ability). The instructor course list shows
+   own courses; for admins it shows every course.
+8. **Course description is the only `RichHtml` course field**; lesson text content is
+   `RichHtml::class` too (sanitized on save, rendered through `<x-ui.prose>`). Summary,
+   module/department descriptions and learning objectives are plain escaped text.

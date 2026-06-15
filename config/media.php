@@ -78,6 +78,34 @@ return [
             'transformations' => ['width' => 600, 'crop' => 'limit'],
         ],
 
+        MediaPurpose::LessonMedia->value => [
+            // The primary uploaded file for a file-type lesson (PDF/document/audio)
+            // or the exceptional self-hosted lesson video. Private: streamed only
+            // through a policy-gated/signed route, never a public CDN URL. The size
+            // ceiling is configurable so the human can raise it for video without a
+            // code change.
+            'visibility' => 'private',
+            'disk' => 'private',
+            'allowed_mimes' => [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.ms-powerpoint',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'audio/mpeg',
+                'audio/mp4',
+                'audio/wav',
+                'audio/x-wav',
+                'audio/ogg',
+                'audio/webm',
+                'video/mp4',
+                'video/webm',
+                'video/quicktime',
+            ],
+            'max_kb' => (int) env('LESSON_MEDIA_MAX_KB', 25600),
+            'transformations' => [],
+        ],
+
         MediaPurpose::LessonResources->value => [
             // Course materials for enrolled users — gated, not on a public CDN.
             'visibility' => 'private',

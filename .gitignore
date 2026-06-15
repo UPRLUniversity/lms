@@ -18,6 +18,7 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/uprl_lms
 /vendor
 Homestead.json
 Homestead.yaml
