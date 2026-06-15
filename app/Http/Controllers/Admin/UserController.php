@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\CourseStatus;
+use App\Enums\EnrollmentStatus;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Models\Course;
 use App\Models\User;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Http\JsonResponse;
@@ -125,11 +128,26 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
+        // Admins may enrol a user directly from this page (status active). Offer the
+        // published courses they aren't already actively enrolled in.
+        $canEnroll = $this->user()->hasAnyRole([Role::Admin->value, Role::SuperAdmin->value]);
+        $enrollableCourses = $canEnroll
+            ? Course::query()
+                ->where('status', CourseStatus::Published->value)
+                ->whereDoesntHave('enrollments', fn ($q) => $q
+                    ->where('user_id', $user->id)
+                    ->whereIn('status', [EnrollmentStatus::Active->value, EnrollmentStatus::Completed->value]))
+                ->orderBy('title')
+                ->get(['id', 'title', 'code'])
+            : collect();
+
         return view('admin.users.edit', [
             'user' => $user->load('roles'),
             'roles' => $this->grantableRoles(),
             'currentRole' => $user->roles->first()?->name,
             'isSelf' => $this->user()->is($user),
+            'canEnroll' => $canEnroll,
+            'enrollableCourses' => $enrollableCourses,
         ]);
     }
 

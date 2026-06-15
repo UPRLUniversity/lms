@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Enums\CourseLevel;
 use App\Enums\CourseStatus;
 use App\Enums\CourseVisibility;
+use App\Enums\EnrollmentMode;
 use App\Models\Course;
 use App\Models\Department;
 use App\Models\User;
@@ -70,6 +71,40 @@ class CourseFactory extends Factory
     public function enrolledOnly(): static
     {
         return $this->state(fn () => ['visibility' => CourseVisibility::EnrolledOnly->value]);
+    }
+
+    public function mode(EnrollmentMode $mode): static
+    {
+        return $this->state(fn () => ['enrollment_mode' => $mode->value]);
+    }
+
+    public function approvalMode(): static
+    {
+        return $this->mode(EnrollmentMode::Approval);
+    }
+
+    public function inviteOnly(): static
+    {
+        return $this->mode(EnrollmentMode::InviteOnly);
+    }
+
+    /**
+     * A capped course (defaults to the spec's worked example of 3 seats).
+     */
+    public function withCapacity(int $capacity = 3): static
+    {
+        return $this->state(fn () => ['capacity' => $capacity]);
+    }
+
+    /**
+     * An enrolment window relative to now (null bounds = unbounded that side).
+     */
+    public function window(?\DateTimeInterface $opens, ?\DateTimeInterface $closes): static
+    {
+        return $this->state(fn () => [
+            'enrollment_opens_at' => $opens,
+            'enrollment_closes_at' => $closes,
+        ]);
     }
 
     /**

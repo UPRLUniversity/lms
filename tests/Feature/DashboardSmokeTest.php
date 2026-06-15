@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\Role;
+use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -26,5 +29,17 @@ class DashboardSmokeTest extends TestCase
         $response->assertSee('Dashboard');             // page title in topbar
         $response->assertSee('Continue learning');     // shell content
         $response->assertSee(config('brand.motto'));   // sidebar motto
+    }
+
+    public function test_student_dashboard_reflects_their_real_enrolments(): void
+    {
+        $student = $this->userWithRole(Role::Student->value);
+        $active = Course::factory()->published()->create(['title' => 'Active Course']);
+        Enrollment::factory()->active()->create(['user_id' => $student->id, 'course_id' => $active->id]);
+
+        $this->actingAs($student)->get('/dashboard')
+            ->assertOk()
+            ->assertSee('Courses in progress')
+            ->assertSee('Active Course');   // the course is listed under "Continue learning"
     }
 }

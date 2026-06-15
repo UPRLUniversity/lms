@@ -71,6 +71,33 @@
             </form>
         </x-ui.card>
 
+        @if ($canEnroll)
+            <x-ui.card>
+                <h3 class="font-display text-lg font-semibold text-ink">Enrol in a course</h3>
+                <p class="mt-1 text-sm text-ink/70">Add {{ $user->name }} to a published course directly (status active).</p>
+
+                @if ($enrollableCourses->isEmpty())
+                    <p class="mt-4 text-sm text-ink/50">This user is already enrolled in every published course.</p>
+                @else
+                    <form method="POST" action="{{ route('enrollment.admin.store') }}" class="mt-4 flex flex-wrap items-end gap-3">
+                        @csrf
+                        <input type="hidden" name="user_id" value="{{ $user->id }}">
+                        <div class="min-w-[18rem] flex-1">
+                            <label for="enrol-course" class="mb-1 block text-sm font-medium text-ink">Course</label>
+                            <select id="enrol-course" name="course_id" required
+                                    class="w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                                <option value="">Choose a course…</option>
+                                @foreach ($enrollableCourses as $course)
+                                    <option value="{{ $course->id }}">{{ $course->code }} — {{ $course->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <x-ui.button type="submit">Enrol</x-ui.button>
+                    </form>
+                @endif
+            </x-ui.card>
+        @endif
+
         @can('setActiveStatus', $user)
             <x-ui.card>
                 <div class="flex flex-wrap items-center justify-between gap-3">

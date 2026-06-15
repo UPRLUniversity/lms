@@ -11,6 +11,7 @@ use App\Http\Requests\Courses\UpdateCourseSettingsRequest;
 use App\Models\Course;
 use App\Models\Department;
 use App\Services\Courses\CoursePublishingService;
+use App\Services\Courses\EnrollmentService;
 use App\Services\Media\MediaUploadService;
 use App\Support\Slug;
 use Illuminate\Http\RedirectResponse;
@@ -108,9 +109,12 @@ class CourseController extends Controller
         ]);
     }
 
-    public function update(UpdateCourseSettingsRequest $request, Course $course, MediaUploadService $media): RedirectResponse
+    public function update(UpdateCourseSettingsRequest $request, Course $course, MediaUploadService $media, EnrollmentService $enrollments): RedirectResponse
     {
         $data = $request->validated();
+
+        // Seats freed by raising (or lifting) the cap should auto-promote the waitlist.
+        $previousCapacity = $course->capacity;
 
         $course->update([
             'title' => $data['title'],
@@ -118,11 +122,21 @@ class CourseController extends Controller
             'department_id' => $data['department_id'],
             'level' => $data['level'],
             'visibility' => $data['visibility'],
+            'enrollment_mode' => $data['enrollment_mode'],
+            'capacity' => $data['capacity'] ?? null,
+            'enrollment_opens_at' => $data['enrollment_opens_at'] ?? null,
+            'enrollment_closes_at' => $data['enrollment_closes_at'] ?? null,
             'summary' => $data['summary'] ?? null,
             'description' => $data['description'] ?? null,
             'duration_minutes' => $data['duration_minutes'] ?? null,
             'learning_objectives' => $request->objectives(),
         ]);
+
+        // A raised or removed cap may open seats for waitlisted students.
+        $newCapacity = $course->capacity;
+        if ($newCapacity === null || ($previousCapacity !== null && $newCapacity > $previousCapacity)) {
+            $enrollments->capacityChanged($course);
+        }
 
         // Replace the cover image (keep exactly one), if a new file was supplied.
         if ($request->hasFile('cover')) {

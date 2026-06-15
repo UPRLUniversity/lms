@@ -49,9 +49,16 @@ return [
     [
         'label' => 'My Learning',
         'icon' => 'graduation',
-        'route' => null,
+        'route' => 'learning.index',
         'match' => 'learning.*',
         'roles' => ['student'],
+    ],
+    [
+        'label' => 'Approvals',
+        'icon' => 'user-plus',
+        'route' => 'enrollments.approvals',
+        'match' => 'enrollments.approvals',
+        'roles' => ['instructor', 'admin', 'super-admin'],
     ],
     [
         // Auditor is intentionally included — it sees the people list read-only.

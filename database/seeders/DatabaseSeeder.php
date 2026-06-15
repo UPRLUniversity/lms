@@ -43,6 +43,9 @@ class DatabaseSeeder extends Seeder
 
         // Academic structure + a clickable course catalogue.
         $this->call(CourseSeeder::class);
+
+        // A realistic spread of enrolments across every mode and status.
+        $this->call(EnrollmentSeeder::class);
     }
 
     /**

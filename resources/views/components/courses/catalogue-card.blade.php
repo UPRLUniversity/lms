@@ -21,7 +21,7 @@
             <span class="absolute bottom-3 left-4 font-display text-2xl font-bold text-white/90">{{ $course->code }}</span>
         @endif
         <span class="absolute left-3 top-3">
-            <x-ui.badge variant="gold">{{ $course->level->label() }}</x-ui.badge>
+            <x-ui.badge variant="gold" solid>{{ $course->level->label() }}</x-ui.badge>
         </span>
     </div>
 

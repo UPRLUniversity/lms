@@ -1,7 +1,10 @@
 @php
     use App\Enums\CourseVisibility;
+    use App\Enums\EnrollmentMode;
 
     $objectives = old('learning_objectives', $course->learning_objectives ?: ['']);
+    $currentMode = old('enrollment_mode', $course->enrollment_mode?->value ?? EnrollmentMode::Open->value);
+    $windowFmt = fn ($v) => $v?->format('Y-m-d\TH:i');
 @endphp
 
 <div class="grid gap-6 lg:grid-cols-3">
@@ -125,6 +128,49 @@
                         @endforeach
                     </select>
                 </x-ui.field>
+
+                {{-- Enrolment --}}
+                <div class="space-y-5 rounded-xl border border-line bg-surface/40 p-5">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h3 class="font-display font-semibold text-ink">Enrolment</h3>
+                            <p class="text-xs text-ink/60">How students join, and how many places there are.</p>
+                        </div>
+                        @if ($course->isPublished())
+                            <x-ui.button size="sm" variant="ghost" :href="route('courses.roster', $course)">
+                                <x-ui.icon name="users" class="h-4 w-4" /> View roster
+                            </x-ui.button>
+                        @endif
+                    </div>
+
+                    <x-ui.field name="enrollment_mode" label="Enrolment mode" required>
+                        <select id="enrollment_mode" name="enrollment_mode" @change="dirty = true"
+                                class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                            @foreach (EnrollmentMode::cases() as $mode)
+                                <option value="{{ $mode->value }}" @selected($currentMode === $mode->value)>
+                                    {{ $mode->label() }} — {{ $mode->hint() }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </x-ui.field>
+
+                    <div class="grid gap-5 sm:grid-cols-3">
+                        <x-ui.field name="capacity" label="Capacity" type="number"
+                                    :value="old('capacity', $course->capacity)" hint="Blank = unlimited" @input="dirty = true" />
+
+                        <x-ui.field name="enrollment_opens_at" label="Opens" hint="Optional">
+                            <input id="enrollment_opens_at" name="enrollment_opens_at" type="datetime-local" @change="dirty = true"
+                                   value="{{ old('enrollment_opens_at', $windowFmt($course->enrollment_opens_at)) }}"
+                                   class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                        </x-ui.field>
+
+                        <x-ui.field name="enrollment_closes_at" label="Closes" hint="Optional">
+                            <input id="enrollment_closes_at" name="enrollment_closes_at" type="datetime-local" @change="dirty = true"
+                                   value="{{ old('enrollment_closes_at', $windowFmt($course->enrollment_closes_at)) }}"
+                                   class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                        </x-ui.field>
+                    </div>
+                </div>
 
                 {{-- Learning objectives --}}
                 <div x-data="objectiveRows(@js(array_values($objectives)))" @change="dirty = true">

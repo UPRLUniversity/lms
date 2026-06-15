@@ -6,6 +6,8 @@ use App\Casts\RichHtml;
 use App\Enums\CourseLevel;
 use App\Enums\CourseStatus;
 use App\Enums\CourseVisibility;
+use App\Enums\EnrollmentMode;
+use App\Enums\EnrollmentStatus;
 use App\Enums\MediaPurpose;
 use App\Models\Concerns\HasMedia;
 use Database\Factories\CourseFactory;
@@ -34,6 +36,10 @@ class Course extends Model
         'duration_minutes',
         'status',
         'visibility',
+        'enrollment_mode',
+        'capacity',
+        'enrollment_opens_at',
+        'enrollment_closes_at',
         'created_by',
         'review_note',
         'published_at',
@@ -45,6 +51,10 @@ class Course extends Model
             'status' => CourseStatus::class,
             'level' => CourseLevel::class,
             'visibility' => CourseVisibility::class,
+            'enrollment_mode' => EnrollmentMode::class,
+            'capacity' => 'integer',
+            'enrollment_opens_at' => 'datetime',
+            'enrollment_closes_at' => 'datetime',
             'description' => RichHtml::class,
             'learning_objectives' => 'array',
             'duration_minutes' => 'integer',
@@ -108,6 +118,14 @@ class Course extends Model
     public function lessons(): HasManyThrough
     {
         return $this->hasManyThrough(Lesson::class, Module::class);
+    }
+
+    /**
+     * @return HasMany<Enrollment, $this>
+     */
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
     }
 
     /*
@@ -210,5 +228,114 @@ class Course extends Model
     {
         return $this->instructors->firstWhere('pivot.is_lead', true)
             ?? $this->instructors->first();
+    }
+
+    /**
+     * Whether $user is the lead instructor of this course — the (co-)instructor who
+     * may run its approval queue, alongside admins.
+     */
+    public function isLeadInstructor(User $user): bool
+    {
+        return $this->instructors()
+            ->wherePivot('is_lead', true)
+            ->whereKey($user->id)
+            ->exists();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Enrolment
+    |--------------------------------------------------------------------------
+    */
+
+    public function enrollmentMode(): EnrollmentMode
+    {
+        return $this->enrollment_mode ?? EnrollmentMode::Open;
+    }
+
+    public function hasCapacityLimit(): bool
+    {
+        return $this->capacity !== null;
+    }
+
+    /**
+     * Seats currently occupied (active + pending). Uses a withCount-loaded value when
+     * present (rosters/lists), else a direct count.
+     */
+    public function seatsTaken(): int
+    {
+        if ($this->seats_taken_count !== null) {
+            return (int) $this->seats_taken_count;
+        }
+
+        return (int) $this->enrollments()->occupyingSeat()->count();
+    }
+
+    /**
+     * Seats left, or null when the course is uncapped.
+     */
+    public function seatsAvailable(): ?int
+    {
+        if (! $this->hasCapacityLimit()) {
+            return null;
+        }
+
+        return max(0, (int) $this->capacity - $this->seatsTaken());
+    }
+
+    public function isFull(): bool
+    {
+        return $this->hasCapacityLimit() && $this->seatsTaken() >= (int) $this->capacity;
+    }
+
+    public function enrollmentOpensInFuture(): bool
+    {
+        return $this->enrollment_opens_at !== null && $this->enrollment_opens_at->isFuture();
+    }
+
+    public function enrollmentHasClosed(): bool
+    {
+        return $this->enrollment_closes_at !== null && $this->enrollment_closes_at->isPast();
+    }
+
+    /**
+     * Whether the enrolment window is open right now (null bounds = no limit).
+     */
+    public function enrollmentWindowOpen(): bool
+    {
+        return ! $this->enrollmentOpensInFuture() && ! $this->enrollmentHasClosed();
+    }
+
+    /**
+     * Whether a student could, in principle, self-enrol right now: a published course,
+     * not invite-only, inside its window. Capacity is handled separately (full ⇒
+     * waitlist), so it is intentionally NOT part of this gate.
+     */
+    public function selfEnrollmentOpen(): bool
+    {
+        return $this->isPublished()
+            && $this->enrollmentMode()->allowsSelfEnrollment()
+            && $this->enrollmentWindowOpen();
+    }
+
+    /**
+     * A given user's enrollment for this course, if any (uses a loaded relation when
+     * present to avoid a per-card query).
+     */
+    public function enrollmentFor(User $user): ?Enrollment
+    {
+        if ($this->relationLoaded('enrollments')) {
+            return $this->enrollments->firstWhere('user_id', $user->id);
+        }
+
+        return $this->enrollments()->where('user_id', $user->id)->first();
+    }
+
+    public function isEnrolled(User $user): bool
+    {
+        $enrollment = $this->enrollmentFor($user);
+
+        return $enrollment !== null
+            && in_array($enrollment->status, [EnrollmentStatus::Active, EnrollmentStatus::Completed], true);
     }
 }
