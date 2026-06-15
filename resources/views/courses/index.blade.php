@@ -66,7 +66,7 @@
                                 <span class="absolute bottom-3 left-4 font-display text-xl font-bold text-white/90">{{ $course->code }}</span>
                             @endif
                             <span class="absolute left-3 top-3">
-                                <x-ui.badge :variant="$course->status->badge()">{{ $course->status->label() }}</x-ui.badge>
+                                <x-ui.badge :variant="$course->status->badge()" solid>{{ $course->status->label() }}</x-ui.badge>
                             </span>
                         </a>
 
@@ -90,8 +90,8 @@
                                     <x-ui.icon name="pencil" class="h-4 w-4" /> Build
                                 </x-ui.button>
                                 @if ($course->isPublished())
-                                    <x-ui.button size="sm" variant="ghost" :href="route('catalogue.show', $course)">
-                                        <x-ui.icon name="eye" class="h-4 w-4" /> View
+                                    <x-ui.button size="sm" variant="ghost" :href="route('courses.roster', $course)" title="Roster">
+                                        <x-ui.icon name="users" class="h-4 w-4" /> Roster
                                     </x-ui.button>
                                 @endif
                             </div>

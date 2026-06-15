@@ -182,3 +182,45 @@ Decisions made where CLAUDE.md allowed discretion. Newest at the bottom.
 8. **Course description is the only `RichHtml` course field**; lesson text content is
    `RichHtml::class` too (sanitized on save, rendered through `<x-ui.prose>`). Summary,
    module/department descriptions and learning objectives are plain escaped text.
+
+## Section 3 — Enrolment, Approvals, Waitlist & Bulk Import (2026-06-15)
+
+1. **One service owns every status write.** `EnrollmentService` is the single place an
+   enrollment's status changes (self-enrol, admin-enrol, approve/reject, withdraw,
+   promote). Controllers never set status directly. The (user_id, course_id) **unique
+   index** makes a duplicate enrolment impossible at the DB level; re-enrolling after
+   a withdrawal/rejection updates the same row.
+2. **Capacity is "active + pending".** A pending approval request reserves a seat, so
+   capacity counts active **and** pending (`EnrollmentStatus::occupiesSeat()`).
+   Completed/withdrawn/rejected/waitlisted don't. An open course self-enrols straight
+   to active; an approval course to pending (a held seat). Full ⇒ waitlisted.
+3. **Queue-safe waitlist promotion.** `syncWaitlist()` runs in a transaction that
+   `lockForUpdate()`s the course row, recounts seats, then promotes **at most** the
+   number of free seats, earliest-first. The recount-after-lock means two racing
+   triggers can never double-promote (covered by a concurrency-safety test). It fires
+   on withdrawal, rejection and a raised/cleared capacity. Promotion target follows the
+   mode: active (open) or pending (approval).
+4. **Waitlist position is derived, never stored** (`Enrollment::waitlistPosition()`),
+   so positions renumber for free the moment anyone ahead is promoted or leaves.
+   FIFO ordering is `enrolled_at, id` (total + stable under concurrent inserts).
+5. **Approvals: admins + the LEAD instructor only.** Co-instructors don't decide
+   enrolments. Course-scoped enrolment abilities (`viewRoster`, `manageRoster`,
+   `enrollOthers`, `approveEnrollments`) live in `EnrollmentPolicy` but are registered
+   as named gates (their subject is a Course, whose policy is CoursePolicy); the
+   Enrollment-instance abilities (`approve`/`reject`/`withdraw`) auto-discover.
+6. **Bulk CSV is preview-then-confirm.** Upload → `BulkEnrollmentService::analyze()`
+   flags each row precisely (unknown email/code, in-file duplicate, already enrolled)
+   in two lookups, not one-per-row. The file is staged on the private `local` disk
+   under a UUID token; confirm re-reads + re-validates and imports only OK rows.
+   Imports **>100 rows** are dispatched to the queued `ProcessEnrollmentImport` job;
+   the staged file is its input and is deleted after. Bulk-imported rows carry
+   source `bulk` (admin-enrol gained an optional source param).
+7. **maatwebsite/excel for the roster CSV export** (`RosterExport`). Local PHP has
+   `ext-gd` disabled, which only blocks composer's platform check (the CSV writer
+   never touches GD), so `config.platform.ext-gd` is pinned in composer.json to keep
+   `composer install` working everywhere; runtime CSV export is unaffected.
+8. **The catalogue course page is now enrolment-aware.** A single partial renders the
+   right state per viewer/mode/capacity/window: Enrol / Request enrolment / Join the
+   waitlist / Awaiting approval / You're enrolled / Enrolment by invitation / opens-or-
+   closed. Staff viewing their own course get a "Manage roster" link instead. Added an
+   `error` flash channel to the toast stack for graceful self-enrol failures.

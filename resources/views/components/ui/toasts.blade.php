@@ -19,7 +19,10 @@
         },
         remove(id) { this.toasts = this.toasts.filter(t => t.id !== id); },
     }"
-    x-init="@if (session('status')) add({ message: @js(session('status')), type: 'success' }); @endif"
+    x-init="
+        @if (session('status')) add({ message: @js(session('status')), type: 'success' }); @endif
+        @if (session('error')) add({ message: @js(session('error')), type: 'error' }); @endif
+    "
     @toast.window="add($event.detail)"
     class="pointer-events-none fixed right-4 top-20 z-[100] flex w-full max-w-sm flex-col gap-2 sm:right-6"
     role="status" aria-live="polite" aria-atomic="true">

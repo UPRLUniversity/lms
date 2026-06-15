@@ -68,7 +68,7 @@ class CatalogueController extends Controller
         return view('catalogue.index', $data);
     }
 
-    public function show(Course $course): View
+    public function show(Request $request, Course $course): View
     {
         // A stranger may only reach a course that's in the public catalogue.
         abort_unless(
@@ -82,8 +82,13 @@ class CatalogueController extends Controller
             'modules.lessons' => fn ($q) => $q->orderBy('position'),
         ]);
 
+        // The viewer's own enrolment (if signed in) drives the enrol card's state.
+        $user = $request->user();
+
         return view('catalogue.show', [
             'course' => $course,
+            'enrollment' => $user ? $course->enrollmentFor($user) : null,
+            'canManageCourse' => $user ? $user->can('viewRoster', $course) : false,
         ]);
     }
 }

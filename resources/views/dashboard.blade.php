@@ -94,28 +94,55 @@
         {{-- STUDENT: learning --}}
         @else
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <x-ui.stat label="Courses in progress" value="0" icon="book" tone="crimson" />
-                <x-ui.stat label="Completed" value="0" icon="check" tone="success" />
-                <x-ui.stat label="Certificates earned" value="0" icon="certificate" tone="gold" />
+                <x-ui.stat label="Courses in progress" :value="$stats['inProgress']" icon="book" tone="crimson" />
+                <x-ui.stat label="Completed" :value="$stats['completed']" icon="check" tone="success" />
+                <x-ui.stat label="Awaiting approval" :value="$stats['awaiting']" icon="clock" tone="gold" />
             </div>
 
             <x-ui.card :padding="false">
                 <x-slot name="header">
                     <div class="flex items-center justify-between gap-3">
                         <h3 class="font-display text-lg font-semibold text-ink">Continue learning</h3>
-                        <x-ui.badge variant="neutral">No courses yet</x-ui.badge>
+                        <x-ui.button size="sm" variant="ghost" :href="route('learning.index')">My Learning</x-ui.button>
                     </div>
                 </x-slot>
 
                 <div class="p-5">
-                    <x-ui.empty-state
-                        icon="graduation"
-                        title="Your learning journey starts here"
-                        description="Browse the catalogue and enrol in a course to see your progress and next lessons here.">
-                        <x-slot name="action">
-                            <x-ui.button :href="route('catalogue.index')">Browse the catalogue</x-ui.button>
-                        </x-slot>
-                    </x-ui.empty-state>
+                    @if ($continueLearning->isEmpty())
+                        <x-ui.empty-state
+                            icon="graduation"
+                            title="Your learning journey starts here"
+                            description="Browse the catalogue and enrol in a course to see your progress and next lessons here.">
+                            <x-slot name="action">
+                                <x-ui.button :href="route('catalogue.index')">Browse the catalogue</x-ui.button>
+                            </x-slot>
+                        </x-ui.empty-state>
+                    @else
+                        <ul class="divide-y divide-line">
+                            @foreach ($continueLearning as $enrollment)
+                                @php
+                                    $course = $enrollment->course;
+                                    $isPublic = $course->status->isPublished() && $course->visibility->isPublic();
+                                @endphp
+                                <li class="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                                    <span class="relative flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-crimson to-crimson-dark">
+                                        @if ($course->coverUrl())
+                                            <img src="{{ $course->coverUrl() }}" alt="" class="h-full w-full object-cover">
+                                        @else
+                                            <span class="font-display text-xs font-bold text-white/90">{{ $course->code }}</span>
+                                        @endif
+                                    </span>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="truncate font-medium text-ink">{{ $course->title }}</p>
+                                        <p class="truncate text-xs text-ink/60">{{ $course->code }} · {{ $course->department?->name ?? 'No department' }}</p>
+                                    </div>
+                                    <x-ui.button size="sm" variant="secondary" :href="$isPublic ? route('catalogue.show', $course) : route('learning.index')">
+                                        Continue
+                                    </x-ui.button>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
                 </div>
             </x-ui.card>
         @endif

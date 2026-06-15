@@ -222,15 +222,7 @@
                             </dl>
 
                             <div class="mt-6">
-                                @auth
-                                    <x-ui.button class="w-full" :href="route('dashboard')">Go to your dashboard</x-ui.button>
-                                    <p class="mt-2 text-center text-xs text-ink/50">Enrolment opens soon.</p>
-                                @else
-                                    <x-ui.button class="w-full" :href="route('register')">Create an account to enrol</x-ui.button>
-                                    <p class="mt-2 text-center text-xs text-ink/50">
-                                        Already a member? <a href="{{ route('login') }}" class="text-crimson hover:underline">Log in</a>
-                                    </p>
-                                @endauth
+                                @include('catalogue._enrol')
                             </div>
                         </div>
                     </div>

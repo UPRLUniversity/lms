@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\Role;
 use App\Models\User;
+use App\Policies\EnrollmentPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -49,6 +50,15 @@ class AppServiceProvider extends ServiceProvider
         // Ability for "may this user grant the named role?" — backed by the policy
         // so the privilege-escalation rule lives in one place.
         Gate::define('grantRole', [UserPolicy::class, 'grantRole']);
+
+        // Course-scoped enrolment abilities live in EnrollmentPolicy but take a
+        // Course (whose own policy is CoursePolicy), so they're registered as named
+        // gates. Enrollment-instance abilities (approve/reject/withdraw) resolve to
+        // EnrollmentPolicy through normal auto-discovery and need no registration.
+        Gate::define('viewRoster', [EnrollmentPolicy::class, 'viewRoster']);
+        Gate::define('manageRoster', [EnrollmentPolicy::class, 'manageRoster']);
+        Gate::define('enrollOthers', [EnrollmentPolicy::class, 'enrollOthers']);
+        Gate::define('approveEnrollments', [EnrollmentPolicy::class, 'approveEnrollments']);
 
         $this->brandedAuthMail();
     }

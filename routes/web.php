@@ -1,17 +1,24 @@
 <?php
 
 use App\Enums\CourseStatus;
+use App\Enums\EnrollmentStatus;
 use App\Enums\Role;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CatalogueController;
+use App\Http\Controllers\Courses\AdminEnrollmentController;
+use App\Http\Controllers\Courses\BulkEnrollmentController;
 use App\Http\Controllers\Courses\CourseController;
 use App\Http\Controllers\Courses\CourseCurriculumController;
 use App\Http\Controllers\Courses\CourseWorkflowController;
+use App\Http\Controllers\Courses\EnrollmentApprovalController;
+use App\Http\Controllers\Courses\EnrollmentController;
 use App\Http\Controllers\Courses\LessonController;
 use App\Http\Controllers\Courses\ModuleController;
+use App\Http\Controllers\Courses\MyLearningController;
+use App\Http\Controllers\Courses\RosterController;
 use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ProfileController;
@@ -61,6 +68,33 @@ Route::get('/dashboard', function () {
             'inReview' => (clone $mine)->where('status', CourseStatus::Review->value)->count(),
             'published' => (clone $mine)->where('status', CourseStatus::Published->value)->count(),
         ];
+    } else {
+        // Student: their real learning at a glance + courses to continue.
+        $enrollments = $user->enrollments()
+            ->with(['course.department', 'course.media'])
+            ->whereIn('status', [
+                EnrollmentStatus::Active->value,
+                EnrollmentStatus::Pending->value,
+                EnrollmentStatus::Waitlisted->value,
+                EnrollmentStatus::Completed->value,
+            ])
+            ->get();
+
+        $data['stats'] = [
+            'inProgress' => $enrollments->where('status', EnrollmentStatus::Active)->count(),
+            'completed' => $enrollments->where('status', EnrollmentStatus::Completed)->count(),
+            'awaiting' => $enrollments->whereIn('status', [
+                EnrollmentStatus::Pending,
+                EnrollmentStatus::Waitlisted,
+            ])->count(),
+        ];
+
+        // The active courses to "continue", most recently enrolled first.
+        $data['continueLearning'] = $enrollments
+            ->where('status', EnrollmentStatus::Active)
+            ->sortByDesc('enrolled_at')
+            ->take(3)
+            ->values();
     }
 
     return view('dashboard', $data);
@@ -80,6 +114,19 @@ Route::middleware('auth')->group(function () {
 
     // In-editor image uploads (TinyMCE) → MediaUploadService.
     Route::post('/editor/upload', [EditorUploadController::class, 'store'])->name('editor.upload');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Student enrolment — self-enrol, My Learning, self-withdraw
+|--------------------------------------------------------------------------
+| Verified accounts only. The service resolves a self-enrolment to active / pending /
+| waitlisted; withdrawing is authorized by the EnrollmentPolicy (owner or staff).
+*/
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/my-learning', [MyLearningController::class, 'index'])->name('learning.index');
+    Route::post('/courses/{course}/enrol', [EnrollmentController::class, 'store'])->name('enrollment.store');
+    Route::delete('/enrolments/{enrollment}', [EnrollmentController::class, 'destroy'])->name('enrollment.withdraw');
 });
 
 /*
@@ -171,6 +218,30 @@ Route::middleware(['auth', 'verified'])
         Route::post('courses/{course}/return', [CourseWorkflowController::class, 'returnToDraft'])->name('courses.return');
         Route::post('courses/{course}/archive', [CourseWorkflowController::class, 'archive'])->name('courses.archive');
         Route::post('courses/{course}/restore', [CourseWorkflowController::class, 'restore'])->name('courses.restore');
+
+        /*
+        | Enrolment management (instructors + admins; each action policy-gated).
+        */
+
+        // Approval queue — admins + lead instructors.
+        Route::get('approvals', [EnrollmentApprovalController::class, 'index'])->name('enrollments.approvals');
+        Route::post('approvals/bulk', [EnrollmentApprovalController::class, 'bulkApprove'])->name('enrollments.bulk-approve');
+        Route::post('approvals/{enrollment}/approve', [EnrollmentApprovalController::class, 'approve'])->name('enrollments.approve');
+        Route::post('approvals/{enrollment}/reject', [EnrollmentApprovalController::class, 'reject'])->name('enrollments.reject');
+
+        // Direct staff enrolment — posted from the roster and from a user's admin page.
+        Route::post('enrollments', [AdminEnrollmentController::class, 'store'])->name('enrollment.admin.store');
+
+        // Bulk CSV import (admins): template, upload→preview, confirm.
+        Route::get('enrollments/import', [BulkEnrollmentController::class, 'create'])->name('enrollments.bulk.create');
+        Route::get('enrollments/import/template', [BulkEnrollmentController::class, 'template'])->name('enrollments.bulk.template');
+        Route::post('enrollments/import/preview', [BulkEnrollmentController::class, 'preview'])->name('enrollments.bulk.preview');
+        Route::post('enrollments/import', [BulkEnrollmentController::class, 'store'])->name('enrollments.bulk.store');
+
+        // Per-course roster — tabbed, searchable, with capacity meter + CSV export.
+        Route::get('courses/{course}/roster', [RosterController::class, 'index'])->name('courses.roster');
+        Route::get('courses/{course}/roster/export', [RosterController::class, 'export'])->name('courses.roster.export');
+        Route::delete('courses/{course}/roster/{enrollment}', [RosterController::class, 'destroy'])->name('courses.roster.withdraw');
     });
 
 // Short-lived signed access to a private file (PrivateFileService::temporaryUrl).
