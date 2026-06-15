@@ -24,6 +24,7 @@ class StoreCourseRequest extends FormRequest
             'code' => ['required', 'string', 'max:20', 'unique:courses,code'],
             'department_id' => ['required', 'integer', 'exists:departments,id'],
             'level' => ['required', Rule::in(CourseLevel::values())],
+            'summary' => ['nullable', 'string', 'max:500'],
         ];
     }
 

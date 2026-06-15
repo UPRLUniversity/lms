@@ -106,6 +106,32 @@ class UserManagementTest extends TestCase
         $this->assertTrue($superAdmin->fresh()->is_active);
     }
 
+    public function test_super_admin_cannot_deactivate_themselves(): void
+    {
+        $superAdmin = $this->userWithRole(Role::SuperAdmin->value);
+
+        $this->actingAs($superAdmin)
+            ->patch(route('admin.users.status', $superAdmin), ['is_active' => 0])
+            ->assertForbidden();
+
+        $this->assertTrue($superAdmin->fresh()->is_active, 'A super-admin cannot lock themselves out.');
+    }
+
+    public function test_a_user_cannot_change_their_own_role(): void
+    {
+        $admin = $this->userWithRole(Role::Admin->value);
+
+        $this->actingAs($admin)->put(route('admin.users.update', $admin), [
+            'name' => $admin->name,
+            'email' => $admin->email,
+            'role' => Role::Student->value,
+        ])->assertRedirect(route('admin.users.index'));
+
+        $fresh = $admin->fresh();
+        $this->assertTrue($fresh->hasRole(Role::Admin->value), 'Own role is unchanged.');
+        $this->assertFalse($fresh->hasRole(Role::Student->value), 'Self-demotion is ignored.');
+    }
+
     public function test_user_list_can_be_searched_and_filtered_by_role(): void
     {
         $admin = $this->userWithRole(Role::Admin->value);

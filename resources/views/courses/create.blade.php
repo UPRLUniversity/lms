@@ -41,6 +41,12 @@
                     </select>
                 </x-ui.field>
 
+                <x-ui.field name="summary" label="Caption" hint="A one-line tagline for the catalogue. You can refine it later.">
+                    <textarea id="summary" name="summary" rows="2" maxlength="500"
+                              class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson"
+                              placeholder="e.g. Master the fundamentals of public relations in a Nigerian context.">{{ old('summary') }}</textarea>
+                </x-ui.field>
+
                 @if ($departments->isEmpty())
                     <p class="rounded-xl bg-gold/10 px-4 py-3 text-sm text-ink/70">
                         No departments exist yet. An admin needs to add a faculty and department first.

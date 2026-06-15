@@ -69,4 +69,30 @@ class CatalogueTest extends TestCase
             ->assertSee('Undergrad PR')
             ->assertDontSee('Postgrad Leadership');
     }
+
+    public function test_catalogue_sorts_by_title(): void
+    {
+        Course::factory()->published()->create(['title' => 'Zebra Studies']);
+        Course::factory()->published()->create(['title' => 'Alpha Studies']);
+
+        $response = $this->get(route('catalogue.index', ['sort' => 'title']))->assertOk();
+
+        $content = $response->getContent();
+        $this->assertLessThan(
+            strpos($content, 'Zebra Studies'),
+            strpos($content, 'Alpha Studies'),
+            'Alpha should appear before Zebra when sorting by title.',
+        );
+    }
+
+    public function test_an_ajax_request_returns_only_the_results_grid(): void
+    {
+        Course::factory()->published()->create(['title' => 'Ajax Course']);
+
+        $response = $this->get(route('catalogue.index'), ['X-Requested-With' => 'XMLHttpRequest'])->assertOk();
+
+        $response->assertSee('Ajax Course');
+        // The partial excludes the page chrome (hero + public nav).
+        $response->assertDontSee('Find a course worth your time.');
+    }
 }

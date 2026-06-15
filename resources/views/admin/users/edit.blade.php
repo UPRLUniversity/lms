@@ -28,19 +28,32 @@
                     <x-ui.field name="title" label="Title" :value="old('title', $user->title)" />
                 </div>
 
-                <x-ui.field name="role" label="Role" required
-                            :hint="$canAssignRoles ? null : 'You do not have permission to change roles.'">
-                    <select id="role" name="role" @disabled(! $canAssignRoles)
-                            class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson disabled:opacity-60">
-                        @foreach ($roles as $r)
-                            <option value="{{ $r->value }}" @selected(old('role', $currentRole) === $r->value)>{{ $r->label() }}</option>
-                        @endforeach
-                        {{-- Show the user's existing privileged role even if this admin can't grant it. --}}
-                        @if ($currentRole && ! collect($roles)->contains(fn ($r) => $r->value === $currentRole))
-                            <option value="{{ $currentRole }}" selected>{{ \App\Enums\Role::from($currentRole)->label() }}</option>
-                        @endif
-                    </select>
-                </x-ui.field>
+                @if ($isSelf)
+                    {{-- You can never change your own role (no self-promotion / lockout). --}}
+                    <div class="space-y-1.5">
+                        <span class="block text-sm font-medium text-ink">Role</span>
+                        <div class="flex items-center gap-2">
+                            @if ($currentRole)
+                                <x-ui.role-badge :role="$currentRole" />
+                            @endif
+                            <span class="text-sm text-ink/60">You can’t change your own role.</span>
+                        </div>
+                    </div>
+                @else
+                    <x-ui.field name="role" label="Role" required
+                                :hint="$canAssignRoles ? null : 'You do not have permission to change roles.'">
+                        <select id="role" name="role" @disabled(! $canAssignRoles)
+                                class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson disabled:opacity-60">
+                            @foreach ($roles as $r)
+                                <option value="{{ $r->value }}" @selected(old('role', $currentRole) === $r->value)>{{ $r->label() }}</option>
+                            @endforeach
+                            {{-- Show the user's existing privileged role even if this admin can't grant it. --}}
+                            @if ($currentRole && ! collect($roles)->contains(fn ($r) => $r->value === $currentRole))
+                                <option value="{{ $currentRole }}" selected>{{ \App\Enums\Role::from($currentRole)->label() }}</option>
+                            @endif
+                        </select>
+                    </x-ui.field>
+                @endif
 
                 <div class="flex items-center justify-between gap-3">
                     <div>

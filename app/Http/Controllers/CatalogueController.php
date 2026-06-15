@@ -16,12 +16,20 @@ use Illuminate\View\View;
  */
 class CatalogueController extends Controller
 {
+    /** Sort options offered on the catalogue → ordering applied to the query. */
+    private const SORTS = ['newest', 'oldest', 'title'];
+
     public function index(Request $request): View
     {
         $search = trim((string) $request->query('q', ''));
         $faculty = (string) $request->query('faculty', '');
         $department = (string) $request->query('department', '');
         $level = (string) $request->query('level', '');
+
+        $sort = (string) $request->query('sort', 'newest');
+        if (! in_array($sort, self::SORTS, true)) {
+            $sort = 'newest';
+        }
 
         $courses = Course::query()
             ->inCatalogue()
@@ -37,16 +45,27 @@ class CatalogueController extends Controller
             ->when(in_array($level, CourseLevel::values(), true), fn ($q) => $q->where('level', $level))
             ->when($department !== '', fn ($q) => $q->whereHas('department', fn ($d) => $d->where('slug', $department)))
             ->when($faculty !== '', fn ($q) => $q->whereHas('department.faculty', fn ($f) => $f->where('slug', $faculty)))
-            ->latest('published_at')
+            ->when($sort === 'title', fn ($q) => $q->orderBy('title'))
+            ->when($sort === 'oldest', fn ($q) => $q->oldest('published_at'))
+            ->when($sort === 'newest', fn ($q) => $q->latest('published_at'))
             ->paginate(9)
             ->withQueryString();
 
-        return view('catalogue.index', [
+        $data = [
             'courses' => $courses,
             'faculties' => Faculty::query()->with('departments')->orderBy('name')->get(),
             'levels' => CourseLevel::cases(),
-            'filters' => compact('search', 'faculty', 'department', 'level'),
-        ]);
+            'filters' => compact('search', 'faculty', 'department', 'level', 'sort'),
+        ];
+
+        // Live filtering: return only the results grid for an AJAX request, the
+        // full page otherwise (the same progressive-enhancement pattern as the
+        // admin data tables — no full reload when JS is on, still works without it).
+        if ($request->ajax() || $request->wantsJson()) {
+            return view('catalogue._grid', $data);
+        }
+
+        return view('catalogue.index', $data);
     }
 
     public function show(Course $course): View

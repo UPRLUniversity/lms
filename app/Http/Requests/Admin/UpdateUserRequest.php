@@ -22,6 +22,7 @@ class UpdateUserRequest extends FormRequest
     {
         /** @var User $target */
         $target = $this->route('user');
+        $isSelf = $this->user()->is($target);
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -31,7 +32,9 @@ class UpdateUserRequest extends FormRequest
             ],
             'phone' => ['nullable', 'string', 'max:40'],
             'title' => ['nullable', 'string', 'max:120'],
-            'role' => [
+            // You can never change your OWN role (no self-promotion / self-demotion),
+            // so for self the field is ignored entirely; the controller skips it too.
+            'role' => $isSelf ? ['nullable'] : [
                 'required',
                 Rule::in(Role::values()),
                 function ($attr, $value, $fail) use ($target) {

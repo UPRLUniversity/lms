@@ -1,5 +1,6 @@
 @php
     $user = auth()->user();
+    $primaryRole = $user?->roles->first()?->name;
 @endphp
 
 <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-card/90 px-4 backdrop-blur sm:px-6">
@@ -44,6 +45,9 @@
                         <span class="block text-sm font-medium leading-tight text-ink">{{ $user?->name }}</span>
                         <span class="block text-xs leading-tight text-ink/70">{{ $user?->email }}</span>
                     </span>
+                    @if ($primaryRole)
+                        <span class="hidden sm:inline-flex"><x-ui.role-badge :role="$primaryRole" /></span>
+                    @endif
                 </button>
             </x-slot>
 

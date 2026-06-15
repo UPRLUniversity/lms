@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CourseStatus;
 use App\Enums\Role;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Courses\ModuleController;
 use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Course;
 use App\Models\User;
 use App\Models\UserInvitation;
 use App\Notifications\UserInvitationNotification;
@@ -36,7 +38,32 @@ Route::get('/courses', [CatalogueController::class, 'index'])->name('catalogue.i
 Route::get('/courses/{course}', [CatalogueController::class, 'show'])->name('catalogue.show');
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $user = auth()->user();
+    $isStaff = $user->hasAnyRole([Role::Instructor->value, Role::Admin->value, Role::SuperAdmin->value]);
+    $isAdmin = $user->hasAnyRole([Role::Admin->value, Role::SuperAdmin->value]);
+
+    $data = ['isStaff' => $isStaff, 'isAdmin' => $isAdmin, 'isAuditor' => $user->hasRole(Role::Auditor->value)];
+
+    if ($isAdmin || $user->hasRole(Role::Auditor->value)) {
+        // Whole-platform view for admins/auditors.
+        $data['stats'] = [
+            'courses' => Course::count(),
+            'inReview' => Course::where('status', CourseStatus::Review->value)->count(),
+            'published' => Course::where('status', CourseStatus::Published->value)->count(),
+            'people' => User::count(),
+        ];
+    } elseif ($user->hasRole(Role::Instructor->value)) {
+        // The instructor's own courses by status.
+        $mine = Course::forInstructor($user);
+        $data['stats'] = [
+            'courses' => (clone $mine)->count(),
+            'drafts' => (clone $mine)->where('status', CourseStatus::Draft->value)->count(),
+            'inReview' => (clone $mine)->where('status', CourseStatus::Review->value)->count(),
+            'published' => (clone $mine)->where('status', CourseStatus::Published->value)->count(),
+        ];
+    }
+
+    return view('dashboard', $data);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {

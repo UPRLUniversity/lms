@@ -7,39 +7,47 @@
  * exposes sort/pagination as real <a data-nav href> links + row actions as
  * <form data-ajax> — so everything still works with JavaScript disabled.
  */
-export default function dataTable(endpoint) {
+export default function dataTable(endpoint, options = {}) {
     return {
         endpoint,
         loading: false,
-        // Two-way bound to the search box + role <select>.
-        params: { search: '', role: '' },
+        // Two-way bound to the filter controls. Defaults to the admin tables'
+        // search/role; any view can pass its own param set (e.g. the catalogue's
+        // q/faculty/department/level/sort) and the live fetch-and-swap is identical.
+        params: { ...(options.params ?? { search: '', role: '' }) },
+        // The pristine values, so "is filtered" ignores a non-empty default (sort).
+        defaults: { ...(options.params ?? { search: '', role: '' }) },
         // Sort/page live on the URL the server renders; we track the live URL so
         // row actions can re-fetch the exact current view.
         currentUrl: window.location.href,
 
         init() {
             const url = new URL(window.location.href);
-            this.params.search = url.searchParams.get('search') ?? '';
-            this.params.role = url.searchParams.get('role') ?? '';
+            for (const key of Object.keys(this.params)) {
+                // Only override the default when the param is actually in the URL,
+                // so non-empty defaults (e.g. sort='newest') survive a fresh load.
+                const value = url.searchParams.get(key);
+                if (value !== null) this.params[key] = value;
+            }
             this.currentUrl = window.location.href;
         },
 
         get isFiltered() {
-            return this.params.search !== '' || this.params.role !== '';
+            return Object.keys(this.params).some((key) => (this.params[key] ?? '') !== (this.defaults[key] ?? ''));
         },
 
-        /** Apply the search/role controls, resetting to page 1 but keeping sort. */
+        /** Apply the filter controls, resetting to page 1. */
         filter() {
             const url = new URL(this.currentUrl, window.location.origin);
-            this.setOrDelete(url, 'search', this.params.search.trim());
-            this.setOrDelete(url, 'role', this.params.role);
+            for (const [key, value] of Object.entries(this.params)) {
+                this.setOrDelete(url, key, typeof value === 'string' ? value.trim() : value);
+            }
             url.searchParams.delete('page');
             this.go(url.toString());
         },
 
         clearFilters() {
-            this.params.search = '';
-            this.params.role = '';
+            this.params = { ...this.defaults };
             this.filter();
         },
 

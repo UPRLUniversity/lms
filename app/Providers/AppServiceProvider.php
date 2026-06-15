@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\Role;
+use App\Models\User;
 use App\Policies\UserPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -27,8 +28,22 @@ class AppServiceProvider extends ServiceProvider
     {
         // The super-admin passes every authorization check. Returning null for
         // everyone else lets the normal policy/permission logic run.
-        Gate::before(function ($user, string $ability) {
-            return $user->hasRole(Role::SuperAdmin->value) ? true : null;
+        //
+        // Exception: a super-admin must not be able to deactivate their own
+        // account (self-lockout). For that self-targeted ability we defer to the
+        // policy, which forbids acting on self. (Self role-change is blocked in the
+        // user controller / update request, since assignRoles carries no model.)
+        Gate::before(function ($user, string $ability, array $arguments = []) {
+            if (! $user->hasRole(Role::SuperAdmin->value)) {
+                return null;
+            }
+
+            $target = $arguments[0] ?? null;
+            if ($ability === 'setActiveStatus' && $target instanceof User && $user->is($target)) {
+                return null;
+            }
+
+            return true;
         });
 
         // Ability for "may this user grant the named role?" — backed by the policy

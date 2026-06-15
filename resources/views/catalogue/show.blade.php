@@ -35,7 +35,7 @@
                     <span class="rounded-full bg-gold/90 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-ink">{{ $course->level->label() }}</span>
                 </div>
 
-                <h1 class="mt-4 max-w-2xl font-display text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">{{ $course->title }}</h1>
+                <h1 class="mt-4 max-w-2xl font-display text-3xl font-bold leading-tight text-white sm:text-4xl lg:text-5xl">{{ $course->title }}</h1>
 
                 @if ($course->summary)
                     <p class="mt-5 max-w-2xl text-lg leading-relaxed text-white/85">{{ $course->summary }}</p>
@@ -63,7 +63,7 @@
             <div class="lg:col-span-2 lg:py-10">
                 {{-- Learning objectives --}}
                 @if (! empty($course->learning_objectives))
-                    <section aria-labelledby="objectives-heading" class="rounded-2xl border border-line bg-card p-6 shadow-sm lg:-mt-16">
+                    <section aria-labelledby="objectives-heading" class="relative z-10 rounded-2xl border border-line bg-card p-6 shadow-sm lg:-mt-16">
                         <h2 id="objectives-heading" class="font-display text-xl font-semibold text-ink">What you'll learn</h2>
                         <ul class="mt-4 grid gap-3 sm:grid-cols-2">
                             @foreach ($course->learning_objectives as $objective)
@@ -184,7 +184,7 @@
 
             {{-- Sticky enrol card --}}
             <aside class="lg:py-10">
-                <div class="lg:sticky lg:top-24">
+                <div class="relative z-10 lg:sticky lg:top-24">
                     <div class="overflow-hidden rounded-2xl border border-line bg-card shadow-sm lg:-mt-32">
                         <div class="aspect-[16/9] bg-gradient-to-br from-crimson to-crimson-dark">
                             @if ($cover)

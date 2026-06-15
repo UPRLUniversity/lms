@@ -27,9 +27,9 @@
 
         {{-- Public top bar --}}
         <header class="sticky top-0 z-30 border-b border-line bg-card/90 backdrop-blur">
-            <nav class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3.5 lg:px-8" aria-label="Primary">
+            <nav class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-8" aria-label="Primary">
                 <a href="{{ url('/') }}" class="inline-flex rounded-lg focus-ring" aria-label="{{ config('brand.name') }} home">
-                    <x-brand.logo variant="color" alt="{{ config('brand.short') }}" class="h-11 w-auto" />
+                    <x-brand.logo variant="color" alt="{{ config('brand.short') }}" class="h-14 w-auto sm:h-16" />
                 </a>
 
                 <div class="flex items-center gap-1 sm:gap-2">

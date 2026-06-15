@@ -28,7 +28,8 @@ class CourseController extends Controller
         $this->authorize('viewAny', Course::class);
 
         $user = $request->user();
-        $isAdmin = $user->hasRole('admin');
+        // Admins and super-admins govern every course; instructors see only theirs.
+        $isAdmin = $user->hasAnyRole(['admin', 'super-admin']);
 
         $status = (string) $request->query('status', '');
 
@@ -69,6 +70,7 @@ class CourseController extends Controller
             'code' => $data['code'],
             'department_id' => $data['department_id'],
             'level' => $data['level'],
+            'summary' => $data['summary'] ?? null,
             'status' => CourseStatus::Draft,
             'created_by' => $request->user()->id,
         ]);

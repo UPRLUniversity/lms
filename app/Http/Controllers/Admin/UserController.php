@@ -129,6 +129,7 @@ class UserController extends Controller
             'user' => $user->load('roles'),
             'roles' => $this->grantableRoles(),
             'currentRole' => $user->roles->first()?->name,
+            'isSelf' => $this->user()->is($user),
         ]);
     }
 
@@ -143,7 +144,8 @@ class UserController extends Controller
             'title' => $data['title'] ?? null,
         ]);
 
-        if ($this->user()->can('assignRoles', User::class)) {
+        // Never let anyone change their own role (self-promotion/demotion).
+        if (! $this->user()->is($user) && $this->user()->can('assignRoles', User::class)) {
             $user->syncRoles([$data['role']]);
         }
 
