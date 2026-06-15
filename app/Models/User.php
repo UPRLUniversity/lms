@@ -83,6 +83,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * This user's per-lesson progress rows (the basis of the learning player and
+     * history). Keyed work happens in LearningService.
+     *
+     * @return HasMany<LessonProgress, $this>
+     */
+    public function lessonProgress(): HasMany
+    {
+        return $this->hasMany(LessonProgress::class);
+    }
+
+    /**
      * Two-letter initials for the avatar fallback (e.g. "Ada Lovelace" → "AL").
      */
     public function initials(): string

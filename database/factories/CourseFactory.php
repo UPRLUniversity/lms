@@ -6,6 +6,7 @@ use App\Enums\CourseLevel;
 use App\Enums\CourseStatus;
 use App\Enums\CourseVisibility;
 use App\Enums\EnrollmentMode;
+use App\Enums\ProgressionMode;
 use App\Models\Course;
 use App\Models\Department;
 use App\Models\User;
@@ -86,6 +87,11 @@ class CourseFactory extends Factory
     public function inviteOnly(): static
     {
         return $this->mode(EnrollmentMode::InviteOnly);
+    }
+
+    public function sequential(): static
+    {
+        return $this->state(fn () => ['progression_mode' => ProgressionMode::Sequential->value]);
     }
 
     /**

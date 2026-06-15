@@ -224,3 +224,47 @@ Decisions made where CLAUDE.md allowed discretion. Newest at the bottom.
    waitlist / Awaiting approval / You're enrolled / Enrolment by invitation / opens-or-
    closed. Staff viewing their own course get a "Manage roster" link instead. Added an
    `error` flash channel to the toast stack for graceful self-enrol failures.
+
+## Section 4 — The Learning Player (2026-06-15)
+
+1. **Completion is a state on a unique row, never an increment.** `lesson_progress`
+   has a `(user_id, lesson_id)` unique index; "Complete & Continue" `firstOrNew`s that
+   row and only writes when not already complete. So a double-click / retried request
+   is idempotent by construction — the same single completed row, the same percentage.
+   Verified by a double-submit test.
+2. **Course percentage is derived, then cached.** The truth is `completed ÷ total`
+   lessons (floored, so it only reads 100 when every lesson is genuinely done);
+   `LearningService::recalculate()` recomputes it on each completion event and caches it
+   on `enrollments.progress_percent` (+ `completed_at`) so list pages never derive it
+   per row. At 100% the enrollment flips to `Completed`; un-marking a lesson drops it
+   back to `Active`.
+3. **One service + one snapshot own the domain.** `LearningService` is the only place
+   progress is read/written; it hands the views an immutable `Support\Learning\CourseProgress`
+   snapshot (ordered sequence + one progress query) that answers percent, locking,
+   neighbours and the resume target — so the sidebar renders with **no N+1**.
+4. **Sequential locking is server-side, by index.** A lesson is locked iff its position
+   in the flat sequence is *beyond* the first not-yet-completed lesson. `LearnController::show`
+   redirects a locked direct-URL hit back to the resume point — the URL is not a
+   loophole (covered by UI + direct-URL tests). Stored on `courses.progression_mode`
+   (`free|sequential`), editable in the builder's settings.
+5. **Resume is one entry point.** `GET /learn/{course}` → `CourseProgress::resumeLesson()`
+   (first incomplete, else the start). Every "Continue learning" — My Learning, the
+   course page, the dashboard — routes through `learn.resume`, so there's a single
+   definition of "where was I?".
+6. **Two abilities for the player.** `LessonPolicy@learn` (open a lesson — enrolled
+   students, or staff/auditor *previewing*) vs `@track` (write progress — enrolled
+   students only). Previews render read-only and leave no progress trail.
+   `MediaPolicy@view` was extended so lesson files/resources are downloadable by anyone
+   who may `learn` the owning lesson (private media stays signed/policy-gated, never a
+   public URL).
+7. **Progress writes are async + degrade.** "Complete & Continue" posts JSON
+   (`{percent, module_completed, course_completed, next_url, …}`); the button lives in a
+   real `<form>`, so with JS off it posts normally and the server redirects to the next
+   lesson. Video position is persisted via a lightweight `learn.position` ping (204);
+   uploaded-mp4 resume seeks to `last_position_seconds` on load. The module/course
+   completion micro-moment is a single tasteful overlay (no confetti spam) that respects
+   `prefers-reduced-motion`.
+8. **The player has its own focus chrome.** A dedicated `x-learn-layout` (no app sidebar)
+   gives the curriculum sidebar + lesson + flow-control footer the whole screen;
+   collapsible to a focus mode, a slide-in drawer on mobile, fully keyboard-operable
+   (←/→ navigate with focus safety).

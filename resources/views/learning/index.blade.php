@@ -17,9 +17,14 @@
                     @endif
                 </p>
             </div>
-            <x-ui.button variant="secondary" :href="route('catalogue.index')">
-                <x-ui.icon name="search" class="h-5 w-5" /> Browse the catalogue
-            </x-ui.button>
+            <div class="flex flex-wrap gap-2">
+                <x-ui.button variant="ghost" :href="route('learning.history')">
+                    <x-ui.icon name="clock" class="h-5 w-5" /> History
+                </x-ui.button>
+                <x-ui.button variant="secondary" :href="route('catalogue.index')">
+                    <x-ui.icon name="search" class="h-5 w-5" /> Browse the catalogue
+                </x-ui.button>
+            </div>
         </div>
 
         @if ($enrollments->isEmpty())
@@ -38,7 +43,6 @@
                         $course = $enrollment->course;
                         $cover = $course->coverUrl();
                         $status = $enrollment->status;
-                        $isPublic = $course->status->isPublished() && $course->visibility->isPublic();
                     @endphp
 
                     <div class="group flex flex-col overflow-hidden rounded-2xl border border-line bg-card shadow-sm transition hover:shadow-md">
@@ -65,18 +69,31 @@
                             <h3 class="mt-1 font-display text-lg font-semibold leading-snug text-ink line-clamp-2">{{ $course->title }}</h3>
                             <p class="mt-1 text-sm text-ink/50">{{ $course->department?->name ?? 'No department' }}</p>
 
+                            {{-- Progress bar for courses being learnt --}}
+                            @if (in_array($status, [EnrollmentStatus::Active, EnrollmentStatus::Completed], true))
+                                @php $percent = (int) $enrollment->progress_percent; @endphp
+                                <div class="mt-3">
+                                    <div class="flex items-center justify-between text-xs font-medium text-ink/60">
+                                        <span>{{ $percent }}% complete</span>
+                                    </div>
+                                    <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-ink/5">
+                                        <div class="h-full rounded-full {{ $percent >= 100 ? 'bg-success' : 'bg-crimson' }}" style="width: {{ $percent }}%"></div>
+                                    </div>
+                                </div>
+                            @endif
+
                             {{-- Status-aware action --}}
                             <div class="mt-auto pt-4">
                                 @switch($status)
                                     @case(EnrollmentStatus::Active)
-                                        <x-ui.button size="sm" class="w-full" :href="$isPublic ? route('catalogue.show', $course) : '#'">
+                                        <x-ui.button size="sm" class="w-full" :href="route('learn.resume', $course)">
                                             Continue learning
                                         </x-ui.button>
                                         @break
                                     @case(EnrollmentStatus::Completed)
-                                        <div class="flex items-center justify-center gap-2 rounded-xl bg-success/10 px-4 py-2 text-sm font-medium text-success">
-                                            <x-ui.icon name="check" class="h-4 w-4" stroke-width="2.5" /> Completed
-                                        </div>
+                                        <x-ui.button size="sm" variant="secondary" class="w-full" :href="route('learn.resume', $course)">
+                                            <x-ui.icon name="check" class="h-4 w-4" stroke-width="2.5" /> Completed — revisit
+                                        </x-ui.button>
                                         @break
                                     @case(EnrollmentStatus::Pending)
                                         <div class="flex items-center justify-center gap-2 rounded-xl bg-gold/15 px-4 py-2 text-sm font-medium text-gold">

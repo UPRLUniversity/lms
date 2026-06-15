@@ -5,6 +5,7 @@ namespace App\Http\Requests\Courses;
 use App\Enums\CourseLevel;
 use App\Enums\CourseVisibility;
 use App\Enums\EnrollmentMode;
+use App\Enums\ProgressionMode;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,6 +31,7 @@ class UpdateCourseSettingsRequest extends FormRequest
             'level' => ['required', Rule::in(CourseLevel::values())],
             'visibility' => ['required', Rule::in(CourseVisibility::values())],
             'enrollment_mode' => ['required', Rule::in(EnrollmentMode::values())],
+            'progression_mode' => ['required', Rule::in(ProgressionMode::values())],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'enrollment_opens_at' => ['nullable', 'date'],
             'enrollment_closes_at' => ['nullable', 'date', 'after_or_equal:enrollment_opens_at'],

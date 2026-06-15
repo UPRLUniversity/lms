@@ -41,8 +41,8 @@
         <x-ui.icon name="check" class="h-4 w-4" stroke-width="2.5" />
         {{ $status === EnrollmentStatus::Completed ? 'You completed this course' : "You're enrolled" }}
     </div>
-    <x-ui.button class="w-full" :href="route('learning.index')">
-        {{ $status === EnrollmentStatus::Completed ? 'Revisit in My Learning' : 'Continue learning' }}
+    <x-ui.button class="w-full" :href="route('learn.resume', $course)">
+        {{ $status === EnrollmentStatus::Completed ? 'Revisit the course' : 'Continue learning' }}
     </x-ui.button>
 
 @elseif ($status === EnrollmentStatus::Pending)

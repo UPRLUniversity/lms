@@ -135,8 +135,15 @@
                                     <div class="min-w-0 flex-1">
                                         <p class="truncate font-medium text-ink">{{ $course->title }}</p>
                                         <p class="truncate text-xs text-ink/60">{{ $course->code }} · {{ $course->department?->name ?? 'No department' }}</p>
+                                        @php $percent = (int) $enrollment->progress_percent; @endphp
+                                        <div class="mt-1.5 flex items-center gap-2">
+                                            <div class="h-1 w-full max-w-[12rem] overflow-hidden rounded-full bg-ink/5">
+                                                <div class="h-full rounded-full bg-crimson" style="width: {{ $percent }}%"></div>
+                                            </div>
+                                            <span class="text-[11px] font-medium text-ink/50">{{ $percent }}%</span>
+                                        </div>
                                     </div>
-                                    <x-ui.button size="sm" variant="secondary" :href="$isPublic ? route('catalogue.show', $course) : route('learning.index')">
+                                    <x-ui.button size="sm" variant="secondary" :href="route('learn.resume', $course)">
                                         Continue
                                     </x-ui.button>
                                 </li>

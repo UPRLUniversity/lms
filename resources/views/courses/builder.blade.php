@@ -37,6 +37,11 @@
                     <x-ui.button variant="secondary" size="sm" :href="route('catalogue.show', $course)">
                         <x-ui.icon name="eye" class="h-4 w-4" /> View live
                     </x-ui.button>
+                    @can('viewRoster', $course)
+                        <x-ui.button variant="secondary" size="sm" :href="route('courses.progress', $course)">
+                            <x-ui.icon name="chart" class="h-4 w-4" /> Progress
+                        </x-ui.button>
+                    @endcan
                 @endif
 
                 @if ($canManage && $isDraft)

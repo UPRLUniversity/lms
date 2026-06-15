@@ -123,6 +123,7 @@ class CourseController extends Controller
             'level' => $data['level'],
             'visibility' => $data['visibility'],
             'enrollment_mode' => $data['enrollment_mode'],
+            'progression_mode' => $data['progression_mode'],
             'capacity' => $data['capacity'] ?? null,
             'enrollment_opens_at' => $data['enrollment_opens_at'] ?? null,
             'enrollment_closes_at' => $data['enrollment_closes_at'] ?? null,

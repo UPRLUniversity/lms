@@ -9,6 +9,7 @@ use App\Enums\CourseVisibility;
 use App\Enums\EnrollmentMode;
 use App\Enums\EnrollmentStatus;
 use App\Enums\MediaPurpose;
+use App\Enums\ProgressionMode;
 use App\Models\Concerns\HasMedia;
 use Database\Factories\CourseFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -37,6 +38,7 @@ class Course extends Model
         'status',
         'visibility',
         'enrollment_mode',
+        'progression_mode',
         'capacity',
         'enrollment_opens_at',
         'enrollment_closes_at',
@@ -52,6 +54,7 @@ class Course extends Model
             'level' => CourseLevel::class,
             'visibility' => CourseVisibility::class,
             'enrollment_mode' => EnrollmentMode::class,
+            'progression_mode' => ProgressionMode::class,
             'capacity' => 'integer',
             'enrollment_opens_at' => 'datetime',
             'enrollment_closes_at' => 'datetime',
@@ -251,6 +254,16 @@ class Course extends Model
     public function enrollmentMode(): EnrollmentMode
     {
         return $this->enrollment_mode ?? EnrollmentMode::Open;
+    }
+
+    public function progressionMode(): ProgressionMode
+    {
+        return $this->progression_mode ?? ProgressionMode::Free;
+    }
+
+    public function isSequential(): bool
+    {
+        return $this->progressionMode()->isSequential();
     }
 
     public function hasCapacityLimit(): bool
