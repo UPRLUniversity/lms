@@ -268,3 +268,24 @@ Decisions made where CLAUDE.md allowed discretion. Newest at the bottom.
    gives the curriculum sidebar + lesson + flow-control footer the whole screen;
    collapsible to a focus mode, a slide-in drawer on mobile, fully keyboard-operable
    (←/→ navigate with focus safety).
+
+## Sections 0–4 — Audit polish & hygiene (2026-06-21)
+
+A full audit of Sections 0–4 (tests green, three static audit passes, live role
+walk-through) found no functional gaps. Three cosmetic/hygiene items were resolved so
+future sections inherit them:
+
+1. **`--uprl-gold-ink` (#8A6A12) is now a brand token** (`text-gold-ink`). The base
+   `--uprl-gold` (#C9A227) fails WCAG AA as text on white, so gold TEXT on light
+   surfaces must use the darker ink token. Replaced the one hardcoded hex
+   (`badge.blade.php` solid-gold pill). Future gold-on-light text uses `text-gold-ink`.
+2. **Skeleton loaders are a shared primitive.** Added `<x-ui.skeleton>` /
+   `<x-ui.skeleton-table>` (+ the `.skeleton` shimmer in `app.css`, which freezes to a
+   static bar under `prefers-reduced-motion`). The reusable `dataTable` now overlays a
+   skeleton on its results region while fetching, so every live list (People,
+   Invitations, Roster, and any future one) shows skeletons consistently — satisfying
+   the DoD "skeleton loaders for slow lists" rather than only dimming. Showcased on
+   `/styleguide`.
+3. **Removed dead Breeze leftovers** `components/nav-link` and
+   `responsive-nav-link.blade.php` — superseded by the custom sidebar/topbar, rendered
+   nowhere, and the only remaining source of non-brand `indigo/gray` classes.

@@ -18,7 +18,7 @@
         'neutral' => 'bg-white text-ink ring-1 ring-black/5 shadow-sm',
         'crimson' => 'bg-white text-crimson ring-1 ring-black/5 shadow-sm',
         'success' => 'bg-white text-success ring-1 ring-black/5 shadow-sm',
-        'gold' => 'bg-white text-[#8a6a12] ring-1 ring-black/5 shadow-sm',
+        'gold' => 'bg-white text-gold-ink ring-1 ring-black/5 shadow-sm',
     ];
 
     $palette = $solid ? $solidVariants : $tinted;

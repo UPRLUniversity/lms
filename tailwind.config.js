@@ -27,7 +27,10 @@ export default {
                 surface: brand('--uprl-surface'),
                 card: brand('--uprl-card'),
                 success: brand('--uprl-green'),
-                gold: brand('--uprl-gold'),
+                gold: {
+                    DEFAULT: brand('--uprl-gold'),
+                    ink: brand('--uprl-gold-ink'),
+                },
                 line: brand('--uprl-border'),
             },
             fontFamily: {

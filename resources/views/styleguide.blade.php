@@ -23,6 +23,7 @@
                 ['Card', 'bg-card border border-line', '#FFFFFF'],
                 ['Success', 'bg-success', '#0F6B3E'],
                 ['Gold', 'bg-gold', '#C9A227'],
+                ['Gold ink', 'bg-gold-ink', '#8A6A12'],
                 ['Border', 'bg-line', '#E7E5E4'],
             ];
         @endphp
@@ -198,6 +199,20 @@
                             <x-ui.button>Create your first course</x-ui.button>
                         </x-slot>
                     </x-ui.empty-state>
+                </div>
+            </section>
+
+            {{-- Skeleton loaders --}}
+            <section aria-labelledby="sg-skeleton">
+                <h2 id="sg-skeleton" class="font-display text-xl font-semibold text-ink">Skeleton loaders</h2>
+                <p class="mt-1 text-sm text-ink/70">The one loading shimmer for slow lists/content — <code>&lt;x-ui.skeleton&gt;</code> for a single bar, <code>&lt;x-ui.skeleton-table&gt;</code> for list placeholders. Used by every live data table. Freezes to a static bar under reduced motion.</p>
+                <div class="mt-5 grid gap-6 lg:grid-cols-2">
+                    <div class="space-y-3">
+                        <x-ui.skeleton class="h-4 w-2/3" />
+                        <x-ui.skeleton class="h-4 w-1/2" />
+                        <x-ui.skeleton class="h-24 w-full rounded-xl" />
+                    </div>
+                    <x-ui.skeleton-table :rows="3" :cols="4" />
                 </div>
             </section>
 

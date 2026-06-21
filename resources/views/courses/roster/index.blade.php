@@ -97,12 +97,17 @@
             </div>
         </form>
 
-        {{-- Results region (swapped in place by dataTable) --}}
-        <div id="roster-results" x-ref="results"
-             @click="onNav($event)" @submit="onAction($event)"
-             :class="loading && 'pointer-events-none opacity-60 transition-opacity'"
-             :aria-busy="loading.toString()">
-            @include('courses.roster._table')
+        {{-- Results region (swapped in place by dataTable); skeleton overlay while fetching --}}
+        <div class="relative">
+            <div x-show="loading" x-cloak class="absolute inset-0 z-10">
+                <x-ui.skeleton-table :rows="6" :cols="5" />
+            </div>
+            <div id="roster-results" x-ref="results"
+                 @click="onNav($event)" @submit="onAction($event)"
+                 :class="loading && 'pointer-events-none opacity-0'"
+                 :aria-busy="loading.toString()">
+                @include('courses.roster._table')
+            </div>
         </div>
     </div>
 </x-app-layout>

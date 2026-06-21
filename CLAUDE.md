@@ -77,6 +77,8 @@ Competence, Character". This file governs every session. Re-read it before actin
   --uprl-card:     #FFFFFF
   --uprl-green:    #0F6B3E   (success, completion ticks — echoes brochure)
   --uprl-gold:     #C9A227   (certificates, achievement accents only)
+  --uprl-gold-ink: #8A6A12   (gold TEXT on light surfaces — `text-gold-ink`; the base
+  gold fails WCAG AA on white, so never use --uprl-gold for text on light)
   --uprl-border:   #E7E5E4
 - Typography: display serif for headings (Fraunces or Playfair Display via
   Bunny Fonts/Google Fonts), Inter for UI/body. Generous line-height, max
@@ -120,6 +122,13 @@ Competence, Character". This file governs every session. Re-read it before actin
   attribute** is cast with `App\Casts\RichHtml` (`RichHtml::class` or `:basic`) so it
   is sanitized on save, and rendered through `<x-ui.prose>`. In-editor images post to
   `editor.upload` → `MediaUploadService`, never base64.
+- **Loading states for lists/slow content** use the shared shimmer primitives
+  `<x-ui.skeleton>` (one bar) / `<x-ui.skeleton-table>` (list placeholder) — never a
+  bespoke spinner-only or ad-hoc loader. The reusable `dataTable` already overlays a
+  skeleton on its results region while fetching; new live lists inherit it for free.
+- **Action feedback** is the single top-right toast stack (`session('status')`/
+  `('error')` or a `toast` window event); **confirmations** use `window.uprlConfirm`
+  (branded SweetAlert2). Never native `confirm()` or inline flash banners.
 
 ## Roles (single university — no multi-tenancy)
 

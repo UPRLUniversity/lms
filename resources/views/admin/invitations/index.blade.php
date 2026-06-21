@@ -33,11 +33,16 @@
 
         {{-- Invitation list — re-send / revoke run without a full-page reload. --}}
         <div x-data="dataTable('{{ route('admin.invitations.index') }}')">
-            <div id="invitations-results" x-ref="results"
-                 @click="onNav($event)" @submit="onAction($event)"
-                 :class="loading && 'pointer-events-none opacity-60 transition-opacity'"
-                 :aria-busy="loading.toString()">
-                @include('admin.invitations._table')
+            <div class="relative">
+                <div x-show="loading" x-cloak class="absolute inset-0 z-10">
+                    <x-ui.skeleton-table :rows="5" :cols="4" />
+                </div>
+                <div id="invitations-results" x-ref="results"
+                     @click="onNav($event)" @submit="onAction($event)"
+                     :class="loading && 'pointer-events-none opacity-0'"
+                     :aria-busy="loading.toString()">
+                    @include('admin.invitations._table')
+                </div>
             </div>
         </div>
     </div>
