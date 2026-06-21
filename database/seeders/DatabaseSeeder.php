@@ -46,6 +46,9 @@ class DatabaseSeeder extends Seeder
 
         // A realistic spread of enrolments across every mode and status.
         $this->call(EnrollmentSeeder::class);
+
+        // Lesson progress: mid-course resume, finished courses, a sequential demo.
+        $this->call(ProgressSeeder::class);
     }
 
     /**

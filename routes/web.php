@@ -12,9 +12,12 @@ use App\Http\Controllers\Courses\AdminEnrollmentController;
 use App\Http\Controllers\Courses\BulkEnrollmentController;
 use App\Http\Controllers\Courses\CourseController;
 use App\Http\Controllers\Courses\CourseCurriculumController;
+use App\Http\Controllers\Courses\CourseProgressController;
 use App\Http\Controllers\Courses\CourseWorkflowController;
 use App\Http\Controllers\Courses\EnrollmentApprovalController;
 use App\Http\Controllers\Courses\EnrollmentController;
+use App\Http\Controllers\Courses\LearnController;
+use App\Http\Controllers\Courses\LearningHistoryController;
 use App\Http\Controllers\Courses\LessonController;
 use App\Http\Controllers\Courses\ModuleController;
 use App\Http\Controllers\Courses\MyLearningController;
@@ -125,8 +128,21 @@ Route::middleware('auth')->group(function () {
 */
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/my-learning', [MyLearningController::class, 'index'])->name('learning.index');
+    Route::get('/history', [LearningHistoryController::class, 'index'])->name('learning.history');
     Route::post('/courses/{course}/enrol', [EnrollmentController::class, 'store'])->name('enrollment.store');
     Route::delete('/enrolments/{enrollment}', [EnrollmentController::class, 'destroy'])->name('enrollment.withdraw');
+
+    /*
+    | The learning player. Course binds by slug; lesson by id (membership re-checked
+    | server-side). The literal "congratulations" segment is declared before the
+    | {lesson} catch so it never resolves as a lesson id.
+    */
+    Route::get('/learn/{course}', [LearnController::class, 'resume'])->name('learn.resume');
+    Route::get('/learn/{course}/congratulations', [LearnController::class, 'congratulations'])->name('learn.congratulations');
+    Route::get('/learn/{course}/{lesson}', [LearnController::class, 'show'])->name('learn.show');
+    Route::post('/learn/{course}/{lesson}/complete', [LearnController::class, 'complete'])->name('learn.complete');
+    Route::post('/learn/{course}/{lesson}/incomplete', [LearnController::class, 'incomplete'])->name('learn.incomplete');
+    Route::post('/learn/{course}/{lesson}/position', [LearnController::class, 'position'])->name('learn.position');
 });
 
 /*
@@ -237,6 +253,9 @@ Route::middleware(['auth', 'verified'])
         Route::get('enrollments/import/template', [BulkEnrollmentController::class, 'template'])->name('enrollments.bulk.template');
         Route::post('enrollments/import/preview', [BulkEnrollmentController::class, 'preview'])->name('enrollments.bulk.preview');
         Route::post('enrollments/import', [BulkEnrollmentController::class, 'store'])->name('enrollments.bulk.store');
+
+        // Per-course learner progress — % per student, last activity, completion heat-strip.
+        Route::get('courses/{course}/progress', [CourseProgressController::class, 'index'])->name('courses.progress');
 
         // Per-course roster — tabbed, searchable, with capacity meter + CSV export.
         Route::get('courses/{course}/roster', [RosterController::class, 'index'])->name('courses.roster');

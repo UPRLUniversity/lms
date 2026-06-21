@@ -26,6 +26,8 @@ class Enrollment extends Model
         'status',
         'source',
         'enrolled_at',
+        'progress_percent',
+        'completed_at',
         'approved_by',
         'decision_note',
     ];
@@ -36,6 +38,8 @@ class Enrollment extends Model
             'status' => EnrollmentStatus::class,
             'source' => EnrollmentSource::class,
             'enrolled_at' => 'datetime',
+            'progress_percent' => 'integer',
+            'completed_at' => 'datetime',
         ];
     }
 
@@ -153,5 +157,19 @@ class Enrollment extends Model
     public function isActive(): bool
     {
         return $this->status === EnrollmentStatus::Active;
+    }
+
+    public function isComplete(): bool
+    {
+        return $this->status === EnrollmentStatus::Completed;
+    }
+
+    /**
+     * Whether this enrollment grants access to the learning player — an active or
+     * already-completed student (revisiting a finished course is allowed).
+     */
+    public function grantsLearningAccess(): bool
+    {
+        return in_array($this->status, [EnrollmentStatus::Active, EnrollmentStatus::Completed], true);
     }
 }

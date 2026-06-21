@@ -16,6 +16,8 @@
     --uprl-card: 255 255 255;        /* #FFFFFF — card surfaces */
     --uprl-green: 15 107 62;         /* #0F6B3E — success, completion ticks */
     --uprl-gold: 201 162 39;         /* #C9A227 — certificates, achievement accents */
+    --uprl-gold-ink: 138 106 18;     /* #8A6A12 — gold TEXT on light surfaces (AA-safe; the
+                                        base gold fails AA on white). Use `text-gold-ink`. */
     --uprl-border: 231 229 228;      /* #E7E5E4 — hairlines, dividers */
 }
 
@@ -98,6 +100,33 @@
     }
     .uprl-prose hr {
         @apply border-line my-8;
+    }
+
+    /*
+     * Skeleton placeholder — one consistent loading shimmer for slow lists/content.
+     * Use via <x-ui.skeleton> / <x-ui.skeleton-table>. The shimmer freezes to a
+     * static bar under prefers-reduced-motion (handled by the global rule below).
+     */
+    .skeleton {
+        @apply relative overflow-hidden rounded-md bg-ink/10;
+    }
+    .skeleton::after {
+        content: "";
+        @apply absolute inset-0;
+        transform: translateX(-100%);
+        background-image: linear-gradient(
+            90deg,
+            rgb(var(--uprl-card) / 0) 0%,
+            rgb(var(--uprl-card) / 0.55) 50%,
+            rgb(var(--uprl-card) / 0) 100%
+        );
+        animation: uprl-shimmer 1.5s ease-in-out infinite;
+    }
+}
+
+@keyframes uprl-shimmer {
+    100% {
+        transform: translateX(100%);
     }
 }
 

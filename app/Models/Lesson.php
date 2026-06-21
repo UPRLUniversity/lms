@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lesson extends Model
 {
@@ -51,6 +52,16 @@ class Lesson extends Model
     }
 
     /**
+     * Per-student progress rows for this lesson.
+     *
+     * @return HasMany<LessonProgress, $this>
+     */
+    public function progress(): HasMany
+    {
+        return $this->hasMany(LessonProgress::class);
+    }
+
+    /**
      * The primary uploaded file for a file-type lesson (PDF/document/audio) or an
      * uploaded lesson video — stored privately via PrivateFileService.
      */
@@ -67,6 +78,15 @@ class Lesson extends Model
     public function resources(): Collection
     {
         return $this->mediaFor(MediaPurpose::LessonResources);
+    }
+
+    /**
+     * The course this lesson belongs to (through its module). Uses loaded relations
+     * when present so the player resolves it without an extra query.
+     */
+    public function course(): ?Course
+    {
+        return $this->module?->course;
     }
 
     public function isUploadedVideo(): bool

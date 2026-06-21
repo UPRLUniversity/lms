@@ -1,9 +1,11 @@
 @php
     use App\Enums\CourseVisibility;
     use App\Enums\EnrollmentMode;
+    use App\Enums\ProgressionMode;
 
     $objectives = old('learning_objectives', $course->learning_objectives ?: ['']);
     $currentMode = old('enrollment_mode', $course->enrollment_mode?->value ?? EnrollmentMode::Open->value);
+    $currentProgression = old('progression_mode', $course->progression_mode?->value ?? ProgressionMode::Free->value);
     $windowFmt = fn ($v) => $v?->format('Y-m-d\TH:i');
 @endphp
 
@@ -171,6 +173,19 @@
                         </x-ui.field>
                     </div>
                 </div>
+
+                {{-- Progression --}}
+                <x-ui.field name="progression_mode" label="Lesson progression" required
+                            hint="Sequential courses unlock each lesson only after the previous one is completed.">
+                    <select id="progression_mode" name="progression_mode" @change="dirty = true"
+                            class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                        @foreach (ProgressionMode::cases() as $progression)
+                            <option value="{{ $progression->value }}" @selected($currentProgression === $progression->value)>
+                                {{ $progression->label() }}
+                            </option>
+                        @endforeach
+                    </select>
+                </x-ui.field>
 
                 {{-- Learning objectives --}}
                 <div x-data="objectiveRows(@js(array_values($objectives)))" @change="dirty = true">

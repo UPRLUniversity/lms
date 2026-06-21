@@ -70,12 +70,18 @@
 
         {{-- Results region — swapped in place by the dataTable component.
              Clicks on sort/pagination links and row-action submits are delegated
-             here so they keep working after each innerHTML swap. --}}
-        <div id="users-results" x-ref="results"
-             @click="onNav($event)" @submit="onAction($event)"
-             :class="loading && 'pointer-events-none opacity-60 transition-opacity'"
-             :aria-busy="loading.toString()">
-            @include('admin.users._table')
+             here so they keep working after each innerHTML swap. A skeleton overlay
+             covers the table while it fetches (the region carries aria-busy). --}}
+        <div class="relative">
+            <div x-show="loading" x-cloak class="absolute inset-0 z-10">
+                <x-ui.skeleton-table :rows="8" :cols="5" />
+            </div>
+            <div id="users-results" x-ref="results"
+                 @click="onNav($event)" @submit="onAction($event)"
+                 :class="loading && 'pointer-events-none opacity-0'"
+                 :aria-busy="loading.toString()">
+                @include('admin.users._table')
+            </div>
         </div>
     </div>
 </x-app-layout>
