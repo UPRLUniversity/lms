@@ -52,7 +52,13 @@
                 <div class="h-full rounded-full bg-crimson transition-[width] duration-500 ease-out"
                      :style="`width: ${percent}%`" style="width: {{ $snapshot->percent() }}%"></div>
             </div>
-            <p class="mt-1.5 text-[11px] text-ink/45">{{ $snapshot->completedCount() }} of {{ $snapshot->total() }} lessons complete</p>
+            <p class="mt-1.5 text-[11px] text-ink/45">
+                {{ $snapshot->lessonCompletedCount() }} of {{ $snapshot->lessonTotal() }} lessons
+                @if (($snapshot->requiredAssessmentTotal ?? 0) > 0)
+                    · {{ $snapshot->requiredAssessmentComplete }} of {{ $snapshot->requiredAssessmentTotal }} assessments
+                @endif
+                complete
+            </p>
         </div>
     </div>
 
@@ -76,6 +82,13 @@
                 </button>
 
                 <ul x-show="open" x-collapse class="mt-0.5 space-y-0.5 pl-2">
+                    {{-- Pre-module assessments sit before the module's lessons. --}}
+                    @isset($outline)
+                        @foreach ($outline->forModule($module->id)->where('kind', 'assessment')->filter(fn ($i) => $i->placement === 'pre_module') as $assessmentItem)
+                            @include('learn.partials._sidebar_assessment', ['item' => $assessmentItem])
+                        @endforeach
+                    @endisset
+
                     @foreach ($module->lessons as $item)
                         @php
                             $isCurrent = $item->id === $lesson->id;
@@ -127,8 +140,29 @@
                             @endif
                         </li>
                     @endforeach
+
+                    {{-- Post-module assessments sit after the module's lessons. --}}
+                    @isset($outline)
+                        @foreach ($outline->forModule($module->id)->where('kind', 'assessment')->filter(fn ($i) => $i->placement === 'post_module') as $assessmentItem)
+                            @include('learn.partials._sidebar_assessment', ['item' => $assessmentItem])
+                        @endforeach
+                    @endisset
                 </ul>
             </div>
         @endforeach
+
+        {{-- Standalone, course-level assessments at the end of the outline. --}}
+        @isset($outline)
+            @if ($outline->standalone()->isNotEmpty())
+                <div class="mt-1">
+                    <p class="px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-ink/40">Assessments</p>
+                    <ul class="space-y-0.5 pl-2">
+                        @foreach ($outline->standalone() as $assessmentItem)
+                            @include('learn.partials._sidebar_assessment', ['item' => $assessmentItem])
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+        @endisset
     </nav>
 </aside>

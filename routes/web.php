@@ -284,10 +284,11 @@ Route::middleware(['auth', 'verified'])
     ->group(function () {
         // Question bank (course-scoped).
         Route::get('courses/{course}/questions', [QuestionController::class, 'index'])->name('questions.index');
+        Route::get('courses/{course}/questions/create', [QuestionController::class, 'create'])->name('questions.create');
         Route::get('courses/{course}/questions/import', [QuestionController::class, 'importForm'])->name('questions.import.form');
         Route::post('courses/{course}/questions/import', [QuestionController::class, 'import'])->name('questions.import');
         Route::post('courses/{course}/questions', [QuestionController::class, 'store'])->name('questions.store');
-        Route::get('courses/{course}/questions/{question}', [QuestionController::class, 'show'])->name('questions.show');
+        Route::get('courses/{course}/questions/{question}/edit', [QuestionController::class, 'edit'])->name('questions.edit');
         Route::put('courses/{course}/questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
         Route::post('courses/{course}/questions/{question}/duplicate', [QuestionController::class, 'duplicate'])->name('questions.duplicate');
         Route::delete('courses/{course}/questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');

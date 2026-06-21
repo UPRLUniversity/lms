@@ -64,43 +64,61 @@ class QuestionController extends Controller
     }
 
     /**
-     * Question data (raw, with correctness) for populating the editor — manager-only.
+     * The full-page question editor for a new question (type chosen via ?type=).
      */
-    public function show(Course $course, Question $question): JsonResponse
+    public function create(Request $request, Course $course): ViewContract
     {
-        $this->authorize('view', $course);
-        $this->assertBelongs($course, $question);
+        $this->authorize('manageCurriculum', $course);
 
-        return response()->json([
-            'id' => $question->id,
-            'type' => $question->type->value,
-            'difficulty' => $question->difficulty->value,
-            'category_id' => $question->category_id,
-            'prompt' => $question->prompt,
-            'explanation' => $question->explanation,
-            'points' => (float) $question->points,
-            'payload' => $question->payload,
+        $type = QuestionType::tryFrom((string) $request->query('type', QuestionType::McqSingle->value))
+            ?? QuestionType::McqSingle;
+
+        return view('assessments.questions.edit', [
+            'course' => $course,
+            'question' => null,
+            'type' => $type,
+            'categories' => $course->questionCategories()->orderBy('name')->get(),
         ]);
     }
 
-    public function store(QuestionRequest $request, Course $course): JsonResponse
+    /**
+     * The full-page editor for an existing question.
+     */
+    public function edit(Course $course, Question $question): ViewContract
     {
-        $question = $this->bank->create(
+        $this->assertBelongs($course, $question);
+        $this->authorize('update', $question);
+
+        return view('assessments.questions.edit', [
+            'course' => $course,
+            'question' => $question,
+            'type' => $question->type,
+            'categories' => $course->questionCategories()->orderBy('name')->get(),
+        ]);
+    }
+
+    public function store(QuestionRequest $request, Course $course): RedirectResponse
+    {
+        $this->bank->create(
             array_merge($request->validated(), ['course_id' => $course->id]),
             $request->user(),
         );
 
-        return response()->json(['ok' => true, 'message' => 'Question added.', 'question_id' => $question->id]);
+        return redirect()
+            ->route('questions.index', $course)
+            ->with('status', 'Question added to the bank.');
     }
 
-    public function update(QuestionRequest $request, Course $course, Question $question): JsonResponse
+    public function update(QuestionRequest $request, Course $course, Question $question): RedirectResponse
     {
         $this->assertBelongs($course, $question);
         $this->authorize('update', $question);
 
         $this->bank->update($question, $request->validated());
 
-        return response()->json(['ok' => true, 'message' => 'Question saved.']);
+        return redirect()
+            ->route('questions.index', $course)
+            ->with('status', 'Question saved.');
     }
 
     public function duplicate(Course $course, Question $question): JsonResponse

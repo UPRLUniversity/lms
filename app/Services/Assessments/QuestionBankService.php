@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Question;
 use App\Models\User;
 use Illuminate\Support\Str;
+use Mews\Purifier\Facades\Purifier;
 
 /**
  * Authoring side of the question bank: create/update with per-type payload normalisation,
@@ -209,9 +210,11 @@ class QuestionBankService
             return [
                 'id' => (string) ($sub['id'] ?? 's_'.Str::lower(Str::random(8))),
                 'type' => $type->value,
-                'prompt' => (string) ($sub['prompt'] ?? ''),
+                // Sub-prompts/explanations are rich HTML inside the parent's payload JSON,
+                // so they bypass the RichHtml cast — sanitise them here on the same allow-list.
+                'prompt' => $this->cleanRich($sub['prompt'] ?? ''),
                 'points' => (float) ($sub['points'] ?? 1),
-                'explanation' => $sub['explanation'] ?? null,
+                'explanation' => isset($sub['explanation']) ? $this->cleanRich($sub['explanation']) : null,
                 'payload' => $this->normalisePayload($type, $sub['payload'] ?? []),
             ];
         }, $subs));
@@ -220,6 +223,18 @@ class QuestionBankService
     private function withCopyMarker(string $prompt): string
     {
         return $prompt.' <em>(copy)</em>';
+    }
+
+    /**
+     * Sanitise a rich-HTML fragment on the same allow-list the RichHtml cast uses.
+     */
+    private function cleanRich(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return $value === '' ? '' : null;
+        }
+
+        return Purifier::clean($value, 'rich');
     }
 
     /**

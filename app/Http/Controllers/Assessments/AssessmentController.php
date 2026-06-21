@@ -8,7 +8,6 @@ use App\Http\Requests\Assessments\UpdateAssessmentRequest;
 use App\Models\Assessment;
 use App\Models\Course;
 use App\Services\Assessments\AssessmentBuilderService;
-use App\Services\Assessments\AttemptPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -59,9 +58,26 @@ class AssessmentController extends Controller
 
         $assessment->load(['questions.category', 'poolRules.category']);
 
+        // The whole course bank, shaped for the fixed-mode picker (no correctness leaked —
+        // this is an instructor-only page, but we only need display fields anyway).
+        $bank = $course->questions()
+            ->with('category')
+            ->latest()
+            ->get()
+            ->map(fn ($q) => [
+                'id' => $q->id,
+                'prompt' => \Illuminate\Support\Str::limit(strip_tags($q->prompt), 100),
+                'type' => $q->type->shortLabel(),
+                'difficulty' => $q->difficulty->value,
+                'category_id' => $q->category_id,
+                'category' => $q->category?->name,
+                'points' => (float) $q->points,
+            ])->values();
+
         return view('assessments.builder', [
             'course' => $course,
             'assessment' => $assessment,
+            'bank' => $bank,
             'bankCategories' => $course->questionCategories()->orderBy('name')->get(),
             'publishErrors' => $this->builder->validateForPublish($assessment),
             'modules' => $course->modules()->orderBy('position')->get(),
@@ -108,7 +124,7 @@ class AssessmentController extends Controller
      * Preview-as-student: render the take screen from a freshly-built (unsaved) layout, so
      * the instructor sees exactly what a learner sees — without recording an attempt.
      */
-    public function preview(Course $course, Assessment $assessment, AttemptPresenter $presenter): View
+    public function preview(Course $course, Assessment $assessment): View
     {
         $this->assertBelongs($course, $assessment);
         $this->authorize('preview', $assessment);
