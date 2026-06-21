@@ -19,8 +19,14 @@ Competence, Character". This file governs every session. Re-read it before actin
    data, and a green test run (`php artisan test`) before you report done.
 4. **Migrations are append-only** once a section is accepted. Schema changes for
    accepted sections require a NEW migration, never edits to old ones.
-5. **Branch per section:** `git checkout -b section/NN-short-name`. Commit in
-   logical chunks with conventional messages (feat:, fix:, test:, chore:).
+5. **Branch per section, always off fresh `main`.** The FIRST action of every new
+   section, before writing any code, is to start its branch from an up-to-date main:
+   verify the working tree is clean, then
+   `git checkout main && git pull origin main && git checkout -b section/NN-short-name`.
+   NEVER branch off the previous section's branch (that stacks history and breaks the
+   moment a PR is squash-merged). One PR per section into `main`; commit in logical
+   chunks with conventional messages (feat:, fix:, test:, chore:). If the tree is
+   dirty or main can't fast-forward, stop and ask rather than forcing it.
 6. **Ask before assuming** on anything irreversible (deleting files, changing
    .env structure, swapping major packages). Otherwise make sensible decisions
    and record them in `docs/decisions.md`.
