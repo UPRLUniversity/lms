@@ -70,6 +70,16 @@ return [
             'transformations' => ['width' => 1600, 'crop' => 'limit'],
         ],
 
+        MediaPurpose::QuestionImages->value => [
+            // An optional diagram/figure attached to a question prompt — a public image,
+            // served via the CDN like a lesson image.
+            'visibility' => 'public',
+            'disk' => 'public',
+            'allowed_mimes' => ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+            'max_kb' => 4096,
+            'transformations' => ['width' => 1200, 'crop' => 'limit'],
+        ],
+
         MediaPurpose::Signatures->value => [
             'visibility' => 'public',
             'disk' => 'public',
