@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Services\Assessments\AssessmentBuilderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -66,7 +67,7 @@ class AssessmentController extends Controller
             ->get()
             ->map(fn ($q) => [
                 'id' => $q->id,
-                'prompt' => \Illuminate\Support\Str::limit(strip_tags($q->prompt), 100),
+                'prompt' => Str::limit(strip_tags($q->prompt), 100),
                 'type' => $q->type->shortLabel(),
                 'difficulty' => $q->difficulty->value,
                 'category_id' => $q->category_id,

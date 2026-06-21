@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\RichHtml;
+use App\Enums\AssessmentStatus;
 use App\Enums\MediaPurpose;
 use App\Enums\QuestionDifficulty;
 use App\Enums\QuestionType;
@@ -232,7 +233,7 @@ class Question extends Model
     public function usedByPublishedAssessment(): bool
     {
         return $this->assessments()
-            ->where('status', \App\Enums\AssessmentStatus::Published->value)
+            ->where('status', AssessmentStatus::Published->value)
             ->exists();
     }
 }

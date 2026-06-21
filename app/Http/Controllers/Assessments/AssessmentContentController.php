@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Assessment;
 use App\Models\AssessmentPoolRule;
 use App\Models\Course;
+use App\Models\QuestionCategory;
 use App\Services\Assessments\AssessmentBuilderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -104,7 +105,7 @@ class AssessmentContentController extends Controller
 
         // The category must belong to this course's bank (or be global).
         $category = $course->questionCategories()->find($data['category_id'])
-            ?? \App\Models\QuestionCategory::whereNull('course_id')->find($data['category_id']);
+            ?? QuestionCategory::whereNull('course_id')->find($data['category_id']);
         abort_unless($category !== null, 422, 'Choose a category from this course.');
 
         $data['difficulty'] = isset($data['difficulty'])

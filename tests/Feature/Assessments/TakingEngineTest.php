@@ -13,6 +13,7 @@ use App\Models\Question;
 use App\Models\User;
 use App\Services\Assessments\AttemptService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 class TakingEngineTest extends TestCase
@@ -23,7 +24,7 @@ class TakingEngineTest extends TestCase
      * A published assessment on a published course, with $n fixed MCQ questions, plus an
      * actively-enrolled student.
      *
-     * @return array{0: User, 1: Course, 2: Assessment, 3: \Illuminate\Support\Collection}
+     * @return array{0: User, 1: Course, 2: Assessment, 3: Collection}
      */
     private function scenario(int $n = 3, array $assessmentAttrs = []): array
     {

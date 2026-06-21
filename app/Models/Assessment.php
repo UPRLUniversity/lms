@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\RichHtml;
 use App\Enums\AssessmentPlacement;
 use App\Enums\AssessmentStatus;
+use App\Enums\AttemptStatus;
 use App\Enums\ReviewPolicy;
 use App\Enums\SelectionMode;
 use Database\Factories\AssessmentFactory;
@@ -280,7 +281,7 @@ class Assessment extends Model
 
         return ! $this->attempts()
             ->where('user_id', $user->id)
-            ->where('status', \App\Enums\AttemptStatus::InProgress->value)
+            ->where('status', AttemptStatus::InProgress->value)
             ->exists();
     }
 
@@ -291,7 +292,7 @@ class Assessment extends Model
     {
         return $this->attempts()
             ->where('user_id', $user->id)
-            ->where('status', \App\Enums\AttemptStatus::InProgress->value)
+            ->where('status', AttemptStatus::InProgress->value)
             ->latest('id')
             ->first();
     }
@@ -303,7 +304,7 @@ class Assessment extends Model
     {
         return $this->attempts()
             ->where('user_id', $user->id)
-            ->where('status', \App\Enums\AttemptStatus::Graded->value)
+            ->where('status', AttemptStatus::Graded->value)
             ->orderByDesc('percentage')
             ->first();
     }

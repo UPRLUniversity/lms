@@ -289,3 +289,44 @@ future sections inherit them:
 3. **Removed dead Breeze leftovers** `components/nav-link` and
    `responsive-nav-link.blade.php` — superseded by the custom sidebar/topbar, rendered
    nowhere, and the only remaining source of non-brand `indigo/gray` classes.
+
+## Section 5 — Assessments, question bank & taking engine (2026-06-21)
+
+1. **Matching is graded proportionally.** `points × (correctPairs / totalPairs)`, rounded
+   to 2 dp (`MatchingGrader`). More forgiving than all-or-nothing and rewards partial
+   knowledge — the common LMS behaviour.
+2. **Multi-select MCQ is all-or-nothing.** Zero credit if any wrong option is chosen or any
+   correct option missed (`McqMultiGrader`), per the section brief. True/false and
+   single-answer MCQ share `McqSingleGrader`.
+3. **Fill-blank** is a single blank (MVP); the response is trimmed and matched against the
+   accepted list, folding case when the question's `case_insensitive` flag is set (default
+   on). Documented so multi-blank can be added later without breaking the cast.
+4. **Scenario** is a container of nested sub-questions. Each sub is graded by its own type;
+   scenario points = Σ sub points. If any sub is an essay the whole scenario routes to
+   manual grading, with the objective sub-score shown to the grader as a hint
+   (`GradingService::scenarioObjectiveSubtotal`). Scenario sub-prompts are rich HTML inside
+   the parent's `payload` JSON, so they bypass the `RichHtml` cast — `QuestionBankService`
+   sanitises them through mews/purifier (`rich` profile) on save.
+5. **The timer is server-authoritative.** `attempts.expires_at` (started_at + limit) is the
+   single source of truth; the client countdown re-anchors to it on every load, so a
+   refresh can't extend it and a walk-away auto-submits at zero (`AttemptService::ensureFresh`
+   on load + the client timer). The whole attempt presentation (question order, shuffled
+   options, pooled draw, tokenised matching rights) is frozen into `attempts.layout` at
+   start, so a refresh never reshuffles and every saved answer is validated against it.
+6. **No correct answers reach the client before submission.** The take payload
+   (`AttemptPresenter::takeItems`) strips `is_correct`/accepted answers and tokenises
+   matching rights (opaque `token` → `pair_id` held server-side in the layout), so the
+   correct mapping can't be read off the DOM. Correct answers/explanations appear only via
+   `reviewItems`, gated by `ReviewPolicy` (immediately / after_close / never) and only for a
+   graded attempt.
+7. **Authoring is gated by ownership, not a flat permission.** Question/Assessment policies
+   defer to `CoursePolicy::update` (the course's instructors + admins), mirroring
+   curriculum management. The pre-defined `assessments.view` / `assessments.grade`
+   permissions gate the grading queue and the read-only auditor. Manual grade entry is
+   rubric-free points + feedback for now; **rubrics arrive in Section 6** and will slot into
+   the same `attempt_answers` rows.
+8. **Progress integration is additive.** A new `CurriculumOutline` (lessons + published
+   assessments interleaved by placement) drives the sidebar and the sequential lock
+   frontier; `CourseProgress` now counts *required* assessments toward the course percentage
+   alongside lessons (lesson-only callers are unaffected — the new counts default to zero).
+   Standalone assessments sit at the end of the outline.

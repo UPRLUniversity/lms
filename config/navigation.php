@@ -61,6 +61,13 @@ return [
         'roles' => ['instructor', 'admin', 'super-admin'],
     ],
     [
+        'label' => 'Grading',
+        'icon' => 'clipboard-check',
+        'route' => 'grading.index',
+        'match' => 'grading.*',
+        'roles' => ['instructor', 'admin', 'super-admin'],
+    ],
+    [
         // Auditor is intentionally included — it sees the people list read-only.
         'label' => 'People',
         'icon' => 'users',

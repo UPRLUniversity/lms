@@ -9,7 +9,9 @@ use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Assessments\AssessmentContentController;
 use App\Http\Controllers\Assessments\AssessmentController;
+use App\Http\Controllers\Assessments\AssessmentInsightController;
 use App\Http\Controllers\Assessments\AttemptController;
+use App\Http\Controllers\Assessments\GradingController;
 use App\Http\Controllers\Assessments\AttemptResultController;
 use App\Http\Controllers\Assessments\QuestionCategoryController;
 use App\Http\Controllers\Assessments\QuestionController;
@@ -312,6 +314,24 @@ Route::middleware(['auth', 'verified'])
         Route::post('courses/{course}/assessments/{assessment}/pool-rules', [AssessmentContentController::class, 'storeRule'])->name('assessments.pool-rules.store');
         Route::put('courses/{course}/assessments/{assessment}/pool-rules/{rule}', [AssessmentContentController::class, 'updateRule'])->name('assessments.pool-rules.update');
         Route::delete('courses/{course}/assessments/{assessment}/pool-rules/{rule}', [AssessmentContentController::class, 'destroyRule'])->name('assessments.pool-rules.destroy');
+
+        // Class-level pre/post knowledge-gain insight.
+        Route::get('courses/{course}/insights', [AssessmentInsightController::class, 'index'])->name('assessments.insights');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Manual grading queue (instructors + admins)
+|--------------------------------------------------------------------------
+| Submitted attempts with essay / scenario-essay answers awaiting a human. Each
+| action is authorized through AttemptPolicy::grade (course ownership + grade perm).
+*/
+Route::middleware(['auth', 'verified'])
+    ->prefix('manage')
+    ->group(function () {
+        Route::get('grading', [GradingController::class, 'index'])->name('grading.index');
+        Route::get('grading/{attempt}', [GradingController::class, 'show'])->name('grading.show');
+        Route::put('grading/{attempt}', [GradingController::class, 'update'])->name('grading.update');
     });
 
 /*

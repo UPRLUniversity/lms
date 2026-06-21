@@ -3,6 +3,7 @@
 namespace App\Services\Assessments;
 
 use App\Enums\AssessmentPlacement;
+use App\Enums\AssessmentStatus;
 use App\Enums\AttemptStatus;
 use App\Models\Assessment;
 use App\Models\Attempt;
@@ -109,7 +110,7 @@ class KnowledgeGainService
     {
         return $module->assessments()
             ->where('placement', $placement->value)
-            ->where('status', \App\Enums\AssessmentStatus::Published->value)
+            ->where('status', AssessmentStatus::Published->value)
             ->orderBy('position')
             ->first();
     }

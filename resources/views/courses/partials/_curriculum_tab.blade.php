@@ -34,6 +34,9 @@
                 <p class="text-sm text-ink/60">Quizzes and exams. Pre/post-module assessments power knowledge-gain insights.</p>
             </div>
             <div class="flex items-center gap-2">
+                <x-ui.button variant="ghost" size="sm" :href="route('assessments.insights', $course)">
+                    <x-ui.icon name="sparkles" class="h-4 w-4" /> Insights
+                </x-ui.button>
                 <x-ui.button variant="ghost" size="sm" :href="route('questions.index', $course)">
                     <x-ui.icon name="clipboard" class="h-4 w-4" /> Question bank
                 </x-ui.button>

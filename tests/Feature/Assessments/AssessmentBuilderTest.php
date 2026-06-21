@@ -8,7 +8,6 @@ use App\Models\Assessment;
 use App\Models\Course;
 use App\Models\Module;
 use App\Models\Question;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
