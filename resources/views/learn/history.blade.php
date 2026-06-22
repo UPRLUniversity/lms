@@ -105,8 +105,24 @@
                                             <span class="text-ink/40">In progress</span>
                                         @endif
                                     </td>
-                                    {{-- Filled in by Sections 5 (assessment) and 7 (certificate). --}}
-                                    <td class="px-5 py-4 text-ink/30">—</td>
+                                    {{-- Section 5: pre/post knowledge-gain per module. --}}
+                                    <td class="px-5 py-4">
+                                        @php $gains = $gainsByCourse[$course->id] ?? collect(); @endphp
+                                        @if ($gains->isEmpty())
+                                            <span class="text-ink/30">—</span>
+                                        @else
+                                            <div class="space-y-1">
+                                                @foreach ($gains as $gain)
+                                                    <span class="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs text-success"
+                                                          title="{{ $gain['module_title'] }}: {{ $gain['pre'] }}% → {{ $gain['post'] }}%">
+                                                        <x-ui.icon name="sparkles" class="h-3 w-3" />
+                                                        {{ $gain['pre'] }}→{{ $gain['post'] }}% ({{ $gain['gain'] >= 0 ? '+' : '' }}{{ $gain['gain'] }})
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </td>
+                                    {{-- Filled in by Section 7 (certificate). --}}
                                     <td class="px-5 py-4 text-ink/30">—</td>
                                     <td class="px-5 py-4 text-right">
                                         @unless ($withdrawn)

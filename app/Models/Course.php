@@ -131,6 +131,36 @@ class Course extends Model
         return $this->hasMany(Enrollment::class);
     }
 
+    /**
+     * Assessments attached to this course (pre/post on its modules + standalone).
+     *
+     * @return HasMany<Assessment, $this>
+     */
+    public function assessments(): HasMany
+    {
+        return $this->hasMany(Assessment::class);
+    }
+
+    /**
+     * The course-scoped question bank.
+     *
+     * @return HasMany<Question, $this>
+     */
+    public function questions(): HasMany
+    {
+        return $this->hasMany(Question::class);
+    }
+
+    /**
+     * Categories the course's questions are grouped into.
+     *
+     * @return HasMany<QuestionCategory, $this>
+     */
+    public function questionCategories(): HasMany
+    {
+        return $this->hasMany(QuestionCategory::class);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Scopes

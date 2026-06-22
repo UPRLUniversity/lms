@@ -22,19 +22,26 @@ class CourseProgress
     /**
      * @param  Collection<int, Lesson>  $sequence  flat, ordered (module then lesson position)
      * @param  Collection<int, LessonProgress>  $progress  keyed by lesson_id
+     * @param  int  $requiredAssessmentTotal  published, required assessments on the course
+     * @param  int  $requiredAssessmentComplete  of those, the ones the student has passed
      */
     public function __construct(
         public readonly Course $course,
         public readonly Collection $sequence,
         public readonly Collection $progress,
+        public readonly int $requiredAssessmentTotal = 0,
+        public readonly int $requiredAssessmentComplete = 0,
     ) {}
 
-    public function total(): int
+    /**
+     * Lesson-only counts — for the "X of Y lessons" labels the sidebar shows.
+     */
+    public function lessonTotal(): int
     {
         return $this->sequence->count();
     }
 
-    public function completedCount(): int
+    public function lessonCompletedCount(): int
     {
         return $this->sequence
             ->filter(fn (Lesson $l) => $this->isComplete($l))
@@ -42,8 +49,23 @@ class CourseProgress
     }
 
     /**
-     * Whole-course completion percentage (0–100), floored so it only reads 100 when
-     * every lesson is genuinely done.
+     * Total trackable items toward course completion: every lesson plus every required
+     * assessment. With no assessments this equals the lesson count, so the lesson-only
+     * player (Section 4) is unaffected.
+     */
+    public function total(): int
+    {
+        return $this->lessonTotal() + $this->requiredAssessmentTotal;
+    }
+
+    public function completedCount(): int
+    {
+        return $this->lessonCompletedCount() + $this->requiredAssessmentComplete;
+    }
+
+    /**
+     * Whole-course completion percentage (0–100), floored so it only reads 100 when every
+     * lesson AND every required assessment is genuinely done.
      */
     public function percent(): int
     {

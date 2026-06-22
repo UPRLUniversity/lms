@@ -2,8 +2,12 @@
 
 namespace App\Services\Courses;
 
+use App\Enums\AssessmentStatus;
+use App\Enums\AttemptStatus;
 use App\Enums\EnrollmentStatus;
 use App\Enums\LessonProgressStatus;
+use App\Models\Assessment;
+use App\Models\Attempt;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Lesson;
@@ -11,6 +15,8 @@ use App\Models\LessonProgress;
 use App\Models\Module;
 use App\Models\User;
 use App\Support\Learning\CourseProgress;
+use App\Support\Learning\CurriculumItem;
+use App\Support\Learning\CurriculumOutline;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
@@ -42,7 +48,126 @@ class LearningService
                 ->get()
                 ->keyBy('lesson_id');
 
-        return new CourseProgress($course, $sequence, $progress);
+        // Required, published assessments count toward course completion like lessons.
+        $assessments = $this->publishedAssessments($course);
+        $required = $assessments->where('is_required', true);
+        $passedIds = $this->passedAssessmentIds($user, $assessments->pluck('id'));
+        $requiredComplete = $required->filter(fn (Assessment $a) => $passedIds->contains($a->id))->count();
+
+        return new CourseProgress($course, $sequence, $progress, $required->count(), $requiredComplete);
+    }
+
+    /**
+     * The unified learning outline (lessons + published assessments interleaved by
+     * placement) with per-item completion and sequential lock state — what the player
+     * sidebar renders and the gate consults.
+     */
+    public function outline(User $user, Course $course, ?CourseProgress $snapshot = null): CurriculumOutline
+    {
+        $snapshot ??= $this->snapshot($user, $course);
+        $sequential = $course->isSequential();
+
+        $course->loadMissing([
+            'modules' => fn ($q) => $q->orderBy('position'),
+            'modules.lessons' => fn ($q) => $q->orderBy('position'),
+        ]);
+
+        $assessments = $this->publishedAssessments($course);
+        $passedIds = $this->passedAssessmentIds($user, $assessments->pluck('id'));
+
+        // Build the flat ordered rows first, then a single pass computes the lock frontier.
+        $rows = new Collection;
+
+        $pushAssessment = function (Assessment $a) use ($rows, $passedIds) {
+            $rows->push([
+                'kind' => 'assessment',
+                'model' => $a,
+                'completed' => $passedIds->contains($a->id),
+                'required' => (bool) $a->is_required,
+                'module_id' => $a->module_id,
+                'placement' => $a->placement->value,
+            ]);
+        };
+
+        foreach ($course->modules as $module) {
+            $byPlacement = $assessments->where('module_id', $module->id);
+            $byPlacement->where('placement', 'pre_module')->sortBy('position')->each($pushAssessment);
+
+            foreach ($module->lessons as $lesson) {
+                $rows->push([
+                    'kind' => 'lesson',
+                    'model' => $lesson,
+                    'completed' => $snapshot->isComplete($lesson),
+                    'required' => true,
+                    'module_id' => $module->id,
+                    'placement' => null,
+                ]);
+            }
+
+            $byPlacement->where('placement', 'post_module')->sortBy('position')->each($pushAssessment);
+        }
+
+        $assessments->whereNull('module_id')->sortBy('position')->each($pushAssessment);
+
+        $blocked = false;
+        $items = $rows->map(function (array $row) use (&$blocked, $sequential) {
+            $locked = $sequential && $blocked;
+
+            // A required, incomplete item closes the gate for everything after it.
+            if ($row['required'] && ! $row['completed']) {
+                $blocked = true;
+            }
+
+            return new CurriculumItem(
+                kind: $row['kind'],
+                model: $row['model'],
+                completed: $row['completed'],
+                locked: $locked,
+                required: $row['required'],
+                moduleId: $row['module_id'],
+                placement: $row['placement'],
+            );
+        });
+
+        return new CurriculumOutline($items->values());
+    }
+
+    /**
+     * Published assessments on a course (uses a loaded relation when present).
+     *
+     * @return Collection<int, Assessment>
+     */
+    private function publishedAssessments(Course $course): Collection
+    {
+        if ($course->relationLoaded('assessments')) {
+            return $course->assessments
+                ->where('status', AssessmentStatus::Published)
+                ->values();
+        }
+
+        return collect($course->assessments()->published()->get()->all());
+    }
+
+    /**
+     * The subset of $assessmentIds the student has a passing graded attempt on.
+     *
+     * @param  Collection<int, int>  $assessmentIds
+     * @return Collection<int, int>
+     */
+    private function passedAssessmentIds(User $user, Collection $assessmentIds): Collection
+    {
+        if ($assessmentIds->isEmpty()) {
+            return new Collection;
+        }
+
+        return Attempt::query()
+            ->where('user_id', $user->id)
+            ->where('status', AttemptStatus::Graded->value)
+            ->where('passed', true)
+            ->whereIn('assessment_id', $assessmentIds->all())
+            ->pluck('assessment_id')
+            ->unique()
+            ->values();
     }
 
     /**

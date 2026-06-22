@@ -7,6 +7,14 @@ use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Assessments\AssessmentContentController;
+use App\Http\Controllers\Assessments\AssessmentController;
+use App\Http\Controllers\Assessments\AssessmentInsightController;
+use App\Http\Controllers\Assessments\AttemptController;
+use App\Http\Controllers\Assessments\GradingController;
+use App\Http\Controllers\Assessments\AttemptResultController;
+use App\Http\Controllers\Assessments\QuestionCategoryController;
+use App\Http\Controllers\Assessments\QuestionController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\Courses\AdminEnrollmentController;
 use App\Http\Controllers\Courses\BulkEnrollmentController;
@@ -261,6 +269,90 @@ Route::middleware(['auth', 'verified'])
         Route::get('courses/{course}/roster', [RosterController::class, 'index'])->name('courses.roster');
         Route::get('courses/{course}/roster/export', [RosterController::class, 'export'])->name('courses.roster.export');
         Route::delete('courses/{course}/roster/{enrollment}', [RosterController::class, 'destroy'])->name('courses.roster.withdraw');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Assessment authoring (instructors + admins)
+|--------------------------------------------------------------------------
+| The question bank, the assessment builder (settings + fixed list / pool rules),
+| publishing and preview. Every action is authorized through Question/Assessment
+| policies (course ownership). Assessment slugs are unique per course, so the
+| {course}/{assessment} routes use scoped bindings.
+*/
+Route::middleware(['auth', 'verified'])
+    ->prefix('manage')
+    ->scopeBindings()
+    ->group(function () {
+        // Question bank (course-scoped).
+        Route::get('courses/{course}/questions', [QuestionController::class, 'index'])->name('questions.index');
+        Route::get('courses/{course}/questions/create', [QuestionController::class, 'create'])->name('questions.create');
+        Route::get('courses/{course}/questions/import', [QuestionController::class, 'importForm'])->name('questions.import.form');
+        Route::post('courses/{course}/questions/import', [QuestionController::class, 'import'])->name('questions.import');
+        Route::post('courses/{course}/questions', [QuestionController::class, 'store'])->name('questions.store');
+        Route::get('courses/{course}/questions/{question}/edit', [QuestionController::class, 'edit'])->name('questions.edit');
+        Route::put('courses/{course}/questions/{question}', [QuestionController::class, 'update'])->name('questions.update');
+        Route::post('courses/{course}/questions/{question}/duplicate', [QuestionController::class, 'duplicate'])->name('questions.duplicate');
+        Route::delete('courses/{course}/questions/{question}', [QuestionController::class, 'destroy'])->name('questions.destroy');
+
+        // Categories (AJAX).
+        Route::post('courses/{course}/question-categories', [QuestionCategoryController::class, 'store'])->name('question-categories.store');
+        Route::put('courses/{course}/question-categories/{category}', [QuestionCategoryController::class, 'update'])->name('question-categories.update');
+        Route::delete('courses/{course}/question-categories/{category}', [QuestionCategoryController::class, 'destroy'])->name('question-categories.destroy');
+
+        // Assessments.
+        Route::post('courses/{course}/assessments', [AssessmentController::class, 'store'])->name('assessments.store');
+        Route::get('courses/{course}/assessments/{assessment}/edit', [AssessmentController::class, 'edit'])->name('assessments.edit');
+        Route::put('courses/{course}/assessments/{assessment}', [AssessmentController::class, 'update'])->name('assessments.update');
+        Route::delete('courses/{course}/assessments/{assessment}', [AssessmentController::class, 'destroy'])->name('assessments.destroy');
+        Route::post('courses/{course}/assessments/{assessment}/publish', [AssessmentController::class, 'publish'])->name('assessments.publish');
+        Route::post('courses/{course}/assessments/{assessment}/unpublish', [AssessmentController::class, 'unpublish'])->name('assessments.unpublish');
+        Route::get('courses/{course}/assessments/{assessment}/preview', [AssessmentController::class, 'preview'])->name('assessments.preview');
+
+        // Assessment content (fixed questions + pool rules) — AJAX.
+        Route::put('courses/{course}/assessments/{assessment}/questions', [AssessmentContentController::class, 'syncQuestions'])->name('assessments.questions.sync');
+        Route::post('courses/{course}/assessments/{assessment}/pool-rules', [AssessmentContentController::class, 'storeRule'])->name('assessments.pool-rules.store');
+        Route::put('courses/{course}/assessments/{assessment}/pool-rules/{rule}', [AssessmentContentController::class, 'updateRule'])->name('assessments.pool-rules.update');
+        Route::delete('courses/{course}/assessments/{assessment}/pool-rules/{rule}', [AssessmentContentController::class, 'destroyRule'])->name('assessments.pool-rules.destroy');
+
+        // Class-level pre/post knowledge-gain insight.
+        Route::get('courses/{course}/insights', [AssessmentInsightController::class, 'index'])->name('assessments.insights');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Manual grading queue (instructors + admins)
+|--------------------------------------------------------------------------
+| Submitted attempts with essay / scenario-essay answers awaiting a human. Each
+| action is authorized through AttemptPolicy::grade (course ownership + grade perm).
+*/
+Route::middleware(['auth', 'verified'])
+    ->prefix('manage')
+    ->group(function () {
+        Route::get('grading', [GradingController::class, 'index'])->name('grading.index');
+        Route::get('grading/{attempt}', [GradingController::class, 'show'])->name('grading.show');
+        Route::put('grading/{attempt}', [GradingController::class, 'update'])->name('grading.update');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Taking assessments (students) — inside the player frame
+|--------------------------------------------------------------------------
+| The start screen, the timed one-question-per-screen runner (autosave/flag/submit),
+| the result + review and the attempt history. AttemptService enforces the window,
+| attempt cap, frozen layout and server-authoritative timer.
+*/
+Route::middleware(['auth', 'verified'])
+    ->scopeBindings()
+    ->group(function () {
+        Route::get('/learn/{course}/assessment/{assessment}', [AttemptController::class, 'start'])->name('assessments.start');
+        Route::post('/learn/{course}/assessment/{assessment}/attempts', [AttemptController::class, 'store'])->name('attempts.store');
+        Route::get('/learn/{course}/assessment/{assessment}/history', [AttemptResultController::class, 'history'])->name('attempts.history');
+
+        Route::get('/attempts/{attempt}', [AttemptController::class, 'show'])->name('attempts.show');
+        Route::post('/attempts/{attempt}/answer', [AttemptController::class, 'answer'])->name('attempts.answer');
+        Route::post('/attempts/{attempt}/submit', [AttemptController::class, 'submit'])->name('attempts.submit');
+        Route::get('/attempts/{attempt}/result', [AttemptResultController::class, 'show'])->name('attempts.result');
     });
 
 // Short-lived signed access to a private file (PrivateFileService::temporaryUrl).

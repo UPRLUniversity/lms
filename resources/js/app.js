@@ -6,6 +6,9 @@ import collapse from '@alpinejs/collapse';
 import dataTable from './data-table';
 import { courseBuilder, courseSettings, objectiveRows } from './course-builder';
 import learnPlayer from './learn';
+import { questionEditor } from './question-bank';
+import { assessmentBuilder } from './assessment-builder';
+import { attemptRunner } from './attempt';
 
 window.Alpine = Alpine;
 
@@ -21,6 +24,12 @@ Alpine.data('objectiveRows', objectiveRows);
 
 // Learning player (sidebar curriculum, Complete & Continue, video resume).
 Alpine.data('learnPlayer', learnPlayer);
+
+// Assessments: the per-type question editor, the assessment builder, and the
+// student taking engine (timer + autosave + progress map).
+Alpine.data('questionEditor', questionEditor);
+Alpine.data('assessmentBuilder', assessmentBuilder);
+Alpine.data('attemptRunner', attemptRunner);
 
 Alpine.start();
 

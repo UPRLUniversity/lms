@@ -70,6 +70,11 @@
                             <p class="px-4 pt-3 text-sm text-ink/60">{{ $module->description }}</p>
                         @endif
 
+                        {{-- Pre-module assessments sit before the lessons. --}}
+                        @foreach ($module->assessments->where('placement', \App\Enums\AssessmentPlacement::PreModule) as $assessment)
+                            @include('courses.partials._assessment_chip', ['assessment' => $assessment])
+                        @endforeach
+
                         <ul data-lesson-list data-module-id="{{ $module->id }}" class="divide-y divide-line">
                             @forelse ($module->lessons as $lesson)
                                 <li data-lesson data-lesson-id="{{ $lesson->id }}" class="flex items-center gap-2 px-3 py-2.5 hover:bg-surface/40">
@@ -107,6 +112,11 @@
                                 <li class="px-4 py-3 text-sm text-ink/40">No lessons yet.</li>
                             @endforelse
                         </ul>
+
+                        {{-- Post-module assessments sit after the lessons. --}}
+                        @foreach ($module->assessments->where('placement', \App\Enums\AssessmentPlacement::PostModule) as $assessment)
+                            @include('courses.partials._assessment_chip', ['assessment' => $assessment])
+                        @endforeach
 
                         @if ($canManage)
                             <div class="border-t border-line px-3 py-2">

@@ -49,6 +49,10 @@ class DatabaseSeeder extends Seeder
 
         // Lesson progress: mid-course resume, finished courses, a sequential demo.
         $this->call(ProgressSeeder::class);
+
+        // Question bank + assessments (pre/post pair, timed exam, pooled exam, essay) with
+        // a spread of attempts incl. one awaiting grading and a pre→post knowledge gain.
+        $this->call(AssessmentSeeder::class);
     }
 
     /**

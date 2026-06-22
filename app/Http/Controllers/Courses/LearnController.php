@@ -57,12 +57,15 @@ class LearnController extends Controller
         $this->authorize('learn', $lesson);
 
         $snapshot = $this->learning->snapshot($request->user(), $course);
+        $outline = $this->learning->outline($request->user(), $course, $snapshot);
 
-        // Sequential gate — a locked lesson is unreachable even by direct URL.
-        if ($snapshot->isLocked($lesson)) {
+        // Sequential gate — a locked lesson is unreachable even by direct URL. The outline
+        // is assessment-aware, so a lesson sitting behind an unpassed required assessment
+        // locks too.
+        if ($outline->isLessonLocked($lesson)) {
             return redirect()
                 ->route('learn.show', [$course, $snapshot->resumeLesson()])
-                ->with('error', 'Complete the previous lesson to unlock this one.');
+                ->with('error', 'Complete the previous step to unlock this one.');
         }
 
         $enrollment = $course->enrollmentFor($request->user());
@@ -78,6 +81,7 @@ class LearnController extends Controller
             'course' => $course,
             'lesson' => $lesson,
             'snapshot' => $snapshot,
+            'outline' => $outline,
             'previous' => $snapshot->previous($lesson),
             'next' => $snapshot->next($lesson),
             'isPreview' => $enrollment === null,

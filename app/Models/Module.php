@@ -38,6 +38,16 @@ class Module extends Model
         return $this->hasMany(Lesson::class)->orderBy('position');
     }
 
+    /**
+     * Pre/post assessments attached to this module, ordered for the curriculum.
+     *
+     * @return HasMany<Assessment, $this>
+     */
+    public function assessments(): HasMany
+    {
+        return $this->hasMany(Assessment::class)->orderBy('position');
+    }
+
     public function durationMinutes(): int
     {
         return (int) ($this->relationLoaded('lessons')
