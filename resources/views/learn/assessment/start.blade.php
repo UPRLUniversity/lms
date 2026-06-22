@@ -98,7 +98,7 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 @if ($past->status === AttemptStatus::Graded)
-                                    <span class="text-sm font-semibold {{ $past->passed ? 'text-green' : 'text-crimson' }}">{{ $past->percentage }}%</span>
+                                    <span class="text-sm font-semibold {{ $past->passed ? 'text-success' : 'text-crimson' }}">{{ $past->percentage }}%</span>
                                 @endif
                                 <a href="{{ route('attempts.result', $past) }}" class="text-sm font-medium text-crimson hover:text-crimson-dark focus-ring rounded">View</a>
                             </div>

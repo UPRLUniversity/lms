@@ -91,30 +91,92 @@ class AssessmentSeeder extends Seeder
     {
         [$fundamentals, $application, $advanced] = $categories;
         $bank = collect();
-        $difficulties = [QuestionDifficulty::Easy, QuestionDifficulty::Medium, QuestionDifficulty::Hard];
 
-        $make = function (string $state, QuestionCategory $cat, int $n) use ($course, $instructor, &$bank, $difficulties) {
+        // Hand-authored, public-relations-flavoured questions so every type renders with real
+        // content; padded with factory questions for volume so the pool/filters have depth.
+        foreach ($this->authored() as $row) {
+            $cat = ['fundamentals' => $fundamentals, 'application' => $application, 'advanced' => $advanced][$row['cat']];
+            $bank->push(Question::factory()->{$row['state']}(...($row['args'] ?? []))
+                ->difficulty($row['difficulty'])
+                ->create(array_merge([
+                    'course_id' => $course->id,
+                    'category_id' => $cat->id,
+                    'created_by' => $instructor?->id,
+                    'prompt' => '<p>'.$row['prompt'].'</p>',
+                ], $row['overrides'] ?? [])));
+        }
+
+        // Volume padding so "Fundamentals" easily satisfies a 5-question pool and the bank
+        // table/filters have something to page through.
+        $difficulties = [QuestionDifficulty::Easy, QuestionDifficulty::Medium, QuestionDifficulty::Hard];
+        $pad = function (string $state, QuestionCategory $cat, int $n) use ($course, $instructor, &$bank, $difficulties) {
             for ($i = 0; $i < $n; $i++) {
-                $q = Question::factory()->{$state}()
-                    ->difficulty($difficulties[$i % 3])
-                    ->create([
-                        'course_id' => $course->id,
-                        'category_id' => $cat->id,
-                        'created_by' => $instructor?->id,
-                    ]);
-                $bank->push($q);
+                $bank->push(Question::factory()->{$state}()->difficulty($difficulties[$i % 3])->create([
+                    'course_id' => $course->id, 'category_id' => $cat->id, 'created_by' => $instructor?->id,
+                ]));
             }
         };
+        $pad('mcqSingle', $fundamentals, 6);
+        $pad('trueFalse', $fundamentals, 3);
+        $pad('mcqMulti', $application, 3);
+        $pad('fillBlank', $application, 3);
+        $pad('mcqSingle', $advanced, 3);
+        $pad('matching', $advanced, 2);
 
-        $make('mcqSingle', $fundamentals, 8);
-        $make('mcqMulti', $application, 4);
-        $make('trueFalse', $fundamentals, 4);
-        $make('fillBlank', $application, 4);
-        $make('matching', $advanced, 2);
-        $make('essay', $advanced, 2);
-        $make('scenario', $advanced, 2);
+        return $bank; // 30+ questions across all 7 types, 3 categories, 3 difficulties
+    }
 
-        return $bank; // 26 questions across all 7 types
+    /**
+     * A small set of realistic, public-relations questions — one or more of every type.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function authored(): array
+    {
+        return [
+            ['cat' => 'fundamentals', 'state' => 'mcqSingle', 'difficulty' => QuestionDifficulty::Easy,
+                'prompt' => 'Which document is issued first during a breaking crisis, before all facts are known?',
+                'overrides' => ['payload' => ['options' => [
+                    ['id' => 'o1', 'text' => 'A holding statement', 'is_correct' => true],
+                    ['id' => 'o2', 'text' => 'The annual report', 'is_correct' => false],
+                    ['id' => 'o3', 'text' => 'A media kit', 'is_correct' => false],
+                    ['id' => 'o4', 'text' => 'A fact sheet', 'is_correct' => false],
+                ]]]],
+            ['cat' => 'fundamentals', 'state' => 'trueFalse', 'difficulty' => QuestionDifficulty::Easy, 'args' => [true],
+                'prompt' => 'The "inverted pyramid" places the most important information at the top of a news release.'],
+            ['cat' => 'fundamentals', 'state' => 'fillBlank', 'difficulty' => QuestionDifficulty::Medium,
+                'args' => [['earned media', 'earned'], true],
+                'prompt' => 'Coverage a brand gains through PR rather than paid placement is called ______ media.'],
+            ['cat' => 'fundamentals', 'state' => 'fillBlank', 'difficulty' => QuestionDifficulty::Easy,
+                'args' => [['embargo'], true],
+                'prompt' => 'A request that journalists not publish information before a set time is called an ______.'],
+            ['cat' => 'application', 'state' => 'mcqMulti', 'difficulty' => QuestionDifficulty::Medium,
+                'prompt' => 'Which of the following belong in a SMART campaign objective? (Select all that apply.)',
+                'overrides' => ['payload' => ['options' => [
+                    ['id' => 'o1', 'text' => 'Measurable', 'is_correct' => true],
+                    ['id' => 'o2', 'text' => 'Time-bound', 'is_correct' => true],
+                    ['id' => 'o3', 'text' => 'Vague', 'is_correct' => false],
+                    ['id' => 'o4', 'text' => 'Achievable', 'is_correct' => true],
+                ]]]],
+            ['cat' => 'application', 'state' => 'matching', 'difficulty' => QuestionDifficulty::Medium,
+                'prompt' => 'Match each PR channel to what it is best suited for.',
+                'overrides' => ['points' => 4, 'payload' => ['pairs' => [
+                    ['id' => 'p1', 'left' => 'Press release', 'right' => 'Announcing news to journalists'],
+                    ['id' => 'p2', 'left' => 'Media interview', 'right' => 'Adding a human, expert voice'],
+                    ['id' => 'p3', 'left' => 'Social media', 'right' => 'Real-time two-way engagement'],
+                    ['id' => 'p4', 'left' => 'Newsletter', 'right' => 'Nurturing an owned audience'],
+                ]]]],
+            ['cat' => 'application', 'state' => 'scenario', 'difficulty' => QuestionDifficulty::Hard, 'args' => [false],
+                'prompt' => 'A food brand discovers a labelling error after products have shipped. Work through the response.'],
+            ['cat' => 'advanced', 'state' => 'essay', 'difficulty' => QuestionDifficulty::Hard,
+                'prompt' => 'Outline a stakeholder-communication plan for a university announcing a controversial fee change. Justify your channel choices.',
+                'overrides' => ['points' => 15, 'payload' => ['guidance' => 'Look for stakeholder mapping, message tailoring, channel rationale, and an evaluation measure.']]],
+            ['cat' => 'advanced', 'state' => 'essay', 'difficulty' => QuestionDifficulty::Medium,
+                'prompt' => 'Explain the difference between outputs, outtakes and outcomes when evaluating a PR campaign.',
+                'overrides' => ['points' => 10, 'payload' => ['guidance' => 'Reward clear definitions and a worked example of each.']]],
+            ['cat' => 'advanced', 'state' => 'scenario', 'difficulty' => QuestionDifficulty::Hard, 'args' => [true],
+                'prompt' => 'A non-profit faces a viral allegation on social media. Triage the first hour.'],
+        ];
     }
 
     /**

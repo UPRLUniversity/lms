@@ -34,6 +34,7 @@ export function questionEditor(config = {}) {
 
     return {
         type: config.type || initial.type || 'mcq_single',
+        points: config.points ?? initial.points ?? 1,
         // Option types
         options: (payload.options && payload.options.length
             ? payload.options.map((o) => ({ key: uid(), text: o.text, is_correct: !!o.is_correct }))

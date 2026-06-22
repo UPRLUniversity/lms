@@ -4,7 +4,8 @@
     $graded = $attempt->status === AttemptStatus::Graded;
     $pending = $attempt->status === AttemptStatus::Submitted;
     $pct = (int) $attempt->percentage;
-    $ringColor = $attempt->passed ? 'var(--uprl-green, #0F6B3E)' : 'var(--uprl-crimson, #C8102E)';
+    // currentColor + a brand text class — SVG presentation attributes don't resolve CSS var().
+    $ringClass = $attempt->passed ? 'text-success' : 'text-crimson';
     $circumference = 2 * pi() * 52;
 
     // Render a student's answer for an option-type review item as text.
@@ -30,14 +31,14 @@
                 <div class="relative mx-auto h-32 w-32">
                     <svg class="h-32 w-32 -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
                         <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" class="text-ink/10" stroke-width="10" />
-                        <circle cx="60" cy="60" r="52" fill="none" stroke="{{ $ringColor }}" stroke-width="10" stroke-linecap="round"
+                        <circle cx="60" cy="60" r="52" fill="none" stroke="currentColor" class="{{ $ringClass }}" stroke-width="10" stroke-linecap="round"
                                 stroke-dasharray="{{ $circumference }}" stroke-dashoffset="{{ $circumference * (1 - $pct / 100) }}" />
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
                         <span class="font-display text-3xl font-semibold text-ink">{{ $pct }}%</span>
                     </div>
                 </div>
-                <p class="mt-4 font-display text-xl font-semibold {{ $attempt->passed ? 'text-green' : 'text-crimson' }}">
+                <p class="mt-4 font-display text-xl font-semibold {{ $attempt->passed ? 'text-success' : 'text-crimson' }}">
                     {{ $attempt->passed ? 'Passed' : 'Not passed' }}
                 </p>
                 <p class="mt-1 text-sm text-ink/60">
@@ -54,8 +55,8 @@
 
         {{-- Pre/post knowledge-gain card --}}
         @if ($gain)
-            <div class="mt-5 overflow-hidden rounded-2xl border border-green/30 bg-green/5 p-5">
-                <div class="flex items-center gap-2 text-green">
+            <div class="mt-5 overflow-hidden rounded-2xl border border-success/30 bg-success/5 p-5">
+                <div class="flex items-center gap-2 text-success">
                     <x-ui.icon name="sparkles" class="h-5 w-5" />
                     <p class="font-display font-semibold">Knowledge gain — {{ $gain['module_title'] }}</p>
                 </div>
@@ -69,9 +70,9 @@
                         <p class="text-xs text-ink/50">Post-module</p>
                         <p class="font-display text-2xl font-semibold text-ink">{{ $gain['post'] }}%</p>
                     </div>
-                    <div class="ml-2 rounded-xl bg-green/15 px-3 py-2">
-                        <p class="text-xs text-green/80">Gain</p>
-                        <p class="font-display text-2xl font-semibold text-green">{{ $gain['gain'] >= 0 ? '+' : '' }}{{ $gain['gain'] }}</p>
+                    <div class="ml-2 rounded-xl bg-success/15 px-3 py-2">
+                        <p class="text-xs text-success/80">Gain</p>
+                        <p class="font-display text-2xl font-semibold text-success">{{ $gain['gain'] >= 0 ? '+' : '' }}{{ $gain['gain'] }}</p>
                     </div>
                 </div>
             </div>
@@ -121,14 +122,14 @@
                             @if (in_array($item['type'], ['mcq_single', 'mcq_multi', 'true_false', 'fill_blank']) && $correct !== true)
                                 <div>
                                     <span class="text-ink/50">Correct answer: </span>
-                                    <span class="text-green">{{ is_array($item['correct']) ? implode(', ', $item['correct']) : $item['correct'] }}</span>
+                                    <span class="text-success">{{ is_array($item['correct']) ? implode(', ', $item['correct']) : $item['correct'] }}</span>
                                 </div>
                             @endif
 
                             @if ($item['type'] === 'matching')
                                 <ul class="mt-1 space-y-1">
                                     @foreach ($item['correct'] as $pair)
-                                        <li class="text-ink/70">{{ $pair['left'] }} → <span class="text-green">{{ $pair['right'] }}</span></li>
+                                        <li class="text-ink/70">{{ $pair['left'] }} → <span class="text-success">{{ $pair['right'] }}</span></li>
                                     @endforeach
                                 </ul>
                             @endif

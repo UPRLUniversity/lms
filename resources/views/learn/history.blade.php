@@ -113,7 +113,7 @@
                                         @else
                                             <div class="space-y-1">
                                                 @foreach ($gains as $gain)
-                                                    <span class="inline-flex items-center gap-1 rounded-full bg-green/10 px-2 py-0.5 text-xs text-green"
+                                                    <span class="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs text-success"
                                                           title="{{ $gain['module_title'] }}: {{ $gain['pre'] }}% → {{ $gain['post'] }}%">
                                                         <x-ui.icon name="sparkles" class="h-3 w-3" />
                                                         {{ $gain['pre'] }}→{{ $gain['post'] }}% ({{ $gain['gain'] >= 0 ? '+' : '' }}{{ $gain['gain'] }})

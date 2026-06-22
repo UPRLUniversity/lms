@@ -30,9 +30,9 @@
                                 <p class="text-xs text-ink/50">Post</p>
                                 <p class="font-display text-2xl font-semibold text-ink">{{ $gain['post'] }}%</p>
                             </div>
-                            <div class="ml-2 rounded-xl px-4 py-2 {{ $gain['gain'] >= 0 ? 'bg-green/15' : 'bg-crimson/10' }}">
-                                <p class="text-xs {{ $gain['gain'] >= 0 ? 'text-green/80' : 'text-crimson/80' }}">Avg gain</p>
-                                <p class="font-display text-2xl font-semibold {{ $gain['gain'] >= 0 ? 'text-green' : 'text-crimson' }}">{{ $gain['gain'] >= 0 ? '+' : '' }}{{ $gain['gain'] }}</p>
+                            <div class="ml-2 rounded-xl px-4 py-2 {{ $gain['gain'] >= 0 ? 'bg-success/15' : 'bg-crimson/10' }}">
+                                <p class="text-xs {{ $gain['gain'] >= 0 ? 'text-success/80' : 'text-crimson/80' }}">Avg gain</p>
+                                <p class="font-display text-2xl font-semibold {{ $gain['gain'] >= 0 ? 'text-success' : 'text-crimson' }}">{{ $gain['gain'] >= 0 ? '+' : '' }}{{ $gain['gain'] }}</p>
                             </div>
                         </div>
                     </x-ui.card>

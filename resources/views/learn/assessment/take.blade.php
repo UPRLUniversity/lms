@@ -37,7 +37,7 @@
                             class="relative h-9 w-9 rounded-lg text-sm font-medium transition focus-ring"
                             :class="{
                                 'ring-2 ring-crimson ring-offset-1': index === i,
-                                'bg-green/15 text-green': statusOf(i) === 'answered',
+                                'bg-success/15 text-success': statusOf(i) === 'answered',
                                 'bg-gold/20 text-gold-ink': statusOf(i) === 'flagged',
                                 'bg-ink/5 text-ink/50': statusOf(i) === 'skipped',
                             }"

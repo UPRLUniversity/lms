@@ -111,6 +111,35 @@ class QuestionBankTest extends TestCase
         $this->assertSoftDeleted('questions', ['id' => $q->id]);
     }
 
+    public function test_import_is_scoped_to_courses_the_instructor_teaches(): void
+    {
+        [$instructor, $target] = $this->instructorWithCourse();
+
+        // A source course the instructor does NOT teach, with a question.
+        $foreignCourse = Course::factory()->create();
+        $foreignQuestion = Question::factory()->mcqSingle()->create(['course_id' => $foreignCourse->id]);
+
+        // Importing from a course they can't view is forbidden (IDOR guard).
+        $this->actingAs($instructor)->post(route('questions.import', $target), [
+            'source_course_id' => $foreignCourse->id,
+            'question_ids' => [$foreignQuestion->id],
+        ])->assertForbidden();
+
+        $this->assertSame(0, Question::where('course_id', $target->id)->count());
+
+        // Even from a legitimate source, a question id outside that source is rejected.
+        $source = Course::factory()->create(['created_by' => $instructor->id]);
+        Question::factory()->mcqSingle()->create(['course_id' => $source->id]);
+
+        $this->actingAs($instructor)->from(route('questions.import.form', $target))
+            ->post(route('questions.import', $target), [
+                'source_course_id' => $source->id,
+                'question_ids' => [$foreignQuestion->id], // belongs to foreignCourse, not source
+            ])->assertSessionHasErrors('question_ids.0');
+
+        $this->assertSame(0, Question::where('course_id', $target->id)->count());
+    }
+
     public function test_a_student_cannot_reach_the_bank(): void
     {
         [, $course] = $this->instructorWithCourse();

@@ -57,7 +57,7 @@
                             <p class="text-xs font-medium text-ink/50">Student's answer</p>
                             @if ($question->type->isScenario())
                                 @if ($item['objective_hint'])
-                                    <p class="mt-1 text-xs text-green">Objective parts auto-scored {{ $item['objective_hint'][0] }} / {{ $item['objective_hint'][1] }} pts.</p>
+                                    <p class="mt-1 text-xs text-success">Objective parts auto-scored {{ $item['objective_hint'][0] }} / {{ $item['objective_hint'][1] }} pts.</p>
                                 @endif
                                 <div class="mt-2 space-y-2">
                                     @foreach ($question->subQuestions() as $si => $sub)

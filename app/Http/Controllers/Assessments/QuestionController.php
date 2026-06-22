@@ -13,6 +13,7 @@ use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * The course-scoped question bank: a filterable table (type, category, difficulty, search)
@@ -181,9 +182,14 @@ class QuestionController extends Controller
         $data = $request->validate([
             'source_course_id' => ['required', 'integer', 'exists:courses,id'],
             'question_ids' => ['required', 'array', 'min:1'],
-            'question_ids.*' => ['integer'],
+            // Defence in depth: every id must belong to the named source course, so a forged
+            // payload can't reference another course's questions even before the service's own
+            // course_id scoping.
+            'question_ids.*' => ['integer', Rule::exists('questions', 'id')->where('course_id', $request->integer('source_course_id'))],
         ]);
 
+        // Authorize the source through the same rule importForm uses: an instructor reaches
+        // only courses they teach; admins reach all. (forInstructor alone would lock admins out.)
         $source = Course::findOrFail($data['source_course_id']);
         $this->authorize('view', $source);
 

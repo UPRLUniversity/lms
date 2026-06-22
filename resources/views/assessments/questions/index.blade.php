@@ -17,7 +17,7 @@
                     <x-ui.icon name="download" class="h-4 w-4" /> Import
                 </x-ui.button>
                 <div class="relative">
-                    <x-ui.button @click="open = !open" aria-haspopup="true" :aria-expanded="open">
+                    <x-ui.button @click="open = !open" aria-haspopup="true" ::aria-expanded="open">
                         <x-ui.icon name="plus" class="h-4 w-4" /> New question
                     </x-ui.button>
                     <div x-show="open" x-cloak @click.outside="open = false"

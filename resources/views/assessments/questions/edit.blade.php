@@ -7,6 +7,7 @@
 
     $config = [
         'type' => old('type', $type->value),
+        'points' => old('points', $question?->points ?? 1),
         'question' => $editing ? [
             'type' => $question->type->value,
             'payload' => $question->payload,
@@ -59,9 +60,9 @@
                             <span class="font-normal text-ink/40" x-show="type === 'scenario'">(auto)</span>
                         </label>
                         <input id="points" name="points" type="number" min="0" step="0.5"
-                               :value="type === 'scenario' ? scenarioPoints : undefined"
+                               x-model="points"
                                :readonly="type === 'scenario'"
-                               value="{{ old('points', $question?->points ?? 1) }}"
+                               x-effect="if (type === 'scenario') points = scenarioPoints"
                                class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                     </div>
                 </div>
@@ -100,14 +101,14 @@
                                 <template x-if="type === 'mcq_single'">
                                     <button type="button" @click="setSingleCorrect(i)" :aria-pressed="opt.is_correct"
                                             class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border focus-ring"
-                                            :class="opt.is_correct ? 'border-green bg-green/10 text-green' : 'border-line text-ink/30'">
+                                            :class="opt.is_correct ? 'border-success bg-success/10 text-success' : 'border-line text-ink/30'">
                                         <x-ui.icon name="check" class="h-4 w-4" />
                                     </button>
                                 </template>
                                 <template x-if="type === 'mcq_multi'">
                                     <button type="button" @click="opt.is_correct = !opt.is_correct" :aria-pressed="opt.is_correct"
                                             class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border focus-ring"
-                                            :class="opt.is_correct ? 'border-green bg-green/10 text-green' : 'border-line text-ink/30'">
+                                            :class="opt.is_correct ? 'border-success bg-success/10 text-success' : 'border-line text-ink/30'">
                                         <x-ui.icon name="check" class="h-4 w-4" />
                                     </button>
                                 </template>
@@ -134,7 +135,7 @@
                         <div class="flex gap-3">
                             <button type="button" @click="tf_answer = true"
                                     class="flex-1 rounded-xl border px-4 py-3 text-sm font-medium focus-ring"
-                                    :class="tf_answer ? 'border-green bg-green/10 text-green' : 'border-line text-ink/60'">True</button>
+                                    :class="tf_answer ? 'border-success bg-success/10 text-success' : 'border-line text-ink/60'">True</button>
                             <button type="button" @click="tf_answer = false"
                                     class="flex-1 rounded-xl border px-4 py-3 text-sm font-medium focus-ring"
                                     :class="!tf_answer ? 'border-crimson bg-crimson/10 text-crimson' : 'border-line text-ink/60'">False</button>
@@ -242,7 +243,7 @@
                                                 <button type="button"
                                                         @click="sub.type === 'mcq_single' ? setSubSingleCorrect(sub, oi) : (opt.is_correct = !opt.is_correct)"
                                                         class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border focus-ring"
-                                                        :class="opt.is_correct ? 'border-green bg-green/10 text-green' : 'border-line text-ink/30'">
+                                                        :class="opt.is_correct ? 'border-success bg-success/10 text-success' : 'border-line text-ink/30'">
                                                     <x-ui.icon name="check" class="h-3.5 w-3.5" />
                                                 </button>
                                                 <input type="text" x-model="opt.text" :name="`payload[sub_questions][${si}][payload][options][${oi}][text]`" required
@@ -262,7 +263,7 @@
                                     <div class="flex gap-2">
                                         <button type="button" @click="sub.tf_answer = true"
                                                 class="flex-1 rounded-lg border px-3 py-2 text-sm focus-ring"
-                                                :class="sub.tf_answer ? 'border-green bg-green/10 text-green' : 'border-line text-ink/60'">True</button>
+                                                :class="sub.tf_answer ? 'border-success bg-success/10 text-success' : 'border-line text-ink/60'">True</button>
                                         <button type="button" @click="sub.tf_answer = false"
                                                 class="flex-1 rounded-lg border px-3 py-2 text-sm focus-ring"
                                                 :class="!sub.tf_answer ? 'border-crimson bg-crimson/10 text-crimson' : 'border-line text-ink/60'">False</button>

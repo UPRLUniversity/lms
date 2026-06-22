@@ -22,7 +22,7 @@
                         <div class="flex items-center gap-3">
                             <x-ui.badge :variant="$past->status->badge()">{{ $past->status->label() }}</x-ui.badge>
                             @if ($past->status === AttemptStatus::Graded)
-                                <span class="font-display text-lg font-semibold {{ $past->passed ? 'text-green' : 'text-crimson' }}">{{ $past->percentage }}%</span>
+                                <span class="font-display text-lg font-semibold {{ $past->passed ? 'text-success' : 'text-crimson' }}">{{ $past->percentage }}%</span>
                             @endif
                             @if ($past->status === AttemptStatus::InProgress)
                                 <a href="{{ route('attempts.show', $past) }}" class="text-sm font-medium text-crimson focus-ring rounded">Resume</a>
