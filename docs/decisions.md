@@ -330,3 +330,21 @@ future sections inherit them:
    frontier; `CourseProgress` now counts *required* assessments toward the course percentage
    alongside lessons (lesson-only callers are unaffected — the new counts default to zero).
    Standalone assessments sit at the end of the outline.
+
+### Section 5 — review addendum (2026-06-22)
+
+A full browser QA pass after delivery resolved one spec gap and recorded two accepted
+enhancements:
+
+9. **Builder curriculum now interleaves assessments inline.** Pre-module assessments
+   render before a module's lessons and post-module after (gold-tinted, non-draggable
+   chips with the clipboard icon), matching the player sidebar and the Section-2 brief
+   ("pre sits before its module's lessons, post after"). Standalone assessments keep
+   their own section below the outline. The lesson drag-reorder list is untouched (chips
+   sit outside `[data-lesson-list]`), so SortableJS still only reorders lessons.
+10. **Accepted as-is (enhancements, not gaps):** (a) a question prompt's "optional image"
+    is satisfied by inline TinyMCE images (Cloudinary) — there is no separate figure-
+    attachment field; the `QuestionImages` purpose + render path exist if one is added
+    later. (b) The scenario sub-question composer offers MCQ/multi/true-false/fill-blank/
+    essay; the grader also accepts matching as a sub-type, but nested matching isn't
+    offered in the UI (rare authoring case).

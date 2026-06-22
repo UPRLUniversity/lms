@@ -22,7 +22,7 @@ class CourseCurriculumController extends Controller
     {
         $this->authorize('view', $course);
 
-        $course->load(['modules.lessons.media']);
+        $course->load(['modules.lessons.media', 'modules.assessments']);
 
         return view('courses.partials._curriculum', [
             'course' => $course,

@@ -30,8 +30,8 @@
     <div class="mt-8 border-t border-line pt-6">
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
-                <h3 class="font-display text-lg font-semibold text-ink">Assessments</h3>
-                <p class="text-sm text-ink/60">Quizzes and exams. Pre/post-module assessments power knowledge-gain insights.</p>
+                <h3 class="font-display text-lg font-semibold text-ink">Standalone assessments</h3>
+                <p class="text-sm text-ink/60">Course-level quizzes and exams. Pre/post-module assessments appear inline in the outline above.</p>
             </div>
             <div class="flex items-center gap-2">
                 <x-ui.button variant="ghost" size="sm" :href="route('assessments.insights', $course)">
@@ -48,15 +48,15 @@
             </div>
         </div>
 
-        @if ($course->assessments->isEmpty())
+        @php $standalone = $course->assessments->where('placement', \App\Enums\AssessmentPlacement::Standalone); @endphp
+        @if ($standalone->isEmpty())
             <div class="mt-4">
-                <x-ui.empty-state icon="clipboard" title="No assessments yet"
-                    description="Add a quiz or exam — attach it before or after a module, or as a standalone." />
+                <x-ui.empty-state icon="clipboard" title="No standalone assessments"
+                    description="Add a course-level quiz or exam — or attach one to a module (pre/post) and it'll appear in the outline above." />
             </div>
         @else
             <ul class="mt-4 space-y-2">
-                @foreach ($course->assessments as $assessment)
-                    @php $module = $assessment->module_id ? $course->modules->firstWhere('id', $assessment->module_id) : null; @endphp
+                @foreach ($standalone as $assessment)
                     <li>
                         <a href="{{ route('assessments.edit', [$course, $assessment]) }}"
                            class="flex items-center gap-3 rounded-xl border border-line bg-card p-3 transition hover:border-ink/20 focus-ring">
@@ -66,7 +66,7 @@
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate text-sm font-medium text-ink">{{ $assessment->title }}</span>
                                 <span class="text-xs text-ink/50">
-                                    {{ $assessment->placement->label() }}@if ($module) · {{ $module->title }}@endif · {{ $assessment->questionCount() }} questions
+                                    Standalone · {{ $assessment->questionCount() }} {{ \Illuminate\Support\Str::plural('question', $assessment->questionCount()) }}
                                 </span>
                             </span>
                             <x-ui.badge :variant="$assessment->status->badge()">{{ $assessment->status->label() }}</x-ui.badge>

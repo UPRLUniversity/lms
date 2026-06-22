@@ -97,6 +97,7 @@ class CourseController extends Controller
             'instructors',
             'media',
             'modules.lessons.media',
+            'modules.assessments',
             'assessments' => fn ($q) => $q->orderBy('position'),
         ]);
 
