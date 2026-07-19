@@ -348,3 +348,45 @@ enhancements:
     later. (b) The scenario sub-question composer offers MCQ/multi/true-false/fill-blank/
     essay; the grader also accepts matching as a sub-type, but nested matching isn't
     offered in the UI (rare authoring case).
+
+## Section 6 — Assignments, submissions & rubric grading (2026-07-19)
+
+1. **Assignments mirror the assessment curriculum pattern, minus placement.** An
+   assignment attaches after a module's lessons (`module_id` + `position`) or sits
+   standalone at the end of the outline. It joins the unified `CurriculumOutline`
+   as a third item kind, so the sequential gate, sidebar and progress math all
+   treat it like lessons/assessments with zero special-casing.
+2. **Completion = a graded submission.** An assignment counts toward the course %
+   when the student has any submission with status `graded`. Returning a graded
+   version for resubmission removes that signal (and can drop a Completed
+   enrollment back to Active) — the grade row itself is kept for the audit trail.
+3. **Versioning is insert-only.** Every hand-in inserts `version = max + 1`
+   inside a transaction; there is no update path for submission content, so prior
+   versions are immutable by construction. Only `status` + the return-note audit
+   fields ever change.
+4. **Rubric grades snapshot their selections.** `grades.criterion_scores` stores
+   {criterion id, title, level index, label, points, max} as graded, so editing or
+   deleting a rubric later never rewrites a student's breakdown. The server is the
+   only scorer: level choices are validated against the rubric and the total is
+   recomputed; a rubric-free grade is capped at `max_points`.
+5. **Publish gate for gradebook safety (per the forward note).** Publishing is
+   blocked unless `max_points` > 0 and instructions are non-empty, so every
+   published assignment is safe for the Section 6.5 gradebook division.
+6. **Late policy is server-enforced in SubmissionService**: past `due_at` with
+   `allow_late=false` throws a kind validation message; with `allow_late=true`
+   the version is stored with `is_late=true` (flag is per-version, so an on-time
+   v1 keeps its state).
+7. **Files ride the existing media rails.** New private `AssignmentResources`
+   purpose for instructor briefs; the existing `Submissions` purpose gained
+   image mimes so the grading split-view can preview pdf + images inline via
+   signed temporary URLs (everything else downloads). MediaPolicy delegates to
+   the owning model's policy (Assignment→submit/view, Submission→view).
+8. **Two new permissions** (`assignments.view`, `assignments.grade`) follow the
+   assessment pair; the auditor inherits `.view` automatically and browses the
+   builder, rubric library, grading workspace and versions strictly read-only.
+9. **Rubrics are owner-scoped authoring tools** (instructor library, admins may
+   step in) saved wholesale from a grid editor; criteria are rebuilt on save,
+   which is safe because grades hold snapshots (see 4).
+10. **Upload progress + draft autosave** live in `assignment-submit.js`: the form
+    posts via XHR for a real progress bar (JSON redirect on success), and the
+    typed answer is snapshotted to localStorage every 5s until submitted.

@@ -31,7 +31,9 @@ class UploadValidationTest extends TestCase
             'lesson image: valid gif' => [MediaPurpose::LessonImages->value, 200, 'image/gif', true],
             'signature: wrong mime (jpg)' => [MediaPurpose::Signatures->value, 50, 'image/jpeg', false],
             'submission: valid pdf' => [MediaPurpose::Submissions->value, 200, 'application/pdf', true],
-            'submission: wrong mime (image)' => [MediaPurpose::Submissions->value, 200, 'image/jpeg', false],
+            // Images became valid for submissions in Section 6 (inline grading preview).
+            'submission: valid image' => [MediaPurpose::Submissions->value, 200, 'image/jpeg', true],
+            'submission: wrong mime (video)' => [MediaPurpose::Submissions->value, 200, 'video/mp4', false],
             'submission: oversize pdf' => [MediaPurpose::Submissions->value, 30000, 'application/pdf', false],
             'certificate: valid pdf' => [MediaPurpose::Certificates->value, 100, 'application/pdf', true],
             'certificate: wrong mime' => [MediaPurpose::Certificates->value, 100, 'application/zip', false],
