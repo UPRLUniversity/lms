@@ -57,6 +57,9 @@
                 @if (($snapshot->requiredAssessmentTotal ?? 0) > 0)
                     · {{ $snapshot->requiredAssessmentComplete }} of {{ $snapshot->requiredAssessmentTotal }} assessments
                 @endif
+                @if (($snapshot->requiredAssignmentTotal ?? 0) > 0)
+                    · {{ $snapshot->requiredAssignmentComplete }} of {{ $snapshot->requiredAssignmentTotal }} assignments
+                @endif
                 complete
             </p>
         </div>
@@ -146,19 +149,28 @@
                         @foreach ($outline->forModule($module->id)->where('kind', 'assessment')->filter(fn ($i) => $i->placement === 'post_module') as $assessmentItem)
                             @include('learn.partials._sidebar_assessment', ['item' => $assessmentItem])
                         @endforeach
+
+                        {{-- Module assignments come last in the module. --}}
+                        @foreach ($outline->forModule($module->id)->where('kind', 'assignment') as $assignmentItem)
+                            @include('learn.partials._sidebar_assignment', ['item' => $assignmentItem])
+                        @endforeach
                     @endisset
                 </ul>
             </div>
         @endforeach
 
-        {{-- Standalone, course-level assessments at the end of the outline. --}}
+        {{-- Standalone, course-level assessments + assignments at the end of the outline. --}}
         @isset($outline)
             @if ($outline->standalone()->isNotEmpty())
                 <div class="mt-1">
-                    <p class="px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-ink/40">Assessments</p>
+                    <p class="px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-ink/40">Assessments &amp; assignments</p>
                     <ul class="space-y-0.5 pl-2">
-                        @foreach ($outline->standalone() as $assessmentItem)
-                            @include('learn.partials._sidebar_assessment', ['item' => $assessmentItem])
+                        @foreach ($outline->standalone() as $standaloneItem)
+                            @if ($standaloneItem->isAssignment())
+                                @include('learn.partials._sidebar_assignment', ['item' => $standaloneItem])
+                            @else
+                                @include('learn.partials._sidebar_assessment', ['item' => $standaloneItem])
+                            @endif
                         @endforeach
                     </ul>
                 </div>

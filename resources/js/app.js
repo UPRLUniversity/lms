@@ -9,6 +9,7 @@ import learnPlayer from './learn';
 import { questionEditor } from './question-bank';
 import { assessmentBuilder } from './assessment-builder';
 import { attemptRunner } from './attempt';
+import { assignmentSubmit } from './assignment-submit';
 
 window.Alpine = Alpine;
 
@@ -30,6 +31,9 @@ Alpine.data('learnPlayer', learnPlayer);
 Alpine.data('questionEditor', questionEditor);
 Alpine.data('assessmentBuilder', assessmentBuilder);
 Alpine.data('attemptRunner', attemptRunner);
+
+// Assignments: the student hand-in form (upload progress + draft autosave).
+Alpine.data('assignmentSubmit', assignmentSubmit);
 
 Alpine.start();
 

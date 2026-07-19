@@ -77,6 +77,85 @@
         @endif
     </div>
 
+    {{-- Assignments — graded coursework attached to the curriculum --}}
+    <div class="mt-8 border-t border-line pt-6">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+            <div>
+                <h3 class="font-display text-lg font-semibold text-ink">Assignments</h3>
+                <p class="text-sm text-ink/60">Graded coursework students hand in as text or files. Module-attached assignments appear inline in the outline above.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <x-ui.button variant="ghost" size="sm" :href="route('rubrics.index')">
+                    <x-ui.icon name="list" class="h-4 w-4" /> Rubrics
+                </x-ui.button>
+                @if ($canManage)
+                    <x-ui.button size="sm" @click="$dispatch('open-modal', 'add-assignment')">
+                        <x-ui.icon name="plus" class="h-4 w-4" /> Add assignment
+                    </x-ui.button>
+                @endif
+            </div>
+        </div>
+
+        @php $standaloneAssignments = $course->assignments->whereNull('module_id'); @endphp
+        @if ($standaloneAssignments->isEmpty())
+            <div class="mt-4">
+                <x-ui.empty-state icon="document-text" title="No standalone assignments"
+                    description="Add course-level coursework here — or attach an assignment to a module and it'll appear in the outline above." />
+            </div>
+        @else
+            <ul class="mt-4 space-y-2">
+                @foreach ($standaloneAssignments as $assignment)
+                    <li>
+                        <a href="{{ route('assignments.edit', [$course, $assignment]) }}"
+                           class="flex items-center gap-3 rounded-xl border border-line bg-card p-3 transition hover:border-ink/20 focus-ring">
+                            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-crimson/10 text-crimson">
+                                <x-ui.icon name="document-text" class="h-5 w-5" />
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-sm font-medium text-ink">{{ $assignment->title }}</span>
+                                <span class="text-xs text-ink/50">
+                                    {{ $assignment->type->label() }}
+                                    @if ($assignment->due_at) · due {{ $assignment->due_at->isoFormat('D MMM YYYY, HH:mm') }} @endif
+                                    @if ($assignment->max_points) · {{ rtrim(rtrim(number_format((float) $assignment->max_points, 2), '0'), '.') }} pts @endif
+                                </span>
+                            </span>
+                            <x-ui.badge :variant="$assignment->status->badge()">{{ $assignment->status->label() }}</x-ui.badge>
+                        </a>
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </div>
+
+    {{-- Add-assignment modal --}}
+    @if ($canManage)
+        <x-ui.modal name="add-assignment" title="New assignment">
+            <form method="POST" action="{{ route('assignments.store', $course) }}" class="space-y-4">
+                @csrf
+                <div>
+                    <label for="as_title" class="block text-sm font-medium text-ink">Title</label>
+                    <input id="as_title" name="title" required maxlength="255"
+                           class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson"
+                           placeholder="e.g. Crisis communication case study">
+                </div>
+                <div>
+                    <label for="as_module" class="block text-sm font-medium text-ink">Placement</label>
+                    <select id="as_module" name="module_id"
+                            class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                        <option value="">Standalone (end of course)</option>
+                        @foreach ($course->modules as $m)
+                            <option value="{{ $m->id }}">After “{{ $m->title }}”</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex justify-end gap-2 pt-2">
+                    <x-ui.button type="button" variant="ghost" @click="$dispatch('close-modal', 'add-assignment')">Cancel</x-ui.button>
+                    <x-ui.button type="submit">Create &amp; write the brief</x-ui.button>
+                </div>
+            </form>
+        </x-ui.modal>
+    @endif
+
     {{-- Add-assessment modal --}}
     @if ($canManage)
         <x-ui.modal name="add-assessment" title="New assessment">

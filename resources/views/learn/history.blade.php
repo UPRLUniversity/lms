@@ -55,6 +55,7 @@
                                 <th scope="col" class="px-5 py-3.5">Time spent</th>
                                 <th scope="col" class="px-5 py-3.5">Completed</th>
                                 <th scope="col" class="px-5 py-3.5">Assessment</th>
+                                <th scope="col" class="px-5 py-3.5">Assignments</th>
                                 <th scope="col" class="px-5 py-3.5">Certificate</th>
                                 <th scope="col" class="px-5 py-3.5"><span class="sr-only">Action</span></th>
                             </tr>
@@ -118,6 +119,28 @@
                                                         <x-ui.icon name="sparkles" class="h-3 w-3" />
                                                         {{ $gain['pre'] }}→{{ $gain['post'] }}% ({{ $gain['gain'] >= 0 ? '+' : '' }}{{ $gain['gain'] }})
                                                     </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </td>
+                                    {{-- Section 6: graded assignment scores (latest graded version per assignment). --}}
+                                    <td class="px-5 py-4">
+                                        @php $gradedAssignments = $assignmentsByCourse[$course->id] ?? collect(); @endphp
+                                        @if ($gradedAssignments->isEmpty())
+                                            <span class="text-ink/30">—</span>
+                                        @else
+                                            <div class="space-y-1">
+                                                @foreach ($gradedAssignments as $graded)
+                                                    @php
+                                                        $pts = rtrim(rtrim(number_format((float) $graded->grade->points_total, 2), '0'), '.');
+                                                        $max = rtrim(rtrim(number_format((float) $graded->assignment->max_points, 2), '0'), '.');
+                                                    @endphp
+                                                    <a href="{{ route('submissions.show', $graded) }}"
+                                                       class="inline-flex items-center gap-1 rounded-full bg-crimson/5 px-2 py-0.5 text-xs text-crimson hover:bg-crimson/10 focus-ring"
+                                                       title="{{ $graded->assignment->title }}: {{ $pts }} of {{ $max }} points">
+                                                        <x-ui.icon name="document-text" class="h-3 w-3" />
+                                                        {{ Str::limit($graded->assignment->title, 18) }} · {{ $pts }}/{{ $max }}
+                                                    </a>
                                                 @endforeach
                                             </div>
                                         @endif

@@ -118,6 +118,11 @@
                             @include('courses.partials._assessment_chip', ['assessment' => $assessment])
                         @endforeach
 
+                        {{-- Module assignments come last in the module. --}}
+                        @foreach ($module->assignments as $assignment)
+                            @include('courses.partials._assignment_chip', ['assignment' => $assignment])
+                        @endforeach
+
                         @if ($canManage)
                             <div class="border-t border-line px-3 py-2">
                                 <button type="button" data-action="add-lesson" data-module-id="{{ $module->id }}"
