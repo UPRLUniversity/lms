@@ -3,18 +3,19 @@
 namespace App\Support\Learning;
 
 use App\Models\Assessment;
+use App\Models\Assignment;
 use App\Models\Lesson;
 
 /**
- * One entry in the unified learning outline — a lesson or an assessment — carrying the
- * derived facts the player sidebar and the sequential gate need: whether the student has
- * completed it, whether it's locked, and whether it blocks progression.
+ * One entry in the unified learning outline — a lesson, an assessment or an assignment —
+ * carrying the derived facts the player sidebar and the sequential gate need: whether the
+ * student has completed it, whether it's locked, and whether it blocks progression.
  */
 final class CurriculumItem
 {
     public function __construct(
-        public readonly string $kind,        // 'lesson' | 'assessment'
-        public readonly Lesson|Assessment $model,
+        public readonly string $kind,        // 'lesson' | 'assessment' | 'assignment'
+        public readonly Lesson|Assessment|Assignment $model,
         public readonly bool $completed,
         public readonly bool $locked,
         public readonly bool $required,
@@ -30,6 +31,11 @@ final class CurriculumItem
     public function isAssessment(): bool
     {
         return $this->kind === 'assessment';
+    }
+
+    public function isAssignment(): bool
+    {
+        return $this->kind === 'assignment';
     }
 
     public function id(): int
