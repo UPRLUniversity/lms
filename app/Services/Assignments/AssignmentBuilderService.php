@@ -3,6 +3,7 @@
 namespace App\Services\Assignments;
 
 use App\Enums\AssignmentStatus;
+use App\Enums\AssignmentType;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\User;
@@ -28,7 +29,8 @@ class AssignmentBuilderService
             'created_by' => $author->id,
             'title' => $data['title'],
             'slug' => $this->uniqueSlug($course, $data['title']),
-            'type' => $data['type'] ?? null,
+            // Explicit default: an omitted key must not write NULL into the NOT NULL column.
+            'type' => $data['type'] ?? AssignmentType::Either->value,
             'status' => AssignmentStatus::Draft->value,
             'position' => (int) $course->assignments()->where('module_id', $moduleId)->max('position') + 1,
         ]);
