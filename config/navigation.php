@@ -65,7 +65,14 @@ return [
         'icon' => 'clipboard-check',
         'route' => 'grading.index',
         'match' => 'grading.*',
-        'roles' => ['instructor', 'admin', 'super-admin'],
+        'roles' => ['instructor', 'admin', 'super-admin', 'auditor'],
+    ],
+    [
+        'label' => 'Rubrics',
+        'icon' => 'list',
+        'route' => 'rubrics.index',
+        'match' => 'rubrics.*',
+        'roles' => ['instructor', 'admin', 'super-admin', 'auditor'],
     ],
     [
         // Auditor is intentionally included — it sees the people list read-only.

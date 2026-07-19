@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Courses;
 
 use App\Enums\EnrollmentStatus;
+use App\Enums\SubmissionStatus;
 use App\Http\Controllers\Controller;
 use App\Models\LessonProgress;
+use App\Models\Submission;
 use App\Services\Assessments\KnowledgeGainService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
  * The student's learning history: one row per course they've engaged with — enrolled
- * date, progress, time spent, completion date and (Section 5) any pre/post knowledge-gain.
+ * date, progress, time spent, completion date, any pre/post knowledge-gain (Section 5)
+ * and graded assignment scores (Section 6).
  */
 class LearningHistoryController extends Controller
 {
@@ -48,10 +51,24 @@ class LearningHistoryController extends Controller
             ->selectRaw('modules.course_id as course_id, SUM(lesson_progress.seconds_spent) as seconds')
             ->pluck('seconds', 'course_id');
 
+        // Graded assignment scores per course: the latest graded version per assignment,
+        // shaped for the Assignments column (one query, no per-row lookups).
+        $assignmentsByCourse = Submission::query()
+            ->where('user_id', $user->id)
+            ->where('status', SubmissionStatus::Graded->value)
+            ->with(['grade', 'assignment:id,course_id,title,max_points'])
+            ->orderBy('version')
+            ->get()
+            ->groupBy('assignment_id')
+            ->map(fn ($versions) => $versions->last()) // highest graded version wins
+            ->filter(fn (Submission $s) => $s->assignment !== null && $s->grade !== null)
+            ->groupBy(fn (Submission $s) => $s->assignment->course_id);
+
         return view('learn.history', [
             'enrollments' => $enrollments,
             'secondsByCourse' => $secondsByCourse,
             'gainsByCourse' => $gainsByCourse,
+            'assignmentsByCourse' => $assignmentsByCourse,
             'completedCount' => $enrollments->where('status', EnrollmentStatus::Completed)->count(),
         ]);
     }
