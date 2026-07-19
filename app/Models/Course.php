@@ -142,6 +142,16 @@ class Course extends Model
     }
 
     /**
+     * Assignments attached to this course (on its modules + standalone).
+     *
+     * @return HasMany<Assignment, $this>
+     */
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(Assignment::class);
+    }
+
+    /**
      * The course-scoped question bank.
      *
      * @return HasMany<Question, $this>

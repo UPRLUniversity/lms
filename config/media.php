@@ -130,7 +130,27 @@ return [
             'transformations' => [],
         ],
 
+        MediaPurpose::AssignmentResources->value => [
+            // Instructor-attached briefs/templates on an assignment. Private like lesson
+            // resources: enrolled students download via the policy-gated route.
+            'visibility' => 'private',
+            'disk' => 'private',
+            'allowed_mimes' => [
+                'application/pdf',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/zip',
+                'image/jpeg',
+                'image/png',
+            ],
+            'max_kb' => 20480,
+            'transformations' => [],
+        ],
+
         MediaPurpose::Submissions->value => [
+            // Images are accepted alongside documents so the grading workspace can
+            // preview them inline (pdf + images render in place; the rest download).
             'visibility' => 'private',
             'disk' => 'private',
             'allowed_mimes' => [
@@ -138,6 +158,9 @@ return [
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 'application/zip',
                 'text/plain',
+                'image/jpeg',
+                'image/png',
+                'image/webp',
             ],
             'max_kb' => 20480,
             'transformations' => [],
