@@ -27,6 +27,10 @@ enum Permission: string
     case AssessmentsView = 'assessments.view';
     case AssessmentsGrade = 'assessments.grade';
 
+    // Assignments (file/text submissions + rubric grading).
+    case AssignmentsView = 'assignments.view';
+    case AssignmentsGrade = 'assignments.grade';
+
     // Reporting.
     case ReportsView = 'reports.view';
 

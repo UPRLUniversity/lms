@@ -24,6 +24,8 @@ class CourseProgress
      * @param  Collection<int, LessonProgress>  $progress  keyed by lesson_id
      * @param  int  $requiredAssessmentTotal  published, required assessments on the course
      * @param  int  $requiredAssessmentComplete  of those, the ones the student has passed
+     * @param  int  $requiredAssignmentTotal  published, required assignments on the course
+     * @param  int  $requiredAssignmentComplete  of those, the ones with a graded submission
      */
     public function __construct(
         public readonly Course $course,
@@ -31,6 +33,8 @@ class CourseProgress
         public readonly Collection $progress,
         public readonly int $requiredAssessmentTotal = 0,
         public readonly int $requiredAssessmentComplete = 0,
+        public readonly int $requiredAssignmentTotal = 0,
+        public readonly int $requiredAssignmentComplete = 0,
     ) {}
 
     /**
@@ -50,17 +54,17 @@ class CourseProgress
 
     /**
      * Total trackable items toward course completion: every lesson plus every required
-     * assessment. With no assessments this equals the lesson count, so the lesson-only
-     * player (Section 4) is unaffected.
+     * assessment and required assignment. With neither this equals the lesson count, so
+     * the lesson-only player (Section 4) is unaffected.
      */
     public function total(): int
     {
-        return $this->lessonTotal() + $this->requiredAssessmentTotal;
+        return $this->lessonTotal() + $this->requiredAssessmentTotal + $this->requiredAssignmentTotal;
     }
 
     public function completedCount(): int
     {
-        return $this->lessonCompletedCount() + $this->requiredAssessmentComplete;
+        return $this->lessonCompletedCount() + $this->requiredAssessmentComplete + $this->requiredAssignmentComplete;
     }
 
     /**

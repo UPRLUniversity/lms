@@ -3,14 +3,15 @@
 namespace App\Support\Learning;
 
 use App\Models\Assessment;
+use App\Models\Assignment;
 use App\Models\Lesson;
 use Illuminate\Support\Collection;
 
 /**
- * The student's whole-course outline as an ordered list of CurriculumItems (lessons +
- * assessments interleaved by placement). Built once per request by LearningService; the
- * player sidebar iterates it, and the sequential gate consults it so a lesson can sit
- * behind a required assessment (and vice-versa).
+ * The student's whole-course outline as an ordered list of CurriculumItems (lessons,
+ * assessments and assignments interleaved). Built once per request by LearningService;
+ * the player sidebar iterates it, and the sequential gate consults it so any item can
+ * sit behind a required one that comes before it.
  */
 final class CurriculumOutline
 {
@@ -29,8 +30,14 @@ final class CurriculumOutline
         return (bool) $this->find('assessment', $assessment->id)?->locked;
     }
 
+    public function isAssignmentLocked(Assignment $assignment): bool
+    {
+        return (bool) $this->find('assignment', $assignment->id)?->locked;
+    }
+
     /**
-     * Items belonging to a module, in order (its pre-assessments, lessons, post-assessments).
+     * Items belonging to a module, in order (its pre-assessments, lessons,
+     * post-assessments, then assignments).
      *
      * @return Collection<int, CurriculumItem>
      */
@@ -40,14 +47,14 @@ final class CurriculumOutline
     }
 
     /**
-     * Standalone (course-level) assessments, at the end of the outline.
+     * Standalone (course-level) assessments + assignments, at the end of the outline.
      *
      * @return Collection<int, CurriculumItem>
      */
     public function standalone(): Collection
     {
         return $this->items
-            ->filter(fn (CurriculumItem $i) => $i->isAssessment() && $i->moduleId === null)
+            ->filter(fn (CurriculumItem $i) => ! $i->isLesson() && $i->moduleId === null)
             ->values();
     }
 

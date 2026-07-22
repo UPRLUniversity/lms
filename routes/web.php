@@ -15,6 +15,10 @@ use App\Http\Controllers\Assessments\GradingController;
 use App\Http\Controllers\Assessments\AttemptResultController;
 use App\Http\Controllers\Assessments\QuestionCategoryController;
 use App\Http\Controllers\Assessments\QuestionController;
+use App\Http\Controllers\Assignments\AssignmentController;
+use App\Http\Controllers\Assignments\AssignmentGradingController;
+use App\Http\Controllers\Assignments\RubricController;
+use App\Http\Controllers\Assignments\SubmissionController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\Courses\AdminEnrollmentController;
 use App\Http\Controllers\Courses\BulkEnrollmentController;
@@ -321,15 +325,55 @@ Route::middleware(['auth', 'verified'])
 
 /*
 |--------------------------------------------------------------------------
+| Assignment authoring (instructors + admins; auditors read-only)
+|--------------------------------------------------------------------------
+| The rubric library + grid builder and the assignment builder (settings, rubric,
+| resources, publish gate). Assignment slugs are unique per course → scoped bindings.
+*/
+Route::middleware(['auth', 'verified'])
+    ->prefix('manage')
+    ->group(function () {
+        Route::get('rubrics', [RubricController::class, 'index'])->name('rubrics.index');
+        Route::get('rubrics/create', [RubricController::class, 'create'])->name('rubrics.create');
+        Route::post('rubrics', [RubricController::class, 'store'])->name('rubrics.store');
+        Route::get('rubrics/{rubric}/edit', [RubricController::class, 'edit'])->name('rubrics.edit');
+        Route::put('rubrics/{rubric}', [RubricController::class, 'update'])->name('rubrics.update');
+        Route::delete('rubrics/{rubric}', [RubricController::class, 'destroy'])->name('rubrics.destroy');
+    });
+
+Route::middleware(['auth', 'verified'])
+    ->prefix('manage')
+    ->scopeBindings()
+    ->group(function () {
+        Route::post('courses/{course}/assignments', [AssignmentController::class, 'store'])->name('assignments.store');
+        Route::get('courses/{course}/assignments/{assignment}/edit', [AssignmentController::class, 'edit'])->name('assignments.edit');
+        Route::put('courses/{course}/assignments/{assignment}', [AssignmentController::class, 'update'])->name('assignments.update');
+        Route::delete('courses/{course}/assignments/{assignment}', [AssignmentController::class, 'destroy'])->name('assignments.destroy');
+        Route::post('courses/{course}/assignments/{assignment}/publish', [AssignmentController::class, 'publish'])->name('assignments.publish');
+        Route::post('courses/{course}/assignments/{assignment}/unpublish', [AssignmentController::class, 'unpublish'])->name('assignments.unpublish');
+        Route::post('courses/{course}/assignments/{assignment}/resources', [AssignmentController::class, 'storeResource'])->name('assignments.resources.store');
+        Route::delete('courses/{course}/assignments/{assignment}/resources/{media}', [AssignmentController::class, 'destroyResource'])->name('assignments.resources.destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
 | Manual grading queue (instructors + admins)
 |--------------------------------------------------------------------------
-| Submitted attempts with essay / scenario-essay answers awaiting a human. Each
-| action is authorized through AttemptPolicy::grade (course ownership + grade perm).
+| Submitted attempts with essay / scenario-essay answers awaiting a human, plus the
+| assignment grading workspace (queue → split view → grade & next / return). Each
+| action is authorized through the Attempt/Submission policies.
 */
 Route::middleware(['auth', 'verified'])
     ->prefix('manage')
     ->group(function () {
         Route::get('grading', [GradingController::class, 'index'])->name('grading.index');
+
+        // Assignment grading — declared before {attempt} so the literal segment wins.
+        Route::get('grading/assignments', [AssignmentGradingController::class, 'index'])->name('grading.assignments.index');
+        Route::get('grading/assignments/{submission}', [AssignmentGradingController::class, 'show'])->name('grading.assignments.show');
+        Route::put('grading/assignments/{submission}', [AssignmentGradingController::class, 'update'])->name('grading.assignments.update');
+        Route::post('grading/assignments/{submission}/return', [AssignmentGradingController::class, 'returnSubmission'])->name('grading.assignments.return');
+
         Route::get('grading/{attempt}', [GradingController::class, 'show'])->name('grading.show');
         Route::put('grading/{attempt}', [GradingController::class, 'update'])->name('grading.update');
     });
@@ -353,6 +397,14 @@ Route::middleware(['auth', 'verified'])
         Route::post('/attempts/{attempt}/answer', [AttemptController::class, 'answer'])->name('attempts.answer');
         Route::post('/attempts/{attempt}/submit', [AttemptController::class, 'submit'])->name('attempts.submit');
         Route::get('/attempts/{attempt}/result', [AttemptResultController::class, 'show'])->name('attempts.result');
+
+        /*
+        | Assignments (students) — the brief + submit + version history, inside the
+        | player frame. A version stays readable forever via submissions.show.
+        */
+        Route::get('/learn/{course}/assignment/{assignment}', [SubmissionController::class, 'show'])->name('assignments.show');
+        Route::post('/learn/{course}/assignment/{assignment}/submissions', [SubmissionController::class, 'store'])->name('submissions.store');
+        Route::get('/submissions/{submission}', [SubmissionController::class, 'showVersion'])->name('submissions.show');
     });
 
 // Short-lived signed access to a private file (PrivateFileService::temporaryUrl).

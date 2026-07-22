@@ -53,6 +53,10 @@ class DatabaseSeeder extends Seeder
         // Question bank + assessments (pre/post pair, timed exam, pooled exam, essay) with
         // a spread of attempts incl. one awaiting grading and a pre→post knowledge gain.
         $this->call(AssessmentSeeder::class);
+
+        // Rubric + assignments with submissions in mixed states (graded via rubric,
+        // returned + resubmitted, late in the queue).
+        $this->call(AssignmentSeeder::class);
     }
 
     /**

@@ -3,16 +3,20 @@
 namespace App\Services\Courses;
 
 use App\Enums\AssessmentStatus;
+use App\Enums\AssignmentStatus;
 use App\Enums\AttemptStatus;
 use App\Enums\EnrollmentStatus;
 use App\Enums\LessonProgressStatus;
+use App\Enums\SubmissionStatus;
 use App\Models\Assessment;
+use App\Models\Assignment;
 use App\Models\Attempt;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
 use App\Models\Module;
+use App\Models\Submission;
 use App\Models\User;
 use App\Support\Learning\CourseProgress;
 use App\Support\Learning\CurriculumItem;
@@ -54,7 +58,23 @@ class LearningService
         $passedIds = $this->passedAssessmentIds($user, $assessments->pluck('id'));
         $requiredComplete = $required->filter(fn (Assessment $a) => $passedIds->contains($a->id))->count();
 
-        return new CourseProgress($course, $sequence, $progress, $required->count(), $requiredComplete);
+        // As do required, published assignments once graded (Section 6).
+        $assignments = $this->publishedAssignments($course);
+        $requiredAssignments = $assignments->where('is_required', true);
+        $gradedIds = $this->gradedAssignmentIds($user, $assignments->pluck('id'));
+        $requiredAssignmentsComplete = $requiredAssignments
+            ->filter(fn (Assignment $a) => $gradedIds->contains($a->id))
+            ->count();
+
+        return new CourseProgress(
+            $course,
+            $sequence,
+            $progress,
+            $required->count(),
+            $requiredComplete,
+            $requiredAssignments->count(),
+            $requiredAssignmentsComplete,
+        );
     }
 
     /**
@@ -75,6 +95,9 @@ class LearningService
         $assessments = $this->publishedAssessments($course);
         $passedIds = $this->passedAssessmentIds($user, $assessments->pluck('id'));
 
+        $assignments = $this->publishedAssignments($course);
+        $gradedIds = $this->gradedAssignmentIds($user, $assignments->pluck('id'));
+
         // Build the flat ordered rows first, then a single pass computes the lock frontier.
         $rows = new Collection;
 
@@ -86,6 +109,17 @@ class LearningService
                 'required' => (bool) $a->is_required,
                 'module_id' => $a->module_id,
                 'placement' => $a->placement->value,
+            ]);
+        };
+
+        $pushAssignment = function (Assignment $a) use ($rows, $gradedIds) {
+            $rows->push([
+                'kind' => 'assignment',
+                'model' => $a,
+                'completed' => $gradedIds->contains($a->id),
+                'required' => (bool) $a->is_required,
+                'module_id' => $a->module_id,
+                'placement' => null,
             ]);
         };
 
@@ -105,9 +139,13 @@ class LearningService
             }
 
             $byPlacement->where('placement', 'post_module')->sortBy('position')->each($pushAssessment);
+
+            // Module assignments come after the module's lessons + post-assessments.
+            $assignments->where('module_id', $module->id)->sortBy('position')->each($pushAssignment);
         }
 
         $assessments->whereNull('module_id')->sortBy('position')->each($pushAssessment);
+        $assignments->whereNull('module_id')->sortBy('position')->each($pushAssignment);
 
         $blocked = false;
         $items = $rows->map(function (array $row) use (&$blocked, $sequential) {
@@ -146,6 +184,44 @@ class LearningService
         }
 
         return collect($course->assessments()->published()->get()->all());
+    }
+
+    /**
+     * Published assignments on a course (uses a loaded relation when present).
+     *
+     * @return Collection<int, Assignment>
+     */
+    private function publishedAssignments(Course $course): Collection
+    {
+        if ($course->relationLoaded('assignments')) {
+            return $course->assignments
+                ->where('status', AssignmentStatus::Published)
+                ->values();
+        }
+
+        return collect($course->assignments()->published()->get()->all());
+    }
+
+    /**
+     * The subset of $assignmentIds the student has a graded submission on — the
+     * assignment-completion signal (a version returned for resubmission stops counting).
+     *
+     * @param  Collection<int, int>  $assignmentIds
+     * @return Collection<int, int>
+     */
+    private function gradedAssignmentIds(User $user, Collection $assignmentIds): Collection
+    {
+        if ($assignmentIds->isEmpty()) {
+            return new Collection;
+        }
+
+        return Submission::query()
+            ->where('user_id', $user->id)
+            ->where('status', SubmissionStatus::Graded->value)
+            ->whereIn('assignment_id', $assignmentIds->all())
+            ->pluck('assignment_id')
+            ->unique()
+            ->values();
     }
 
     /**
