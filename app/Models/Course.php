@@ -40,6 +40,7 @@ class Course extends Model
         'enrollment_mode',
         'progression_mode',
         'grade_scale_id',
+        'certificate_template_id',
         'capacity',
         'enrollment_opens_at',
         'enrollment_closes_at',
@@ -101,6 +102,24 @@ class Course extends Model
     public function courseGradeRecords(): HasMany
     {
         return $this->hasMany(CourseGradeRecord::class);
+    }
+
+    /**
+     * This course's certificate-template override, if any (null = system default).
+     *
+     * @return BelongsTo<CertificateTemplate, $this>
+     */
+    public function certificateTemplate(): BelongsTo
+    {
+        return $this->belongsTo(CertificateTemplate::class);
+    }
+
+    /**
+     * @return HasMany<Certificate, $this>
+     */
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
     }
 
     /**
@@ -433,5 +452,28 @@ class Course extends Model
         }
 
         return GradeScale::query()->default()->with('bands')->first();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Certificates (Section 7)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * The template that governs this course's certificates: its own override, or the
+     * system default when it has none.
+     */
+    public function certificateTemplateOrDefault(): ?CertificateTemplate
+    {
+        if ($this->relationLoaded('certificateTemplate') && $this->certificateTemplate !== null) {
+            return $this->certificateTemplate;
+        }
+
+        if ($this->certificate_template_id !== null) {
+            return $this->certificateTemplate()->first();
+        }
+
+        return CertificateTemplate::query()->default()->first();
     }
 }
