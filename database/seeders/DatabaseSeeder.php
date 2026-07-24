@@ -17,6 +17,11 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolesAndPermissionsSeeder::class);
 
+        // Certificate templates, seeded EARLY (before any course completes) so every
+        // genuine completion below issues a real certificate through the normal
+        // CourseCompleted pipeline — see CertificateTemplateSeeder's own note.
+        $this->call(CertificateTemplateSeeder::class);
+
         // 1 super-admin.
         $this->make('Olusola Adeyemi', 'superadmin@uprl.test', Role::SuperAdmin);
 
@@ -62,6 +67,10 @@ class DatabaseSeeder extends Seeder
         // the same course: one genuinely completed student (real CourseGradeRecord via
         // the completion pipeline) and one left "Provisional" pending a graded hand-in.
         $this->call(GradeScaleSeeder::class);
+
+        // Certificates (Section 7): tops up the registry if the natural pipeline above
+        // produced fewer than three, and revokes one so every state is demonstrable.
+        $this->call(CertificateSeeder::class);
     }
 
     /**
