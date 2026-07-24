@@ -126,9 +126,16 @@
                                     <x-ui.button size="lg" :href="route('learn.show', [$course, $next])">
                                         Next lesson <x-ui.icon name="arrow-right" class="h-5 w-5" />
                                     </x-ui.button>
-                                @else
+                                @elseif ($snapshot->isCourseComplete())
                                     <x-ui.button size="lg" :href="route('learn.congratulations', $course)">
                                         Finish course <x-ui.icon name="sparkles" class="h-5 w-5" />
+                                    </x-ui.button>
+                                @else
+                                    {{-- Last lesson done, but a required assessment/assignment
+                                         is still open — say so rather than a button that
+                                         quietly bounces back here. --}}
+                                    <x-ui.button size="lg" variant="secondary" :href="route('learn.congratulations', $course)">
+                                        Review what's left <x-ui.icon name="flag" class="h-5 w-5" />
                                     </x-ui.button>
                                 @endif
                             </div>
@@ -144,17 +151,27 @@
             </footer>
         </div>
 
-        {{-- Celebration micro-moment (module / course completion) --}}
+        {{-- Celebration micro-moment (module / course completion). Always dismissible —
+             by its own timer, Escape, or the close button — never a dead end even when
+             there's no next lesson to navigate to. --}}
         <div x-show="celebrating" x-cloak
              x-transition:enter="transition ease-out duration-300"
              x-transition:enter-start="opacity-0"
              x-transition:enter-end="opacity-100"
+             x-on:keydown.escape.window="dismissCelebration()"
+             @click="dismissCelebration()"
              class="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm"
-             role="dialog" aria-live="assertive">
-            <div class="relative mx-4 w-full max-w-sm overflow-hidden rounded-2xl border border-line bg-card p-8 text-center shadow-xl"
+             role="dialog" aria-live="assertive" aria-label="Celebration">
+            <div @click.stop
+                 class="relative mx-4 w-full max-w-sm overflow-hidden rounded-2xl border border-line bg-card p-8 text-center shadow-xl"
                  x-transition:enter="transition ease-out duration-300 delay-75"
                  x-transition:enter-start="opacity-0 scale-95"
                  x-transition:enter-end="opacity-100 scale-100">
+                <button type="button" @click="dismissCelebration()"
+                        class="absolute right-3 top-3 rounded-lg p-1.5 text-ink/40 hover:bg-ink/5 hover:text-ink focus-ring"
+                        aria-label="Dismiss">
+                    <x-ui.icon name="x" class="h-5 w-5" />
+                </button>
                 <x-brand.sunburst class="pointer-events-none absolute -right-8 -top-8 h-32 w-32 text-gold/15" />
                 <span class="relative mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10 text-success">
                     <x-ui.icon name="check" class="h-8 w-8" stroke-width="2.5" />

@@ -39,7 +39,13 @@
         </div>
 
         <h1 class="mt-2 font-display text-lg font-semibold leading-snug text-ink">{{ $course->title }}</h1>
-        <p class="mt-0.5 text-xs text-ink/50">{{ $course->code }}</p>
+        <div class="mt-0.5 flex items-center justify-between gap-2">
+            <p class="text-xs text-ink/50">{{ $course->code }}</p>
+            <a href="{{ route('learn.grades', $course) }}"
+               class="inline-flex items-center gap-1 text-xs font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
+                <x-ui.icon name="clipboard-check" class="h-3.5 w-3.5" /> Grades
+            </a>
+        </div>
 
         {{-- Overall progress --}}
         <div class="mt-4">

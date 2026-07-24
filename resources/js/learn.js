@@ -17,6 +17,8 @@ export default function learnPlayer(config) {
         completing: false,
         celebrating: false,
         celebration: { title: '', message: '' },
+        _celebrationTimer: null,
+        _celebrationThen: null,
         drawer: false,
         collapsed: JSON.parse(localStorage.getItem('uprl:learn-focus') ?? 'false'),
 
@@ -85,6 +87,14 @@ export default function learnPlayer(config) {
         /**
          * Show the completion micro-moment, then run `then`. Respects reduced-motion
          * by skipping the overlay (a quick toast instead) — never confetti spam.
+         *
+         * `then` navigates away in two of its three call sites (course/module complete
+         * with a next lesson), which used to be the only thing that ever reset
+         * `celebrating` — reaching the very last lesson with a module (not course)
+         * completion has no next_url to navigate to, so the overlay never closed and
+         * had no dismiss control either. Both are fixed here: closing is now this
+         * method's job, not an accident of navigation, and dismiss() gives the learner
+         * (or a keypress/click) a manual way out regardless.
          */
         celebrate(detail, then) {
             const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -97,7 +107,24 @@ export default function learnPlayer(config) {
 
             this.celebration = detail;
             this.celebrating = true;
-            setTimeout(then, 1500);
+            this._celebrationThen = then;
+
+            clearTimeout(this._celebrationTimer);
+            this._celebrationTimer = setTimeout(() => this.dismissCelebration(), 1500);
+        },
+
+        /** Close the celebration overlay and run whatever it was about to do anyway —
+         *  used by the auto-dismiss timer, the close button, and Escape alike, so
+         *  there's exactly one way this ever closes. */
+        dismissCelebration() {
+            if (!this.celebrating) return;
+
+            clearTimeout(this._celebrationTimer);
+            this.celebrating = false;
+
+            const then = this._celebrationThen;
+            this._celebrationThen = null;
+            then?.();
         },
 
         onKey(e) {

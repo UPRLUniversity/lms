@@ -8,6 +8,7 @@ use App\Enums\AttemptStatus;
 use App\Enums\EnrollmentStatus;
 use App\Enums\LessonProgressStatus;
 use App\Enums\SubmissionStatus;
+use App\Events\CourseCompleted;
 use App\Models\Assessment;
 use App\Models\Assignment;
 use App\Models\Attempt;
@@ -94,14 +95,16 @@ class LearningService
 
         $assessments = $this->publishedAssessments($course);
         $passedIds = $this->passedAssessmentIds($user, $assessments->pluck('id'));
+        $assessmentStatuses = $this->assessmentStatuses($user, $assessments);
 
         $assignments = $this->publishedAssignments($course);
         $gradedIds = $this->gradedAssignmentIds($user, $assignments->pluck('id'));
+        $assignmentStatuses = $this->assignmentStatuses($user, $assignments);
 
         // Build the flat ordered rows first, then a single pass computes the lock frontier.
         $rows = new Collection;
 
-        $pushAssessment = function (Assessment $a) use ($rows, $passedIds) {
+        $pushAssessment = function (Assessment $a) use ($rows, $passedIds, $assessmentStatuses) {
             $rows->push([
                 'kind' => 'assessment',
                 'model' => $a,
@@ -109,10 +112,11 @@ class LearningService
                 'required' => (bool) $a->is_required,
                 'module_id' => $a->module_id,
                 'placement' => $a->placement->value,
+                'status' => $assessmentStatuses->get($a->id),
             ]);
         };
 
-        $pushAssignment = function (Assignment $a) use ($rows, $gradedIds) {
+        $pushAssignment = function (Assignment $a) use ($rows, $gradedIds, $assignmentStatuses) {
             $rows->push([
                 'kind' => 'assignment',
                 'model' => $a,
@@ -120,6 +124,7 @@ class LearningService
                 'required' => (bool) $a->is_required,
                 'module_id' => $a->module_id,
                 'placement' => null,
+                'status' => $assignmentStatuses->get($a->id),
             ]);
         };
 
@@ -164,6 +169,8 @@ class LearningService
                 required: $row['required'],
                 moduleId: $row['module_id'],
                 placement: $row['placement'],
+                statusLabel: $row['status']['label'] ?? null,
+                statusTone: $row['status']['tone'] ?? null,
             );
         });
 
@@ -244,6 +251,120 @@ class LearningService
             ->pluck('assessment_id')
             ->unique()
             ->values();
+    }
+
+    /**
+     * A "where things stand" label + brand tone per assessment, for every assessment the
+     * student hasn't passed yet — one query for every assessment's attempts (not one per
+     * assessment), so the sidebar carries no N+1. Passed assessments and ones with no
+     * attempt at all resolve to null (the checkmark, or the plain default icon, already
+     * says enough).
+     *
+     * @param  Collection<int, Assessment>  $assessments
+     * @return Collection<int, array{label: string, tone: string}> keyed by assessment id
+     */
+    private function assessmentStatuses(User $user, Collection $assessments): Collection
+    {
+        if ($assessments->isEmpty()) {
+            return new Collection;
+        }
+
+        $attemptsByAssessment = Attempt::query()
+            ->where('user_id', $user->id)
+            ->whereIn('assessment_id', $assessments->pluck('id'))
+            ->get()
+            ->groupBy('assessment_id');
+
+        return $assessments->mapWithKeys(function (Assessment $a) use ($attemptsByAssessment) {
+            $attempts = $attemptsByAssessment->get($a->id, new Collection);
+
+            return [$a->id => $this->statusForAssessment($a, $attempts)];
+        })->filter();
+    }
+
+    /**
+     * @param  Collection<int, Attempt>  $attempts  every attempt this student has on the assessment
+     * @return array{label: string, tone: string}|null
+     */
+    private function statusForAssessment(Assessment $a, Collection $attempts): ?array
+    {
+        if ($attempts->isEmpty()) {
+            return null;
+        }
+
+        if ($attempts->contains(fn (Attempt $at) => $at->status === AttemptStatus::InProgress)) {
+            return ['label' => 'In progress', 'tone' => 'gold'];
+        }
+
+        if ($attempts->contains(fn (Attempt $at) => $at->status === AttemptStatus::Submitted)) {
+            return ['label' => 'Awaiting grading', 'tone' => 'gold'];
+        }
+
+        $graded = $attempts->where('status', AttemptStatus::Graded);
+        $best = $graded->sortByDesc('percentage')->first();
+
+        if ($best === null) {
+            return null;
+        }
+
+        if ($best->passed) {
+            // Completed — the checkmark already covers it, no extra label needed.
+            return null;
+        }
+
+        $used = $graded->count();
+        $left = $a->max_attempts === null ? null : max(0, $a->max_attempts - $used);
+        $score = round((float) $best->percentage).'%';
+
+        $tail = match (true) {
+            $left === null => 'retake anytime',
+            $left > 0 => $left === 1 ? '1 attempt left' : "{$left} attempts left",
+            default => 'no attempts left',
+        };
+
+        return ['label' => "Not passed · {$score} · {$tail}", 'tone' => 'crimson'];
+    }
+
+    /**
+     * A "where things stand" label + brand tone per assignment (submitted/awaiting
+     * grading, returned for revision) — one query for every assignment's submissions.
+     * Graded (completed) assignments and ones with no submission resolve to null.
+     *
+     * @param  Collection<int, Assignment>  $assignments
+     * @return Collection<int, array{label: string, tone: string}> keyed by assignment id
+     */
+    private function assignmentStatuses(User $user, Collection $assignments): Collection
+    {
+        if ($assignments->isEmpty()) {
+            return new Collection;
+        }
+
+        $submissionsByAssignment = Submission::query()
+            ->where('user_id', $user->id)
+            ->whereIn('assignment_id', $assignments->pluck('id'))
+            ->orderBy('version')
+            ->get()
+            ->groupBy('assignment_id');
+
+        return $assignments->mapWithKeys(function (Assignment $a) use ($submissionsByAssignment) {
+            $latest = $submissionsByAssignment->get($a->id, new Collection)->sortByDesc('version')->first();
+
+            return [$a->id => $this->statusForAssignment($latest)];
+        })->filter();
+    }
+
+    private function statusForAssignment(?Submission $latest): ?array
+    {
+        if ($latest === null) {
+            return null;
+        }
+
+        return match ($latest->status) {
+            SubmissionStatus::Submitted => ['label' => 'Awaiting grading', 'tone' => 'gold'],
+            SubmissionStatus::ReturnedForResubmission => ['label' => 'Needs revision', 'tone' => 'crimson'],
+            // Graded — the checkmark already covers it.
+            SubmissionStatus::Graded => null,
+        };
     }
 
     /**
@@ -363,8 +484,9 @@ class LearningService
         $complete = $snapshot->isCourseComplete();
 
         $attributes = ['progress_percent' => $percent];
+        $justCompleted = $complete && $enrollment->status !== EnrollmentStatus::Completed;
 
-        if ($complete && $enrollment->status !== EnrollmentStatus::Completed) {
+        if ($justCompleted) {
             $attributes['status'] = EnrollmentStatus::Completed;
             $attributes['completed_at'] = now();
         } elseif (! $complete && $enrollment->status === EnrollmentStatus::Completed) {
@@ -374,6 +496,12 @@ class LearningService
         }
 
         $enrollment->forceFill($attributes)->save();
+
+        // Fired exactly on this not-Completed → Completed transition — the shared
+        // pipeline Section 6.5's grade snapshot (and Section 7's certificate) hook.
+        if ($justCompleted) {
+            CourseCompleted::dispatch($user, $course, $enrollment);
+        }
 
         return $enrollment;
     }

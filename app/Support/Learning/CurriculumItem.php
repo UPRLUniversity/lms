@@ -21,6 +21,12 @@ final class CurriculumItem
         public readonly bool $required,
         public readonly ?int $moduleId,
         public readonly ?string $placement = null, // assessments: pre_module | post_module | standalone
+        // Assessments/assignments only: a short "where things stand" label for the
+        // sidebar (e.g. "Not passed · 56% · 1 attempt left", "Awaiting grading") and the
+        // brand tone to render it in. Null when there's nothing yet to report (not
+        // started) or the item is already complete (the checkmark already says enough).
+        public readonly ?string $statusLabel = null,
+        public readonly ?string $statusTone = null, // success | gold | crimson | neutral
     ) {}
 
     public function isLesson(): bool

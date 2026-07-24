@@ -3,6 +3,14 @@
     /** @var \App\Models\Course $course */
     $assessment = $item->model;
     $label = $assessment->placement->label();
+
+    // Not-started default is gold-ink; an in-progress/awaiting-grading/failed attempt
+    // recolors both the icon and the caption to match, so the state reads at a glance.
+    $tone = match ($item->statusTone) {
+        'crimson' => 'text-crimson',
+        'gold' => 'text-gold-ink',
+        default => 'text-gold-ink',
+    };
 @endphp
 
 <li>
@@ -21,12 +29,14 @@
                         <x-ui.icon name="check" class="h-3 w-3" stroke-width="3" />
                     </span>
                 @else
-                    <span class="text-gold-ink"><x-ui.icon name="clipboard" class="h-4 w-4" /></span>
+                    <span class="{{ $tone }}"><x-ui.icon name="clipboard" class="h-4 w-4" /></span>
                 @endif
             </span>
             <span class="min-w-0 flex-1">
                 <span class="block truncate">{{ $assessment->title }}</span>
-                <span class="text-[11px] text-ink/40">{{ $label }} assessment</span>
+                <span class="text-[11px] {{ $item->statusLabel ? $tone.' font-medium' : 'text-ink/40' }}">
+                    {{ $item->statusLabel ?? $label.' assessment' }}
+                </span>
             </span>
         </a>
     @endif
