@@ -57,6 +57,11 @@ class DatabaseSeeder extends Seeder
         // Rubric + assignments with submissions in mixed states (graded via rubric,
         // returned + resubmitted, late in the queue).
         $this->call(AssignmentSeeder::class);
+
+        // Grade scales (NUC Standard default + 4.0 Scale) and a believable gradebook on
+        // the same course: one genuinely completed student (real CourseGradeRecord via
+        // the completion pipeline) and one left "Provisional" pending a graded hand-in.
+        $this->call(GradeScaleSeeder::class);
     }
 
     /**
