@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Courses;
 use App\Enums\EnrollmentStatus;
 use App\Enums\SubmissionStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
 use App\Models\CourseGradeRecord;
 use App\Models\LessonProgress;
 use App\Models\Submission;
@@ -74,12 +75,20 @@ class LearningHistoryController extends Controller
             ->get()
             ->keyBy('course_id');
 
+        // Section 7: the issued certificate per course, if any (one query, no per-row lookups).
+        $certificateByCourse = Certificate::query()
+            ->where('user_id', $user->id)
+            ->whereIn('course_id', $enrollments->pluck('course_id'))
+            ->get()
+            ->keyBy('course_id');
+
         return view('learn.history', [
             'enrollments' => $enrollments,
             'secondsByCourse' => $secondsByCourse,
             'gainsByCourse' => $gainsByCourse,
             'assignmentsByCourse' => $assignmentsByCourse,
             'gradeByCourse' => $gradeByCourse,
+            'certificateByCourse' => $certificateByCourse,
             'completedCount' => $enrollments->where('status', EnrollmentStatus::Completed)->count(),
         ]);
     }

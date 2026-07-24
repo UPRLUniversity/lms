@@ -61,6 +61,27 @@ return [
         'roles' => ['student'],
     ],
     [
+        'label' => 'My Certificates',
+        'icon' => 'certificate',
+        'route' => 'certificates.mine',
+        'match' => 'certificates.mine',
+        'roles' => ['student'],
+    ],
+    [
+        'label' => 'Certificates',
+        'icon' => 'certificate',
+        'route' => 'admin.certificates.index',
+        'match' => 'admin.certificates.*',
+        'roles' => ['admin', 'super-admin', 'auditor'],
+    ],
+    [
+        'label' => 'Certificate templates',
+        'icon' => 'certificate',
+        'route' => 'admin.certificate-templates.index',
+        'match' => 'admin.certificate-templates.*',
+        'roles' => ['admin', 'super-admin'],
+    ],
+    [
         'label' => 'Approvals',
         'icon' => 'user-plus',
         'route' => 'enrollments.approvals',

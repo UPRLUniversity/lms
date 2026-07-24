@@ -207,6 +207,26 @@
                     </select>
                 </x-ui.field>
 
+                {{-- Certificate template override --}}
+                @php
+                    $defaultTemplate = $certificateTemplates->firstWhere('is_default', true);
+                    $currentTemplateId = old('certificate_template_id', $course->certificate_template_id);
+                @endphp
+                <x-ui.field name="certificate_template_id" label="Certificate template"
+                            hint="The design issued when a student completes this course. Leave on the system default unless this course needs a different one.">
+                    <select id="certificate_template_id" name="certificate_template_id" @change="dirty = true"
+                            class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                        <option value="" @selected(blank($currentTemplateId))>
+                            System default @if ($defaultTemplate) ({{ $defaultTemplate->name }}) @endif
+                        </option>
+                        @foreach ($certificateTemplates as $template)
+                            <option value="{{ $template->id }}" @selected((string) $currentTemplateId === (string) $template->id)>
+                                {{ $template->name }}{{ $template->is_default ? ' — system default' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </x-ui.field>
+
                 {{-- Learning objectives --}}
                 <div x-data="objectiveRows(@js(array_values($objectives)))" @change="dirty = true">
                     <label class="block text-sm font-medium text-ink">Learning objectives</label>

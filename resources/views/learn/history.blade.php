@@ -157,8 +157,24 @@
                                             <span class="text-ink/30">—</span>
                                         @endif
                                     </td>
-                                    {{-- Filled in by Section 7 (certificate). --}}
-                                    <td class="px-5 py-4 text-ink/30">—</td>
+                                    {{-- Section 7: the issued certificate, if any. --}}
+                                    <td class="px-5 py-4">
+                                        @php $certificate = $certificateByCourse[$course->id] ?? null; @endphp
+                                        @if (! $certificate)
+                                            <span class="text-ink/30">—</span>
+                                        @elseif ($certificate->isRevoked())
+                                            <x-ui.badge variant="crimson">Revoked</x-ui.badge>
+                                        @elseif ($certificate->isReady())
+                                            <a href="{{ route('certificates.download', $certificate) }}"
+                                               class="inline-flex items-center gap-1 rounded-full bg-gold/10 px-2 py-0.5 text-xs text-gold-ink hover:bg-gold/20 focus-ring">
+                                                <x-ui.icon name="download" class="h-3 w-3" /> {{ $certificate->serial }}
+                                            </a>
+                                        @else
+                                            <span class="inline-flex items-center gap-1 text-xs text-ink/40">
+                                                <x-ui.icon name="clock" class="h-3 w-3" /> Preparing…
+                                            </span>
+                                        @endif
+                                    </td>
                                     <td class="px-5 py-4 text-right">
                                         @unless ($withdrawn)
                                             <x-ui.button size="sm" variant="ghost" :href="route('learn.resume', $course)">

@@ -50,14 +50,31 @@
                 </div>
             </dl>
 
-            {{-- Certificate placeholder (Section 7 replaces this) --}}
-            <div class="mx-auto mt-8 max-w-md rounded-2xl border border-dashed border-gold/40 bg-gold/5 p-5">
-                <div class="flex items-center justify-center gap-2 text-gold">
-                    <x-ui.icon name="certificate" class="h-5 w-5" />
-                    <span class="font-display font-semibold">Certificate coming soon</span>
+            {{-- Certificate: ready to download, or a brief pending state while the queued render finishes. --}}
+            @if ($certificate)
+                <div
+                    x-data="certificateStatus({ ready: {{ $certificate->isReady() ? 'true' : 'false' }}, statusUrl: '{{ route('certificates.status', $certificate) }}' })"
+                    class="mx-auto mt-8 max-w-md rounded-2xl border border-gold/30 bg-gold/5 p-5"
+                >
+                    <div class="flex items-center justify-center gap-2 text-gold-ink">
+                        <x-ui.icon name="certificate" class="h-5 w-5" />
+                        <span class="font-display font-semibold">Your certificate</span>
+                    </div>
+
+                    <template x-if="!ready">
+                        <p class="mt-2 text-sm text-ink/60">Preparing your certificate — this only takes a moment…</p>
+                    </template>
+
+                    <template x-if="ready">
+                        <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
+                            <x-ui.button size="sm" :href="route('certificates.download', $certificate)">
+                                <x-ui.icon name="download" class="h-4 w-4" /> Download your certificate
+                            </x-ui.button>
+                            <x-ui.button size="sm" variant="ghost" :href="route('certificates.mine')">My Certificates</x-ui.button>
+                        </div>
+                    </template>
                 </div>
-                <p class="mt-1.5 text-sm text-ink/60">Your certificate of completion will appear here.</p>
-            </div>
+            @endif
 
             {{-- Actions --}}
             <div class="mt-10 flex flex-wrap items-center justify-center gap-3">

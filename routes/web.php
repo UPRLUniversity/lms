@@ -3,6 +3,8 @@
 use App\Enums\CourseStatus;
 use App\Enums\EnrollmentStatus;
 use App\Enums\Role;
+use App\Http\Controllers\Admin\CertificateController as AdminCertificateController;
+use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\InvitationController;
@@ -20,6 +22,7 @@ use App\Http\Controllers\Assignments\AssignmentGradingController;
 use App\Http\Controllers\Assignments\RubricController;
 use App\Http\Controllers\Assignments\SubmissionController;
 use App\Http\Controllers\CatalogueController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\Courses\AdminEnrollmentController;
 use App\Http\Controllers\Courses\BulkEnrollmentController;
 use App\Http\Controllers\Courses\CourseController;
@@ -39,6 +42,7 @@ use App\Http\Controllers\Admin\GradeScaleController;
 use App\Http\Controllers\Grades\GradebookController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VerificationController;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\UserInvitation;
@@ -60,6 +64,20 @@ Route::get('/', function () {
 */
 Route::get('/courses', [CatalogueController::class, 'index'])->name('catalogue.index');
 Route::get('/courses/{course}', [CatalogueController::class, 'show'])->name('catalogue.show');
+
+/*
+|--------------------------------------------------------------------------
+| Public certificate verification portal (no auth)
+|--------------------------------------------------------------------------
+| Manual serial entry and a QR deep-link both resolve through the same lookup.
+| Throttled so the serial space can't be brute-forced for a hit; a miss never
+| reveals whether it "almost" matched a real format (see CertificateVerificationService).
+*/
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/verify', [VerificationController::class, 'index'])->name('verify.index');
+    Route::post('/verify', [VerificationController::class, 'lookup'])->name('verify.lookup');
+    Route::get('/verify/{serial}', [VerificationController::class, 'show'])->name('verify.show');
+});
 
 Route::get('/dashboard', function () {
     $user = auth()->user();
@@ -158,6 +176,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/learn/{course}/{lesson}/complete', [LearnController::class, 'complete'])->name('learn.complete');
     Route::post('/learn/{course}/{lesson}/incomplete', [LearnController::class, 'incomplete'])->name('learn.incomplete');
     Route::post('/learn/{course}/{lesson}/position', [LearnController::class, 'position'])->name('learn.position');
+
+    /*
+    | Certificates (Section 7) — "My Certificates", gated download and the pending-
+    | render poll used by the completion screen. Ownership is checked by CertificatePolicy
+    | (also lets the admin registry re-download through the same route).
+    */
+    Route::get('/certificates', [CertificateController::class, 'mine'])->name('certificates.mine');
+    Route::get('/certificates/{certificate}/download', [CertificateController::class, 'download'])->name('certificates.download');
+    Route::get('/certificates/{certificate}/status', [CertificateController::class, 'status'])->name('certificates.status');
 });
 
 /*
@@ -227,6 +254,51 @@ Route::middleware(['auth', 'verified', 'permission:grade-scales.manage'])
         Route::put('grade-scales/{gradeScale}', [GradeScaleController::class, 'update'])->name('grade-scales.update');
         Route::post('grade-scales/{gradeScale}/archive', [GradeScaleController::class, 'archive'])->name('grade-scales.archive');
         Route::post('grade-scales/{gradeScale}/restore', [GradeScaleController::class, 'restore'])->name('grade-scales.restore');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin — certificate templates (Section 7)
+|--------------------------------------------------------------------------
+| Admin-only, like grade scales — template design isn't part of the auditor's
+| record-keeping view (that's the registry below).
+*/
+Route::middleware(['auth', 'verified', 'permission:certificate-templates.manage'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('certificate-templates', [CertificateTemplateController::class, 'index'])->name('certificate-templates.index');
+        Route::get('certificate-templates/create', [CertificateTemplateController::class, 'create'])->name('certificate-templates.create');
+        Route::post('certificate-templates', [CertificateTemplateController::class, 'store'])->name('certificate-templates.store');
+        Route::post('certificate-templates/signature-upload', [CertificateTemplateController::class, 'uploadSignature'])->name('certificate-templates.signature-upload');
+        Route::get('certificate-templates/{certificateTemplate}/edit', [CertificateTemplateController::class, 'edit'])->name('certificate-templates.edit');
+        Route::put('certificate-templates/{certificateTemplate}', [CertificateTemplateController::class, 'update'])->name('certificate-templates.update');
+        Route::get('certificate-templates/{certificateTemplate}/preview', [CertificateTemplateController::class, 'preview'])->name('certificate-templates.preview');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin — certificate registry (Section 7)
+|--------------------------------------------------------------------------
+| Viewing (including the read-only auditor) needs certificates.view; every mutation
+| (issue/re-issue/revoke/restore) is additionally gated by certificates.manage inside
+| the controller via CertificatePolicy.
+*/
+Route::middleware(['auth', 'verified', 'permission:certificates.view'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('certificates', [AdminCertificateController::class, 'index'])->name('certificates.index');
+    });
+
+Route::middleware(['auth', 'verified', 'permission:certificates.manage'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::post('certificates/issue', [AdminCertificateController::class, 'issue'])->name('certificates.issue');
+        Route::post('certificates/{certificate}/reissue', [AdminCertificateController::class, 'reissue'])->name('certificates.reissue');
+        Route::post('certificates/{certificate}/revoke', [AdminCertificateController::class, 'revoke'])->name('certificates.revoke');
+        Route::post('certificates/{certificate}/restore', [AdminCertificateController::class, 'restore'])->name('certificates.restore');
     });
 
 /*
