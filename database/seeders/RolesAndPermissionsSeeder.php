@@ -59,6 +59,8 @@ class RolesAndPermissionsSeeder extends Seeder
             Perm::AssessmentsGrade->value,
             Perm::AssignmentsView->value,
             Perm::AssignmentsGrade->value,
+            Perm::GradeScalesManage->value,
+            Perm::GradebookView->value,
             Perm::ReportsView->value,
         ];
 
@@ -72,6 +74,7 @@ class RolesAndPermissionsSeeder extends Seeder
             Perm::AssessmentsGrade->value,
             Perm::AssignmentsView->value,
             Perm::AssignmentsGrade->value,
+            Perm::GradebookView->value,
         ];
 
         $student = [

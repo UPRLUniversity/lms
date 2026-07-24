@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Services\Courses\LearningService;
+use App\Support\Learning\CurriculumItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -167,21 +168,32 @@ class LearnController extends Controller
     }
 
     /**
-     * The full-screen congratulations page shown once a course hits 100%.
+     * The full-screen congratulations page shown once a course hits 100% — or, short of
+     * that, an actionable checklist naming exactly what's left and why, so reaching the
+     * end of the lessons never just silently bounces the learner back to lesson one.
      */
-    public function congratulations(Request $request, Course $course): View|RedirectResponse
+    public function congratulations(Request $request, Course $course): View
     {
         $this->authorizeCourseAccess($course);
 
         $this->loadCurriculum($course);
-        $snapshot = $this->learning->snapshot($request->user(), $course);
+        $user = $request->user();
+        $snapshot = $this->learning->snapshot($user, $course);
 
-        // Not finished yet → send them back to where they left off.
         if (! $snapshot->isCourseComplete()) {
-            return redirect()->route('learn.resume', $course);
+            $outline = $this->learning->outline($user, $course, $snapshot);
+            $outstanding = $outline->items
+                ->filter(fn (CurriculumItem $i) => $i->required && ! $i->completed)
+                ->values();
+
+            return view('learn.keep-going', [
+                'course' => $course,
+                'snapshot' => $snapshot,
+                'outstanding' => $outstanding,
+            ]);
         }
 
-        $enrollment = $course->enrollmentFor($request->user());
+        $enrollment = $course->enrollmentFor($user);
 
         return view('learn.congratulations', [
             'course' => $course,

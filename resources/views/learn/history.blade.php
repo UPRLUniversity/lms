@@ -56,6 +56,7 @@
                                 <th scope="col" class="px-5 py-3.5">Completed</th>
                                 <th scope="col" class="px-5 py-3.5">Assessment</th>
                                 <th scope="col" class="px-5 py-3.5">Assignments</th>
+                                <th scope="col" class="px-5 py-3.5">Grade</th>
                                 <th scope="col" class="px-5 py-3.5">Certificate</th>
                                 <th scope="col" class="px-5 py-3.5"><span class="sr-only">Action</span></th>
                             </tr>
@@ -143,6 +144,17 @@
                                                     </a>
                                                 @endforeach
                                             </div>
+                                        @endif
+                                    </td>
+                                    {{-- Section 6.5: the recorded final grade, once completion has snapshotted one. --}}
+                                    <td class="px-5 py-4">
+                                        @php $record = $gradeByCourse[$course->id] ?? null; @endphp
+                                        @if ($record)
+                                            <span class="inline-flex items-center gap-1.5 text-sm font-medium text-ink" title="Recorded {{ $record->computed_at->isoFormat('D MMM YYYY') }}">
+                                                {{ $record->formatResult() }}
+                                            </span>
+                                        @else
+                                            <span class="text-ink/30">—</span>
                                         @endif
                                     </td>
                                     {{-- Filled in by Section 7 (certificate). --}}

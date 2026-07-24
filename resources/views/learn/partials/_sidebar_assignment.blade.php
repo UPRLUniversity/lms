@@ -2,6 +2,12 @@
     /** @var \App\Support\Learning\CurriculumItem $item */
     /** @var \App\Models\Course $course */
     $assignment = $item->model;
+
+    $tone = match ($item->statusTone) {
+        'crimson' => 'text-crimson',
+        'gold' => 'text-gold-ink',
+        default => 'text-crimson/70',
+    };
 @endphp
 
 <li>
@@ -20,13 +26,17 @@
                         <x-ui.icon name="check" class="h-3 w-3" stroke-width="3" />
                     </span>
                 @else
-                    <span class="text-crimson/70"><x-ui.icon name="document-text" class="h-4 w-4" /></span>
+                    <span class="{{ $tone }}"><x-ui.icon name="document-text" class="h-4 w-4" /></span>
                 @endif
             </span>
             <span class="min-w-0 flex-1">
                 <span class="block truncate">{{ $assignment->title }}</span>
-                <span class="text-[11px] text-ink/40">
-                    Assignment{{ $assignment->due_at ? ' · due '.$assignment->due_at->isoFormat('D MMM') : '' }}
+                <span class="text-[11px] {{ $item->statusLabel ? $tone.' font-medium' : 'text-ink/40' }}">
+                    @if ($item->statusLabel)
+                        {{ $item->statusLabel }}
+                    @else
+                        Assignment{{ $assignment->due_at ? ' · due '.$assignment->due_at->isoFormat('D MMM') : '' }}
+                    @endif
                 </span>
             </span>
         </a>

@@ -10,6 +10,7 @@ use App\Http\Requests\Courses\StoreCourseRequest;
 use App\Http\Requests\Courses\UpdateCourseSettingsRequest;
 use App\Models\Course;
 use App\Models\Department;
+use App\Models\GradeScale;
 use App\Services\Courses\CoursePublishingService;
 use App\Services\Courses\EnrollmentService;
 use App\Services\Media\MediaUploadService;
@@ -103,10 +104,21 @@ class CourseController extends Controller
             'assignments' => fn ($q) => $q->orderBy('position'),
         ]);
 
+        $gradeScales = GradeScale::query()->active()->orderByDesc('is_default')->orderBy('name')->get();
+        // An already-selected but since-archived scale stays selectable for THIS course,
+        // so the settings form never silently drops the current override.
+        if ($course->grade_scale_id !== null && ! $gradeScales->contains('id', $course->grade_scale_id)) {
+            $current = GradeScale::find($course->grade_scale_id);
+            if ($current) {
+                $gradeScales->push($current);
+            }
+        }
+
         return view('courses.builder', [
             'course' => $course,
             'levels' => CourseLevel::cases(),
             'departments' => Department::query()->with('faculty')->orderBy('name')->get(),
+            'gradeScales' => $gradeScales,
             'publishBlockers' => app(CoursePublishingService::class)->publishBlockers($course),
             'canManage' => request()->user()->can('update', $course),
             'canReview' => request()->user()->can('review', $course),
@@ -128,6 +140,7 @@ class CourseController extends Controller
             'visibility' => $data['visibility'],
             'enrollment_mode' => $data['enrollment_mode'],
             'progression_mode' => $data['progression_mode'],
+            'grade_scale_id' => $data['grade_scale_id'] ?? null,
             'capacity' => $data['capacity'] ?? null,
             'enrollment_opens_at' => $data['enrollment_opens_at'] ?? null,
             'enrollment_closes_at' => $data['enrollment_closes_at'] ?? null,

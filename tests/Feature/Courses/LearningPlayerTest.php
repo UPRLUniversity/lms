@@ -5,6 +5,7 @@ namespace Tests\Feature\Courses;
 use App\Enums\EnrollmentStatus;
 use App\Enums\LessonProgressStatus;
 use App\Enums\Role;
+use App\Models\Assessment;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Lesson;
@@ -156,6 +157,48 @@ class LearningPlayerTest extends TestCase
             ->assertOk()
             ->assertJson(['percent' => 100, 'course_completed' => true])
             ->assertJsonPath('congratulations_url', route('learn.congratulations', $course));
+    }
+
+    /**
+     * Finishing the last lesson of the last module reports module_completed, but NOT
+     * course_completed when a required assessment is still open — the exact combination
+     * that used to leave the "Module complete" celebration overlay stuck open forever
+     * (its only close path was `then()` navigating to a next lesson, and there is none).
+     */
+    public function test_last_lesson_of_last_module_reports_module_not_course_complete_when_an_assessment_is_pending(): void
+    {
+        $student = $this->userWithRole(Role::Student->value);
+        [$course, $lessons] = $this->makeCourse(2); // one module of 1, one of 1 (last module = last lesson)
+        $this->enrol($student, $course);
+        Assessment::factory()->published()->create([
+            'course_id' => $course->id,
+            'is_required' => true,
+        ]);
+
+        $this->actingAs($student)->postJson(route('learn.complete', [$course, $lessons[0]]));
+
+        $this->actingAs($student)
+            ->postJson(route('learn.complete', [$course, $lessons[1]]))
+            ->assertOk()
+            ->assertJson(['module_completed' => true, 'course_completed' => false])
+            ->assertJsonPath('next_url', null);
+    }
+
+    /**
+     * The celebration overlay always carries its own dismiss control (button, Escape,
+     * backdrop click) rather than relying solely on its auto-advance timer, since that
+     * timer's callback doesn't always navigate away (see the test above).
+     */
+    public function test_the_celebration_overlay_is_always_manually_dismissible(): void
+    {
+        $student = $this->userWithRole(Role::Student->value);
+        [$course, $lessons] = $this->makeCourse(1);
+        $this->enrol($student, $course);
+
+        $this->actingAs($student)->get(route('learn.show', [$course, $lessons->first()]))
+            ->assertOk()
+            ->assertSee('dismissCelebration()', false)
+            ->assertSee('Dismiss', false);
     }
 
     public function test_double_completion_is_idempotent(): void
