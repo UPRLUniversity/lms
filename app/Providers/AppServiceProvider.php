@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Enums\Role;
 use App\Models\User;
 use App\Policies\EnrollmentPolicy;
+use App\Policies\GradebookPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -59,6 +60,14 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manageRoster', [EnrollmentPolicy::class, 'manageRoster']);
         Gate::define('enrollOthers', [EnrollmentPolicy::class, 'enrollOthers']);
         Gate::define('approveEnrollments', [EnrollmentPolicy::class, 'approveEnrollments']);
+
+        // Gradebook abilities (Section 6.5) — same reasoning: subject is a Course.
+        Gate::define('viewGradebookMatrix', [GradebookPolicy::class, 'viewMatrix']);
+        Gate::define('viewOwnGradebook', [GradebookPolicy::class, 'viewOwn']);
+
+        // Re-issuing a completion snapshot is an explicit admin action (never an
+        // instructor one) — the super-admin already passes via Gate::before above.
+        Gate::define('recompute-gradebook', fn (User $user) => $user->hasRole(Role::Admin->value));
 
         $this->brandedAuthMail();
     }

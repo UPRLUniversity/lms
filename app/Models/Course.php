@@ -39,6 +39,7 @@ class Course extends Model
         'visibility',
         'enrollment_mode',
         'progression_mode',
+        'grade_scale_id',
         'capacity',
         'enrollment_opens_at',
         'enrollment_closes_at',
@@ -82,6 +83,24 @@ class Course extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    /**
+     * This course's grade-scale override, if any (null = system default).
+     *
+     * @return BelongsTo<GradeScale, $this>
+     */
+    public function gradeScale(): BelongsTo
+    {
+        return $this->belongsTo(GradeScale::class);
+    }
+
+    /**
+     * @return HasMany<CourseGradeRecord, $this>
+     */
+    public function courseGradeRecords(): HasMany
+    {
+        return $this->hasMany(CourseGradeRecord::class);
     }
 
     /**
@@ -390,5 +409,29 @@ class Course extends Model
 
         return $enrollment !== null
             && in_array($enrollment->status, [EnrollmentStatus::Active, EnrollmentStatus::Completed], true);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Grading (Section 6.5)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * The scale that governs this course's grades: its own override, or the system
+     * default when it has none. Used for display and for freezing a completion
+     * snapshot — never for re-deriving an already-recorded grade.
+     */
+    public function gradeScaleOrDefault(): ?GradeScale
+    {
+        if ($this->relationLoaded('gradeScale') && $this->gradeScale !== null) {
+            return $this->gradeScale;
+        }
+
+        if ($this->grade_scale_id !== null) {
+            return $this->gradeScale()->with('bands')->first();
+        }
+
+        return GradeScale::query()->default()->with('bands')->first();
     }
 }
