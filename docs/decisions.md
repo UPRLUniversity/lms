@@ -390,3 +390,99 @@ enhancements:
 10. **Upload progress + draft autosave** live in `assignment-submit.js`: the form
     posts via XHR for a real progress bar (JSON redirect on success), and the
     typed answer is snapshotted to localStorage every 5s until submitted.
+
+## Section 6.5 — Grade scales & course gradebook (2026-07-22)
+
+1. **Gradebook items = every published, REQUIRED assessment/assignment in the
+   course** — the same set that already gates course completion (Sections 5/6),
+   not "every assessment" or "only ones with a result." This keeps "all required
+   items graded" and "enrollment reached Completed" in permanent lock-step, which
+   is what lets the completion snapshot assume a final (non-provisional) result is
+   always available the instant `CourseCompleted` fires. Optional (non-required)
+   assessments/assignments never enter the gradebook. A required item with no
+   result yet (never attempted, or awaiting manual grading) is listed as
+   **Pending** and excluded from the percentage — the two situations aren't
+   distinguished, since both mean "no score to weight in yet."
+2. **Percentage rounds to the nearest whole percent before mapping to a band**
+   (`GradeScale::bandFor()`), not floored/truncated — a points-weighted 59.5%
+   resolves the way a human reading "60%" would expect. Bands themselves stay
+   integer-only (0–100), enforced by `GradeBandValidator`.
+3. **Grade points and the scale limit always render to exactly one decimal**
+   (`4.0`, `5.0`), never the rubric-style trailing-zero-strip used for raw points
+   elsewhere — this matches every example in the brief ("82% · A · 4.0/5.0") and
+   reads as a GPA figure, not a literal point count.
+4. **Completion snapshot rides the same event a certificate will later hook.**
+   `LearningService::recalculate()` dispatches `CourseCompleted` exactly on the
+   not-Completed → Completed transition (never on a no-op recalculation); a new
+   sync (non-queued) listener, `RecordCourseGradeSnapshot`, writes the
+   `CourseGradeRecord` through `CourseGradeRecordService`. Section 7's
+   certificate issuance listens on the same event — no new pipeline to wire.
+5. **CourseGradeRecord is insert-only and versioned**, mirroring Section 6's
+   submission versioning: a row is never edited after it's written. An admin
+   "recompute" (gated by a plain `recompute-gradebook` Gate, not a policy —
+   there's no natural model to hang it on) supersedes the current row
+   (`superseded_at`) and inserts version+1. The live scale/bands are never
+   re-read for an existing record — `scale_snapshot` (the whole scale: bands,
+   display settings, limit) is frozen at write time, so archiving or editing a
+   scale later can't rewrite history.
+6. **Exactly one default scale, enforced in the service, not the DB.**
+   `GradeScaleService::save()` unsets `is_default` on every other scale when one
+   is checked, and silently keeps the sole existing default checked if the save
+   would otherwise leave zero defaults (unchecking your only default is a no-op,
+   not a validation error — there's always another scale to promote first).
+   Archiving the current default is blocked outright for the same reason.
+7. **The instructor matrix is batched, not per-student.** `GradebookService`
+   gained `itemsForMany()` — two queries total (all attempts, all submissions)
+   instead of the natural per-student `itemsFor()` calls the student-facing page
+   uses — so the matrix stays N+1-free regardless of roster size.
+8. **No charting dependency for the grade-distribution mini-chart** — plain CSS
+   bars sized by `count / max(counts)`, consistent with the codebase's existing
+   "no chart library" convention (progress bars, heat-strips elsewhere).
+9. **`courses.grade_scale_id` needed adding to `Course::$fillable`** — caught by
+   a feature test (the override silently no-op'd without it), not by inspection.
+   Worth remembering: a new nullable FK column is easy to migrate and forget to
+   also expose through mass assignment.
+
+## Sections 4/5 — player polish: an honest "Finish course" (2026-07-23)
+
+Manual testing of Section 6.5's completion pipeline surfaced a real, pre-existing gap
+in the Section 4/5 learning player: "Finish course" only ever checked "is there a next
+LESSON", so a learner who'd finished every lesson but still had an unpassed required
+assessment or ungraded assignment got silently bounced back to lesson one with zero
+explanation. Since these sections are already accepted and not upcoming, this was
+fixed now rather than deferred, on the same branch that found it.
+
+1. **`LearnController::congratulations()` no longer redirects on incomplete** — it
+   renders a new `learn.keep-going` view: an honest, on-brand checklist naming every
+   still-open REQUIRED item with a direct link to it and a plain-language reason
+   ("Not passed · 44% · no attempts left", "Awaiting grading", "Not started yet").
+   A genuinely complete course still gets the real congratulations page, untouched.
+2. **The lesson-player's finish button is now honest about state**: "Finish course"
+   only when `$snapshot->isCourseComplete()`; otherwise a secondary "Review what's
+   left" button, both pointing at the same route — the destination now does the
+   right thing either way, so there's no wrong button to press.
+3. **`CurriculumItem` gained `statusLabel`/`statusTone`**, computed once per outline
+   build in two batched queries (`LearningService::assessmentStatuses()` /
+   `assignmentStatuses()` — all of a student's attempts/submissions across every
+   assessment/assignment in one query each, not one per item), so the curriculum
+   sidebar carries no N+1. An assessment/assignment already complete still shows a
+   bare checkmark (unchanged); one that isn't now shows *why* — in progress,
+   awaiting grading, needs revision, or not passed with a score and attempts left —
+   instead of a flat, unchanging icon regardless of how many times it's been
+   attempted. This is presentation only; nothing about scoring or completion
+   changed. A failed assessment with attempts remaining always links to its normal
+   start page — even fully exhausted, since that page already renders a read-only
+   attempt history rather than a broken retry.
+4. **No new migration.** This is a display + control-flow fix; no schema changed,
+   so the append-only migration rule is unaffected.
+5. **The module/course "celebration" overlay could get stuck open with no way out** —
+   found live while re-testing the fix above: finishing the LAST lesson of the LAST
+   module while a required assessment is still open reports `module_completed`
+   (not `course_completed`), and that celebration's callback is `advance(next_url)`
+   with `next_url = null` — which never navigates. `celebrate()`'s only exit had
+   always been its `then` callback navigating to a new page (which incidentally
+   reset the Alpine component entirely); nothing ever set `celebrating` back to
+   `false` on its own. Fixed in `resources/js/learn.js`: the auto-dismiss timer now
+   calls a real `dismissCelebration()` that resets state and then runs `then`, and
+   the same method is wired to the modal's new close button, Escape, and a
+   backdrop click — so it's never solely dependent on navigation to close.
