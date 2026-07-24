@@ -10,6 +10,7 @@
         'crimson' => 'bg-crimson/10 text-crimson',
         'success' => 'bg-success/10 text-success',
         'gold' => 'bg-gold/15 text-gold',
+        'ink' => 'bg-ink/10 text-ink',
     ];
 
     // Solid badges — an opaque white pill with a strong, AA-contrast label. Used when
@@ -19,6 +20,7 @@
         'crimson' => 'bg-white text-crimson ring-1 ring-black/5 shadow-sm',
         'success' => 'bg-white text-success ring-1 ring-black/5 shadow-sm',
         'gold' => 'bg-white text-gold-ink ring-1 ring-black/5 shadow-sm',
+        'ink' => 'bg-white text-ink ring-1 ring-black/5 shadow-sm',
     ];
 
     $palette = $solid ? $solidVariants : $tinted;

@@ -32,6 +32,7 @@ class UpdateCourseSettingsRequest extends FormRequest
             'visibility' => ['required', Rule::in(CourseVisibility::values())],
             'enrollment_mode' => ['required', Rule::in(EnrollmentMode::values())],
             'progression_mode' => ['required', Rule::in(ProgressionMode::values())],
+            'grade_scale_id' => ['nullable', 'integer', 'exists:grade_scales,id'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'enrollment_opens_at' => ['nullable', 'date'],
             'enrollment_closes_at' => ['nullable', 'date', 'after_or_equal:enrollment_opens_at'],

@@ -187,6 +187,26 @@
                     </select>
                 </x-ui.field>
 
+                {{-- Grade scale override --}}
+                @php
+                    $defaultScale = $gradeScales->firstWhere('is_default', true);
+                    $currentScaleId = old('grade_scale_id', $course->grade_scale_id);
+                @endphp
+                <x-ui.field name="grade_scale_id" label="Grade scale" required
+                            hint="Governs the letter/point display on this course's gradebook. Leave on the system default unless this course needs a different one.">
+                    <select id="grade_scale_id" name="grade_scale_id" @change="dirty = true"
+                            class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                        <option value="" @selected(blank($currentScaleId))>
+                            System default @if ($defaultScale) ({{ $defaultScale->name }}) @endif
+                        </option>
+                        @foreach ($gradeScales as $scale)
+                            <option value="{{ $scale->id }}" @selected((string) $currentScaleId === (string) $scale->id)>
+                                {{ $scale->name }}{{ $scale->isArchived() ? ' (archived)' : '' }}{{ $scale->is_default ? ' — system default' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </x-ui.field>
+
                 {{-- Learning objectives --}}
                 <div x-data="objectiveRows(@js(array_values($objectives)))" @change="dirty = true">
                     <label class="block text-sm font-medium text-ink">Learning objectives</label>

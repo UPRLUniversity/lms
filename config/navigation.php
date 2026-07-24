@@ -47,6 +47,13 @@ return [
         'roles' => ['admin', 'super-admin', 'auditor'],
     ],
     [
+        'label' => 'Grade scales',
+        'icon' => 'list',
+        'route' => 'admin.grade-scales.index',
+        'match' => 'admin.grade-scales.*',
+        'roles' => ['admin', 'super-admin'],
+    ],
+    [
         'label' => 'My Learning',
         'icon' => 'graduation',
         'route' => 'learning.index',

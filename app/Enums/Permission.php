@@ -31,6 +31,10 @@ enum Permission: string
     case AssignmentsView = 'assignments.view';
     case AssignmentsGrade = 'assignments.grade';
 
+    // Grade scales & gradebook (Section 6.5).
+    case GradeScalesManage = 'grade-scales.manage';
+    case GradebookView = 'gradebook.view';
+
     // Reporting.
     case ReportsView = 'reports.view';
 

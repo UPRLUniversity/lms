@@ -35,6 +35,8 @@ use App\Http\Controllers\Courses\ModuleController;
 use App\Http\Controllers\Courses\MyLearningController;
 use App\Http\Controllers\Courses\RosterController;
 use App\Http\Controllers\EditorUploadController;
+use App\Http\Controllers\Admin\GradeScaleController;
+use App\Http\Controllers\Grades\GradebookController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Course;
@@ -151,6 +153,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::get('/learn/{course}', [LearnController::class, 'resume'])->name('learn.resume');
     Route::get('/learn/{course}/congratulations', [LearnController::class, 'congratulations'])->name('learn.congratulations');
+    Route::get('/learn/{course}/grades', [GradebookController::class, 'mine'])->name('learn.grades');
     Route::get('/learn/{course}/{lesson}', [LearnController::class, 'show'])->name('learn.show');
     Route::post('/learn/{course}/{lesson}/complete', [LearnController::class, 'complete'])->name('learn.complete');
     Route::post('/learn/{course}/{lesson}/incomplete', [LearnController::class, 'incomplete'])->name('learn.incomplete');
@@ -205,6 +208,25 @@ Route::middleware(['auth', 'verified'])
         Route::get('departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit');
         Route::put('departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
         Route::delete('departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin — grade scales (Section 6.5)
+|--------------------------------------------------------------------------
+| Admin-only (grade-scales.manage). Archive-not-delete once referenced.
+*/
+Route::middleware(['auth', 'verified', 'permission:grade-scales.manage'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('grade-scales', [GradeScaleController::class, 'index'])->name('grade-scales.index');
+        Route::get('grade-scales/create', [GradeScaleController::class, 'create'])->name('grade-scales.create');
+        Route::post('grade-scales', [GradeScaleController::class, 'store'])->name('grade-scales.store');
+        Route::get('grade-scales/{gradeScale}/edit', [GradeScaleController::class, 'edit'])->name('grade-scales.edit');
+        Route::put('grade-scales/{gradeScale}', [GradeScaleController::class, 'update'])->name('grade-scales.update');
+        Route::post('grade-scales/{gradeScale}/archive', [GradeScaleController::class, 'archive'])->name('grade-scales.archive');
+        Route::post('grade-scales/{gradeScale}/restore', [GradeScaleController::class, 'restore'])->name('grade-scales.restore');
     });
 
 /*
@@ -273,6 +295,11 @@ Route::middleware(['auth', 'verified'])
         Route::get('courses/{course}/roster', [RosterController::class, 'index'])->name('courses.roster');
         Route::get('courses/{course}/roster/export', [RosterController::class, 'export'])->name('courses.roster.export');
         Route::delete('courses/{course}/roster/{enrollment}', [RosterController::class, 'destroy'])->name('courses.roster.withdraw');
+
+        // Instructor gradebook matrix (Section 6.5) — students × gradebook items.
+        Route::get('courses/{course}/gradebook', [GradebookController::class, 'matrix'])->name('courses.gradebook');
+        Route::get('courses/{course}/gradebook/export', [GradebookController::class, 'export'])->name('courses.gradebook.export');
+        Route::post('courses/{course}/gradebook/{user}/recompute', [GradebookController::class, 'recompute'])->name('courses.gradebook.recompute');
     });
 
 /*

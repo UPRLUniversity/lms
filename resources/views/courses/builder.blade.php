@@ -42,6 +42,11 @@
                             <x-ui.icon name="chart" class="h-4 w-4" /> Progress
                         </x-ui.button>
                     @endcan
+                    @can('viewGradebookMatrix', $course)
+                        <x-ui.button variant="secondary" size="sm" :href="route('courses.gradebook', $course)">
+                            <x-ui.icon name="clipboard-check" class="h-4 w-4" /> Gradebook
+                        </x-ui.button>
+                    @endcan
                 @endif
 
                 @if ($canManage && $isDraft)
