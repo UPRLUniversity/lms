@@ -35,6 +35,11 @@ enum Permission: string
     case GradeScalesManage = 'grade-scales.manage';
     case GradebookView = 'gradebook.view';
 
+    // Certificates & templates (Section 7).
+    case CertificateTemplatesManage = 'certificate-templates.manage';
+    case CertificatesView = 'certificates.view';
+    case CertificatesManage = 'certificates.manage';
+
     // Reporting.
     case ReportsView = 'reports.view';
 

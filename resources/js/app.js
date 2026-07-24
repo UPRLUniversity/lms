@@ -10,6 +10,8 @@ import { questionEditor } from './question-bank';
 import { assessmentBuilder } from './assessment-builder';
 import { attemptRunner } from './attempt';
 import { assignmentSubmit } from './assignment-submit';
+import certificateStatus from './certificate-status';
+import { certificateTemplateEditor } from './certificate-template-editor';
 
 window.Alpine = Alpine;
 
@@ -34,6 +36,11 @@ Alpine.data('attemptRunner', attemptRunner);
 
 // Assignments: the student hand-in form (upload progress + draft autosave).
 Alpine.data('assignmentSubmit', assignmentSubmit);
+
+// Certificates: polls for the queued PDF render to finish (completion screen + My
+// Certificates cards); a no-op when it's already ready.
+Alpine.data('certificateStatus', certificateStatus);
+Alpine.data('certificateTemplateEditor', certificateTemplateEditor);
 
 Alpine.start();
 

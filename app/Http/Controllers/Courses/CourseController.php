@@ -8,6 +8,7 @@ use App\Enums\MediaPurpose;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Courses\StoreCourseRequest;
 use App\Http\Requests\Courses\UpdateCourseSettingsRequest;
+use App\Models\CertificateTemplate;
 use App\Models\Course;
 use App\Models\Department;
 use App\Models\GradeScale;
@@ -114,11 +115,14 @@ class CourseController extends Controller
             }
         }
 
+        $certificateTemplates = CertificateTemplate::query()->orderByDesc('is_default')->orderBy('name')->get();
+
         return view('courses.builder', [
             'course' => $course,
             'levels' => CourseLevel::cases(),
             'departments' => Department::query()->with('faculty')->orderBy('name')->get(),
             'gradeScales' => $gradeScales,
+            'certificateTemplates' => $certificateTemplates,
             'publishBlockers' => app(CoursePublishingService::class)->publishBlockers($course),
             'canManage' => request()->user()->can('update', $course),
             'canReview' => request()->user()->can('review', $course),
@@ -141,6 +145,7 @@ class CourseController extends Controller
             'enrollment_mode' => $data['enrollment_mode'],
             'progression_mode' => $data['progression_mode'],
             'grade_scale_id' => $data['grade_scale_id'] ?? null,
+            'certificate_template_id' => $data['certificate_template_id'] ?? null,
             'capacity' => $data['capacity'] ?? null,
             'enrollment_opens_at' => $data['enrollment_opens_at'] ?? null,
             'enrollment_closes_at' => $data['enrollment_closes_at'] ?? null,

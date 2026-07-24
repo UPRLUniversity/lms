@@ -486,3 +486,75 @@ fixed now rather than deferred, on the same branch that found it.
    calls a real `dismissCelebration()` that resets state and then runs `then`, and
    the same method is wired to the modal's new close button, Escape, and a
    backdrop click — so it's never solely dependent on navigation to close.
+
+## Section 7 — Certificates & Public Verification Portal (2026-07-24)
+
+1. **`Certificate` is one row per (user, course), never versioned** — unlike
+   `CourseGradeRecord`. The ULID `public_id` (gated download/admin routes) and the
+   human `serial` (`UPRL-{YEAR}-{6 alnum}`, printed + publicly verifiable) are assigned
+   once and never change, including across an admin re-issue: re-issuing re-freezes
+   `snapshot` and re-renders the PDF, but a certificate already scanned/distributed
+   keeps working at the same URL. `rendered_at` is null while the queued PDF job is in
+   flight — the "pending" state the completion screen and My Certificates poll for.
+2. **Two listeners on `CourseCompleted`, order-independent by design.** Laravel's
+   listener auto-discovery does not guarantee execution order (`DiscoverEvents` uses
+   `Finder` unsorted), so `IssueCertificateOnCompletion` never assumes Section 6.5's
+   `RecordCourseGradeSnapshot` ran first — it calls `CourseGradeRecordService::
+   recordCompletion()` itself (already idempotent) before reading the grade. It also
+   wraps issuance in try/catch + `Log::error`: a certificate problem (e.g. no template
+   configured yet) must never turn a student's "lesson complete" request into a 500.
+3. **The snapshot freezes template config AND the grade together**, sourced from the
+   just-written (or already-current) `CourseGradeRecord` — final percent, label, grade
+   point, scale name/display settings — never a live re-join. Editing the grade scale
+   or the certificate template afterwards changes nothing on an issued certificate;
+   only an explicit admin re-issue re-freezes it (verified by test).
+4. **dompdf has neither GD nor Imagick in this environment.** QR codes and the
+   sunburst/diagonal-motif watermarks are generated as SVG (bacon/bacon-qr-code's SVG
+   backend + hand-built SVG strings) and embedded as base64 `data:image/svg+xml`
+   `<img>` tags — dompdf renders these natively via its bundled `php-svg-lib`, no
+   extension required. The UPRL logo and signature images are PNG, which dompdf's CPDF
+   adapter cannot embed without GD (`addPngFromFile` hard-fails) — the human enabled
+   `extension=gd` in `php.ini` (present but commented out) after being asked, since a
+   working PDF with the real logo is a hard acceptance criterion.
+5. **Fonts are `"DejaVu Serif"`/`"DejaVu Sans"`, not `Georgia`/`Helvetica`.** dompdf's
+   font registry maps unrecognised families (`Georgia`, `"Times New Roman"`) through to
+   its base-14 PDF fonts (`Times-Roman`, `Helvetica`) — which are WinAnsi/Latin-1 only
+   and silently render unsupported glyphs as `?`. This broke Yoruba/Igbo dotted-vowel
+   names (e.g. `Ọláwálé`) on the very first pixel-check. Naming dompdf's actual bundled
+   Unicode TTFs directly fixes it completely and satisfies the brief's own "embedded
+   fonts" requirement more literally than the base-14 fonts ever could.
+6. **Certificate templates are plain absolute-position CSS, never `display:table`
+   nested inside `position:absolute`.** An early layout used a table-cell signature/
+   footer row and it rendered inconsistently under dompdf; every row is now two
+   independently `position:absolute` boxes instead. Also: `.sheet` (the A4 canvas) may
+   carry `overflow:hidden` but must NOT also carry its own `padding` under
+   `box-sizing:border-box` — that silently shrinks the usable canvas height and was the
+   actual cause of a phantom blank second page under a long course title, not the
+   overflow itself.
+7. **Signature images upload immediately via AJAX** (`certificate-templates/signature-
+   upload`, purpose `Signatures` — already provisioned in Section 0.5's `config/
+   media.php`), the same "upload now, submit the Media id later" pattern as TinyMCE's
+   editor images. `CertificateTemplateService::save()` attaches the new image via
+   `HasMedia` and deletes any image it replaces, so a template never accumulates
+   orphaned signature files.
+8. **Public verification never shows the grade, and a revoked result never shows the
+   reason** — a certificate proves completion, not a transcript, and a revocation's
+   internal reason (e.g. an integrity finding) is exactly the kind of detail that
+   should stay internal. A miss (`not_found`) uses identical, generic copy regardless
+   of why the serial didn't match, so probing can't fingerprint the serial format.
+   `/verify*` is rate-limited (`throttle:30,1`) — Laravel's built-in limiter, not a
+   bespoke one; sufficient for "basic rate limiting" against serial-guessing.
+9. **Permissions split three ways**, mirroring Section 6.5's grade-scale precedent:
+   `certificate-templates.manage` (admin-only design work, no auditor — same reasoning
+   as `grade-scales.manage`), `certificates.view` (`.view`-suffixed ⇒ the auditor
+   inherits it automatically, browses the registry read-only) and `certificates.manage`
+   (admin-only issue/re-issue/revoke/restore). A student's own certificate access is
+   ownership-checked in `CertificatePolicy`, not permission-gated.
+10. **Certificate templates seed BEFORE any course/enrolment/progress seeding**, not
+    alongside Section 6.5's `GradeScaleSeeder` at the end. Every genuine course
+    completion elsewhere in `DatabaseSeeder` (ProgressSeeder's finished PRL101
+    students, GradeScaleSeeder's own completer) then issues a real certificate through
+    the normal event pipeline — no hand-rolled demo `Certificate::factory()` rows
+    needed for the common case. A final `CertificateSeeder` only tops up to three if
+    the natural pipeline produced fewer, and revokes the earliest-issued one so every
+    state (valid/pending/revoked, with/without a grade) is demonstrable.

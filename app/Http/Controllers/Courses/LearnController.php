@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Courses;
 
 use App\Http\Controllers\Controller;
+use App\Models\Certificate;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Services\Courses\LearningService;
@@ -195,10 +196,16 @@ class LearnController extends Controller
 
         $enrollment = $course->enrollmentFor($user);
 
+        $certificate = Certificate::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
+
         return view('learn.congratulations', [
             'course' => $course,
             'snapshot' => $snapshot,
             'enrollment' => $enrollment,
+            'certificate' => $certificate,
         ]);
     }
 

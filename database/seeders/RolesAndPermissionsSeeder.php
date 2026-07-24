@@ -61,6 +61,9 @@ class RolesAndPermissionsSeeder extends Seeder
             Perm::AssignmentsGrade->value,
             Perm::GradeScalesManage->value,
             Perm::GradebookView->value,
+            Perm::CertificateTemplatesManage->value,
+            Perm::CertificatesView->value,
+            Perm::CertificatesManage->value,
             Perm::ReportsView->value,
         ];
 
