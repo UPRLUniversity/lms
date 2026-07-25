@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Courses\AnnouncementController;
 use App\Http\Controllers\Assessments\AssessmentContentController;
 use App\Http\Controllers\Assessments\AssessmentController;
 use App\Http\Controllers\Assessments\AssessmentInsightController;
@@ -41,6 +42,7 @@ use App\Http\Controllers\EditorUploadController;
 use App\Http\Controllers\Admin\GradeScaleController;
 use App\Http\Controllers\Grades\GradebookController;
 use App\Http\Controllers\MediaController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VerificationController;
 use App\Models\Course;
@@ -141,6 +143,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
     Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
+    Route::patch('/profile/notifications', [ProfileController::class, 'updateNotifications'])->name('profile.notifications.update');
+
+    /*
+    | In-app bell (Section 8): unread badge + recent list (polled), the mark-read /
+    | open redirect, mark-all-read and the full filterable history page.
+    */
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
+    Route::get('/notifications/{notification}/open', [NotificationController::class, 'open'])->name('notifications.open');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
 
     // Policy-gated download of a private file.
     Route::get('/media/{media}/download', [MediaController::class, 'download'])
@@ -172,6 +184,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/learn/{course}', [LearnController::class, 'resume'])->name('learn.resume');
     Route::get('/learn/{course}/congratulations', [LearnController::class, 'congratulations'])->name('learn.congratulations');
     Route::get('/learn/{course}/grades', [GradebookController::class, 'mine'])->name('learn.grades');
+    Route::get('/learn/{course}/announcements', [AnnouncementController::class, 'index'])->name('learn.announcements');
     Route::get('/learn/{course}/{lesson}', [LearnController::class, 'show'])->name('learn.show');
     Route::post('/learn/{course}/{lesson}/complete', [LearnController::class, 'complete'])->name('learn.complete');
     Route::post('/learn/{course}/{lesson}/incomplete', [LearnController::class, 'incomplete'])->name('learn.incomplete');
@@ -372,6 +385,10 @@ Route::middleware(['auth', 'verified'])
         Route::get('courses/{course}/gradebook', [GradebookController::class, 'matrix'])->name('courses.gradebook');
         Route::get('courses/{course}/gradebook/export', [GradebookController::class, 'export'])->name('courses.gradebook.export');
         Route::post('courses/{course}/gradebook/{user}/recompute', [GradebookController::class, 'recompute'])->name('courses.gradebook.recompute');
+
+        // Course announcements (Section 8) — composed from the builder's Announcements tab.
+        Route::post('courses/{course}/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::delete('courses/{course}/announcements/{announcement}', [AnnouncementController::class, 'destroy'])->name('announcements.destroy');
     });
 
 /*

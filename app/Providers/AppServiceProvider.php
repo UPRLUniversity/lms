@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\Role;
 use App\Models\User;
+use App\Policies\CourseAnnouncementPolicy;
 use App\Policies\EnrollmentPolicy;
 use App\Policies\GradebookPolicy;
 use App\Policies\UserPolicy;
@@ -64,6 +65,10 @@ class AppServiceProvider extends ServiceProvider
         // Gradebook abilities (Section 6.5) — same reasoning: subject is a Course.
         Gate::define('viewGradebookMatrix', [GradebookPolicy::class, 'viewMatrix']);
         Gate::define('viewOwnGradebook', [GradebookPolicy::class, 'viewOwn']);
+
+        // Course announcements (Section 8) — same reasoning: subject is a Course.
+        Gate::define('viewAnnouncements', [CourseAnnouncementPolicy::class, 'view']);
+        Gate::define('manageAnnouncements', [CourseAnnouncementPolicy::class, 'manage']);
 
         // Re-issuing a completion snapshot is an explicit admin action (never an
         // instructor one) — the super-admin already passes via Gate::before above.
