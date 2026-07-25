@@ -1,7 +1,5 @@
 <?php
 
-use App\Enums\CourseStatus;
-use App\Enums\EnrollmentStatus;
 use App\Enums\Role;
 use App\Http\Controllers\Admin\CertificateController as AdminCertificateController;
 use App\Http\Controllers\Admin\CertificateTemplateController;
@@ -29,6 +27,10 @@ use App\Http\Controllers\Assignments\RubricController;
 use App\Http\Controllers\Assignments\SubmissionController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InstructorAnalyticsController;
+use App\Http\Controllers\Reports\ReportController;
+use App\Http\Controllers\Reports\ReportDownloadController;
 use App\Http\Controllers\Courses\AdminEnrollmentController;
 use App\Http\Controllers\Courses\BulkEnrollmentController;
 use App\Http\Controllers\Courses\CourseController;
@@ -50,7 +52,6 @@ use App\Http\Controllers\MediaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VerificationController;
-use App\Models\Course;
 use App\Models\User;
 use App\Models\UserInvitation;
 use App\Notifications\UserInvitationNotification;
@@ -86,61 +87,9 @@ Route::middleware('throttle:30,1')->group(function () {
     Route::get('/verify/{serial}', [VerificationController::class, 'show'])->name('verify.show');
 });
 
-Route::get('/dashboard', function () {
-    $user = auth()->user();
-    $isStaff = $user->hasAnyRole([Role::Instructor->value, Role::Admin->value, Role::SuperAdmin->value]);
-    $isAdmin = $user->hasAnyRole([Role::Admin->value, Role::SuperAdmin->value]);
-
-    $data = ['isStaff' => $isStaff, 'isAdmin' => $isAdmin, 'isAuditor' => $user->hasRole(Role::Auditor->value)];
-
-    if ($isAdmin || $user->hasRole(Role::Auditor->value)) {
-        // Whole-platform view for admins/auditors.
-        $data['stats'] = [
-            'courses' => Course::count(),
-            'inReview' => Course::where('status', CourseStatus::Review->value)->count(),
-            'published' => Course::where('status', CourseStatus::Published->value)->count(),
-            'people' => User::count(),
-        ];
-    } elseif ($user->hasRole(Role::Instructor->value)) {
-        // The instructor's own courses by status.
-        $mine = Course::forInstructor($user);
-        $data['stats'] = [
-            'courses' => (clone $mine)->count(),
-            'drafts' => (clone $mine)->where('status', CourseStatus::Draft->value)->count(),
-            'inReview' => (clone $mine)->where('status', CourseStatus::Review->value)->count(),
-            'published' => (clone $mine)->where('status', CourseStatus::Published->value)->count(),
-        ];
-    } else {
-        // Student: their real learning at a glance + courses to continue.
-        $enrollments = $user->enrollments()
-            ->with(['course.department', 'course.media'])
-            ->whereIn('status', [
-                EnrollmentStatus::Active->value,
-                EnrollmentStatus::Pending->value,
-                EnrollmentStatus::Waitlisted->value,
-                EnrollmentStatus::Completed->value,
-            ])
-            ->get();
-
-        $data['stats'] = [
-            'inProgress' => $enrollments->where('status', EnrollmentStatus::Active)->count(),
-            'completed' => $enrollments->where('status', EnrollmentStatus::Completed)->count(),
-            'awaiting' => $enrollments->whereIn('status', [
-                EnrollmentStatus::Pending,
-                EnrollmentStatus::Waitlisted,
-            ])->count(),
-        ];
-
-        // The active courses to "continue", most recently enrolled first.
-        $data['continueLearning'] = $enrollments
-            ->where('status', EnrollmentStatus::Active)
-            ->sortByDesc('enrolled_at')
-            ->take(3)
-            ->values();
-    }
-
-    return view('dashboard', $data);
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', DashboardController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -382,6 +331,26 @@ Route::middleware(['auth', 'verified', 'permission:certificates.manage'])
 
 /*
 |--------------------------------------------------------------------------
+| Report centre (Section 10) — admin + read-only auditor
+|--------------------------------------------------------------------------
+| Dashboards live at /dashboard; this is the exportable reporting suite. The whole
+| area is gated on reports.view (auditors hold it — nothing here mutates). Export is a
+| POST so it can carry the full filter set (course arrays, e-mail cohorts); a large
+| export is queued and delivered by an in-app "report ready" notification, whose link
+| hits the Policy-gated download route.
+*/
+Route::middleware(['auth', 'verified', 'permission:reports.view'])
+    ->prefix('admin/reports')
+    ->name('reports.')
+    ->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('exports/{generatedReport}', ReportDownloadController::class)->name('download');
+        Route::get('{report}', [ReportController::class, 'show'])->name('show');
+        Route::post('{report}/export', [ReportController::class, 'export'])->name('export');
+    });
+
+/*
+|--------------------------------------------------------------------------
 | Course builder & publishing workflow (instructors + admins)
 |--------------------------------------------------------------------------
 | The instructor list, the builder (settings + curriculum), per-type lesson
@@ -451,6 +420,10 @@ Route::middleware(['auth', 'verified'])
         Route::get('courses/{course}/gradebook', [GradebookController::class, 'matrix'])->name('courses.gradebook');
         Route::get('courses/{course}/gradebook/export', [GradebookController::class, 'export'])->name('courses.gradebook.export');
         Route::post('courses/{course}/gradebook/{user}/recompute', [GradebookController::class, 'recompute'])->name('courses.gradebook.recompute');
+
+        // Per-course analytics drill-down (Section 10) — progress, assessment stats,
+        // knowledge gain and the class grade distribution.
+        Route::get('courses/{course}/analytics', [InstructorAnalyticsController::class, 'show'])->name('courses.analytics');
 
         // Course announcements (Section 8) — composed from the builder's Announcements tab.
         Route::post('courses/{course}/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');

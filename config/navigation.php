@@ -137,7 +137,7 @@ return [
     [
         'label' => 'Reports',
         'icon' => 'chart',
-        'route' => null,
+        'route' => 'reports.index',
         'match' => 'reports.*',
         'roles' => ['admin', 'super-admin', 'auditor'],
     ],

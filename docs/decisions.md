@@ -709,3 +709,52 @@ generic `fake()` output (foreign names, Latin lorem):
    at three segments sidesteps the collision entirely while staying course-scoped by slug.
    "Discuss this lesson" from the player deep-links to `forum.index`/`forum.create` with a
    `lesson=` scope. A `chat` / `chat-group` icon pair was added to `<x-ui.icon>`.
+
+## Section 10 — Reporting, Analytics & Exports (2026-07-25)
+
+1. **One report abstraction drives preview + all three export formats.** Each report
+   (`App\Reports\*`) implements a single `Report` contract that returns positional row
+   arrays aligned 1:1 with its `headings()`. The on-screen preview, the xlsx/csv
+   spreadsheet (`ReportExport`) and the branded PDF (`ReportPdf` → one shared
+   `reports/pdf/layout` view) all consume the *same* rows, so what the Vice-Chancellor
+   prints matches the admin's screen exactly — no drift. Query-backed reports extend
+   `EloquentReport` (count/paginate/rows derived from a `baseQuery` + a chunk-mapper that
+   batch-loads grade snapshots/certificates, N+1-free); the two aggregate reports
+   (instructor, compliance) implement the contract directly with in-memory paging.
+2. **Learner grade columns come from the immutable `CourseGradeRecord` snapshot, never a
+   live re-derivation.** They therefore match the gradebook and the printed certificate
+   exactly, and a learner with no completed course shows a tidy empty cell — never a
+   misleading `0` (asserted in tests). This also avoids running the gradebook aggregation
+   per enrolment across a large report.
+3. **Compliance "department cohort" is a documented proxy.** Users have no direct
+   department (only courses do), so a department cohort = everyone enrolled in that
+   department's courses; the e-mail cohort matches users by (case-insensitive) address and
+   reports unmatched addresses in the filter echo. Rows are the cohort × target-courses
+   cross-product resolved against one preloaded enrolment map (no per-cell query);
+   status is Completed / In progress / Never started with headline percentages.
+4. **Exports > 2 000 rows are queued, not streamed.** `ReportController@export` streams
+   small reports inline; over `ReportExporter::QUEUE_THRESHOLD` it creates a
+   `generated_reports` row, dispatches `GenerateReportExport`, and tells the admin a
+   notification will carry the link. The job builds the file on the **private** disk and
+   fires `ReportReadyNotification` (new `NotificationType::ReportReady`, in-app only —
+   it answers the user's own action so it bypasses per-type channel prefs). Download is a
+   Policy-gated route (`GeneratedReportPolicy` — owner or super-admin), never a public URL,
+   consistent with the constitution's treatment of sensitive generated files.
+5. **The Section-6.5 gradebook CSV is folded into this path.** The bespoke `GradebookExport`
+   is deleted; `GradebookController@export` now routes through `ReportExporter::downloadRows`
+   and gains xlsx/pdf alongside csv, removing the duplication the brief called out.
+6. **Charts: Chart.js, lazy-loaded, brand palette from CSS vars in one place.** A
+   `<x-ui.chart>` component emits the config as JSON; `resources/js/charts.js` dynamically
+   imports Chart.js only where a chart exists (mirrors the TinyMCE pattern — kept out of the
+   main bundle) and resolves named tones (`crimson`, `green`, `gold`, band tone names) to
+   the live `--uprl-*` custom properties. Those tokens are stored as bare `R G B` channel
+   triplets (for Tailwind's opacity modifiers), so the resolver wraps them as `rgb(R G B)` —
+   the one subtlety needed to make brand colour render on a canvas. `prefers-reduced-motion`
+   disables animation.
+7. **Admin dashboard aggregates are cached 5 min; per-user views read live.** Platform-wide
+   figures (stats, 12-month trend, top courses) that sweep whole tables are memoised;
+   instructor/student dashboards and the activity feed read live so a learner never sees a
+   stale progress bar. The month-bucket trend query uses a driver-portable year-month
+   expression (sqlite/mysql/pgsql). New indexes (`add_reporting_indexes`) back the trend,
+   certification, assessment-analytics and active-users queries; the warm admin dashboard
+   stays within the ~15-query budget (asserted).
