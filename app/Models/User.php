@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\MediaPurpose;
+use App\Enums\NotificationType;
 use App\Models\Concerns\HasMedia;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -125,10 +126,52 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Whether the user has opted in to the periodic e-mail digest.
+     * Whether the user has opted in to the periodic e-mail digest. Section 8 gives
+     * this existing toggle teeth: when on, digestible notification types are
+     * withheld from immediate e-mail and folded into the daily digest instead.
      */
     public function wantsEmailDigest(): bool
     {
         return (bool) ($this->learning_preferences['email_digest'] ?? false);
+    }
+
+    /**
+     * Whether $type should reach this user's in-app bell. Critical types (status
+     * changes the user must not miss) are always on, regardless of the saved
+     * preference — the profile toggle for them renders locked/checked.
+     */
+    public function notifiesInApp(NotificationType $type): bool
+    {
+        if ($type->isCritical()) {
+            return true;
+        }
+
+        return (bool) data_get($this->learning_preferences, "notifications.{$type->value}.in_app", true);
+    }
+
+    /**
+     * Whether $type should reach this user's inbox at all (immediately, or folded
+     * into their daily digest if they've opted into one and the type qualifies).
+     */
+    public function notifiesByEmail(NotificationType $type): bool
+    {
+        return (bool) data_get($this->learning_preferences, "notifications.{$type->value}.email", true);
+    }
+
+    /**
+     * Persist one type's channel toggles, merging into the existing preference
+     * blob so unrelated keys (other types, email_digest) are never clobbered.
+     *
+     * @param  array{email?: bool, in_app?: bool}  $channels
+     */
+    public function setNotificationPreference(NotificationType $type, array $channels): void
+    {
+        $prefs = $this->learning_preferences ?? [];
+        $prefs['notifications'][$type->value] = array_merge(
+            $prefs['notifications'][$type->value] ?? [],
+            $channels,
+        );
+
+        $this->learning_preferences = $prefs;
     }
 }

@@ -30,6 +30,7 @@ class Enrollment extends Model
         'completed_at',
         'approved_by',
         'decision_note',
+        'pending_digested_at',
     ];
 
     protected function casts(): array
@@ -40,6 +41,7 @@ class Enrollment extends Model
             'enrolled_at' => 'datetime',
             'progress_percent' => 'integer',
             'completed_at' => 'datetime',
+            'pending_digested_at' => 'datetime',
         ];
     }
 
