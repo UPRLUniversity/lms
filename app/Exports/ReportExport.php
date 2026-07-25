@@ -30,7 +30,27 @@ class ReportExport implements FromArray, ShouldAutoSize, WithHeadings, WithStyle
 
     public function array(): array
     {
-        return $this->rows;
+        // Neutralise CSV/spreadsheet formula injection: a cell a spreadsheet would treat
+        // as a formula (leading = + - @, tab or CR) is prefixed with a single quote so it
+        // opens as literal text. Cells carry user-controlled values (names, e-mails,
+        // course titles), so this must happen on the write path, not just on input.
+        return array_map(
+            fn (array $row) => array_map([$this, 'neutraliseFormula'], $row),
+            $this->rows,
+        );
+    }
+
+    /**
+     * @param  scalar|null  $value
+     * @return scalar|null
+     */
+    private function neutraliseFormula(mixed $value): mixed
+    {
+        if (is_string($value) && $value !== '' && preg_match('/^[=+\-@\t\r]/', $value) === 1) {
+            return "'".$value;
+        }
+
+        return $value;
     }
 
     public function headings(): array

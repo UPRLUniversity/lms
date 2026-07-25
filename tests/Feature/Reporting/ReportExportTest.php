@@ -72,6 +72,19 @@ class ReportExportTest extends TestCase
         $this->assertSame('application/pdf', $response->headers->get('content-type'));
     }
 
+    public function test_export_neutralises_spreadsheet_formula_injection(): void
+    {
+        // A malicious display name that a spreadsheet would otherwise execute as a formula.
+        $rows = [['=HYPERLINK("http://evil","click")', 'ok@uprl.test'], ['safe name', '+15550000']];
+        $export = new \App\Exports\ReportExport('Test', ['Name', 'Email'], $rows);
+
+        $out = $export->array();
+
+        $this->assertSame("'=HYPERLINK(\"http://evil\",\"click\")", $out[0][0]);
+        $this->assertSame("'+15550000", $out[1][1]);
+        $this->assertSame('safe name', $out[1][0]); // untouched
+    }
+
     public function test_export_rejects_an_unknown_format(): void
     {
         $admin = $this->userWithRole(Role::Admin->value);
