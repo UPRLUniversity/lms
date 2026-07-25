@@ -105,15 +105,43 @@ class CourseSeeder extends Seeder
                     'title' => $lesson['title'],
                     'type' => $type->value,
                     'position' => $lIndex + 1,
-                    'duration_minutes' => $lesson['minutes'] ?? fake()->numberBetween(5, 25),
+                    'duration_minutes' => $lesson['minutes'] ?? 12,
                     'is_free_preview' => $lesson['preview'] ?? false,
-                    'content_text' => $type === LessonType::Text ? '<p>'.fake()->paragraphs(2, true).'</p>' : null,
+                    'content_text' => $type === LessonType::Text ? $this->lessonBody($lesson['title'], $course, $module['title']) : null,
                     'video_url' => $type === LessonType::Video ? ($lesson['url'] ?? null) : null,
                     'video_provider' => $type === LessonType::Video ? (str_contains($lesson['url'] ?? '', 'vimeo') ? 'vimeo' : 'youtube') : null,
                     'external_url' => $type === LessonType::ExternalLink ? ($lesson['url'] ?? 'https://uprl.edu.ng') : null,
                 ]);
             }
         }
+    }
+
+    /**
+     * Real, on-topic English lesson prose (never Latin lorem) so a text lesson opened
+     * in the player reads like genuine course material — grounded in the lesson title,
+     * its module and the UPRL context.
+     */
+    private function lessonBody(string $title, Course $course, string $moduleTitle): string
+    {
+        $lead = "In this lesson we turn to <strong>{$title}</strong>, a core part of "
+            ."<em>{$moduleTitle}</em> in {$course->title}. The aim is to move from the idea to "
+            .'the practice, with examples drawn from public relations and leadership work here in Nigeria.';
+
+        $body = 'Strong practitioners do not just know the theory — they can apply it under real '
+            .'conditions, explain their choices, and adapt when the situation shifts. As you read, '
+            .'keep asking how each point would play out in a live campaign, newsroom or leadership team.';
+
+        return implode('', [
+            "<p>{$lead}</p>",
+            '<h3>What to focus on</h3>',
+            '<ul>',
+            '<li>The key idea and why it matters in day-to-day practice.</li>',
+            '<li>A worked example you can adapt to your own context.</li>',
+            '<li>Common mistakes — and how to avoid them.</li>',
+            '</ul>',
+            "<p>{$body}</p>",
+            '<blockquote>Creativity, Competence, Character — the standard we hold ourselves to at UPRL.</blockquote>',
+        ]);
     }
 
     /**
