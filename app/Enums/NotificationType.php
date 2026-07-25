@@ -22,6 +22,10 @@ enum NotificationType: string
     case AssignmentDueSoon = 'assignment_due_soon';
     case CourseAnnouncement = 'course_announcement';
 
+    // Communication (Section 9) — reaches students and staff alike.
+    case NewMessage = 'new_message';
+    case ForumReply = 'forum_reply';
+
     // Instructor.
     case CourseApproved = 'course_approved';
     case CourseReturned = 'course_returned';
@@ -45,6 +49,8 @@ enum NotificationType: string
             self::CertificateIssued => 'Certificate issued',
             self::AssignmentDueSoon => 'Assignment due soon',
             self::CourseAnnouncement => 'Course announcements',
+            self::NewMessage => 'New messages',
+            self::ForumReply => 'Forum replies',
             self::CourseApproved => 'Course approved',
             self::CourseReturned => 'Course returned with note',
             self::NewSubmission => 'New submission to grade',
@@ -67,6 +73,8 @@ enum NotificationType: string
             self::CertificateIssued => 'certificate',
             self::AssignmentDueSoon => 'clock',
             self::CourseAnnouncement => 'megaphone',
+            self::NewMessage => 'chat',
+            self::ForumReply => 'chat',
             self::CourseApproved => 'check',
             self::CourseReturned => 'inbox',
             self::NewSubmission => 'document-text',
@@ -89,8 +97,8 @@ enum NotificationType: string
             self::EnrollmentConfirmed, self::EnrollmentApproved, self::WaitlistPromoted, self::CourseApproved => 'success',
             self::EnrollmentRejected, self::AssignmentReturned, self::CourseReturned => 'crimson',
             self::CertificateIssued, self::AssignmentGraded, self::AttemptGraded, self::AssignmentDueSoon,
-            self::CourseAnnouncement, self::NewSubmission, self::NewPendingEnrollment,
-            self::CourseSubmittedForReview, self::BulkImportCompleted => 'gold',
+            self::CourseAnnouncement, self::NewMessage, self::ForumReply, self::NewSubmission,
+            self::NewPendingEnrollment, self::CourseSubmittedForReview, self::BulkImportCompleted => 'gold',
         };
     }
 
@@ -104,6 +112,7 @@ enum NotificationType: string
             self::AssignmentGraded, self::AssignmentReturned, self::AttemptGraded, self::CertificateIssued => 'Grades & certificates',
             self::AssignmentDueSoon => 'Reminders',
             self::CourseAnnouncement => 'Course announcements',
+            self::NewMessage, self::ForumReply => 'Messages & forums',
             self::CourseApproved, self::CourseReturned, self::CourseSubmittedForReview => 'Course workflow',
             self::NewSubmission, self::NewPendingEnrollment => 'Teaching',
             self::BulkImportCompleted => 'Administration',

@@ -151,6 +151,27 @@
             @break
     @endswitch
 
+    {{-- Discuss this lesson — entry point into the course forum, scoped to this lesson. --}}
+    <section class="mt-8 flex flex-col items-start gap-3 rounded-2xl border border-line bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+            <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-crimson/10 text-crimson">
+                <x-ui.icon name="chat-group" class="h-5 w-5" />
+            </span>
+            <div>
+                <p class="font-medium text-ink">Have a question about this lesson?</p>
+                <p class="text-sm text-ink/60">Discuss it with your instructor and coursemates in the forum.</p>
+            </div>
+        </div>
+        <div class="flex shrink-0 gap-2">
+            <x-ui.button size="sm" variant="secondary" :href="route('forum.index', ['course' => $course, 'lesson' => $lesson->id])">
+                View discussions
+            </x-ui.button>
+            <x-ui.button size="sm" :href="route('forum.create', ['course' => $course, 'lesson' => $lesson->id])">
+                <x-ui.icon name="plus" class="h-4 w-4" /> Discuss this lesson
+            </x-ui.button>
+        </div>
+    </section>
+
     {{-- Lesson resources --}}
     @if ($resources->isNotEmpty())
         <section class="mt-8" aria-labelledby="resources-heading">

@@ -219,6 +219,68 @@ class Course extends Model
         return $this->hasMany(QuestionCategory::class);
     }
 
+    /**
+     * Discussion threads in this course's forum (Section 9).
+     *
+     * @return HasMany<ForumThread, $this>
+     */
+    public function forumThreads(): HasMany
+    {
+        return $this->hasMany(ForumThread::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Membership (forums & messaging — Section 9)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * The students with learning access — actively enrolled or already completed.
+     * The audience for a course group conversation and the classmate pool for direct
+     * messages.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, User>
+     */
+    public function enrolledStudents(): \Illuminate\Database\Eloquent\Collection
+    {
+        return User::query()
+            ->whereHas('enrollments', fn (Builder $q) => $q->where('course_id', $this->id)
+                ->whereIn('status', [EnrollmentStatus::Active->value, EnrollmentStatus::Completed->value]))
+            ->get();
+    }
+
+    /**
+     * Everyone who belongs to this course's community: its instructors plus its
+     * enrolled/completed students. The membership pool for messaging classmates and
+     * instructors, and the roster of a "message all enrolled" group.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    public function members(): \Illuminate\Support\Collection
+    {
+        return $this->instructors()->get()
+            ->concat($this->enrolledStudents())
+            ->unique('id')
+            ->values();
+    }
+
+    /**
+     * Whether $user belongs to this course's community — an enrolled/completed student
+     * or one of its instructors. The gate for reading and posting in its forum, and
+     * for messaging within it.
+     */
+    public function isMember(User $user): bool
+    {
+        $enrollment = $this->enrollmentFor($user);
+
+        if ($enrollment && $enrollment->grantsLearningAccess()) {
+            return true;
+        }
+
+        return $this->isTaughtBy($user);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Scopes

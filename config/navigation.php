@@ -33,6 +33,15 @@ return [
         'roles' => ['*'],
     ],
     [
+        // Direct/group messaging (Section 9). The read-only auditor never initiates
+        // conversations, so it's intentionally excluded.
+        'label' => 'Messages',
+        'icon' => 'chat',
+        'route' => 'messages.index',
+        'match' => 'messages.*',
+        'roles' => ['student', 'instructor', 'admin', 'super-admin'],
+    ],
+    [
         'label' => 'Teaching',
         'icon' => 'pencil',
         'route' => 'courses.index',
@@ -115,6 +124,14 @@ return [
         'icon' => 'inbox',
         'route' => 'admin.invitations.index',
         'match' => 'admin.invitations.*',
+        'roles' => ['admin', 'super-admin'],
+    ],
+    [
+        // Forum moderation queue (Section 9) — reported posts for admin review.
+        'label' => 'Reported posts',
+        'icon' => 'flag',
+        'route' => 'admin.forum-reports.index',
+        'match' => 'admin.forum-reports.*',
         'roles' => ['admin', 'super-admin'],
     ],
     [

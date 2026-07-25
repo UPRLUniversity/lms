@@ -103,6 +103,29 @@
     }
 
     /*
+     * Inverted rich text for a message bubble on the crimson (own-message) background,
+     * so links and quotes stay legible against white text. Compact spacing to suit chat.
+     */
+    .uprl-prose.uprl-prose-chat {
+        @apply max-w-none leading-normal;
+    }
+    .uprl-prose.uprl-prose-chat > * + * {
+        @apply mt-2;
+    }
+    .uprl-prose-invert {
+        @apply text-white;
+    }
+    .uprl-prose-invert a {
+        @apply text-white underline hover:text-white;
+    }
+    .uprl-prose-invert blockquote {
+        @apply border-white/40 text-white/90;
+    }
+    .uprl-prose-invert code {
+        @apply bg-white/20 text-white;
+    }
+
+    /*
      * Skeleton placeholder — one consistent loading shimmer for slow lists/content.
      * Use via <x-ui.skeleton> / <x-ui.skeleton-table>. The shimmer freezes to a
      * static bar under prefers-reduced-motion (handled by the global rule below).

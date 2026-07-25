@@ -95,6 +95,19 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Conversations (direct + group) this user takes part in (Section 9). last_read_at
+     * on the pivot is the read watermark used to derive unread counts.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<Conversation, $this>
+     */
+    public function conversations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class)
+            ->withPivot('last_read_at')
+            ->withTimestamps();
+    }
+
+    /**
      * Two-letter initials for the avatar fallback (e.g. "Ada Lovelace" → "AL").
      */
     public function initials(): string

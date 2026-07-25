@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Assignment;
 use App\Models\Lesson;
 use App\Models\Media;
+use App\Models\Message;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
@@ -37,6 +38,12 @@ class MediaPolicy
 
         if ($owner instanceof Submission) {
             return Gate::forUser($user)->allows('view', $owner);
+        }
+
+        // A message attachment: any participant of the conversation the message
+        // belongs to (the same rule as reading the message itself).
+        if ($owner instanceof Message) {
+            return Gate::forUser($user)->allows('view', $owner->conversation);
         }
 
         return false;

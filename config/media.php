@@ -166,6 +166,28 @@ return [
             'transformations' => [],
         ],
 
+        MediaPurpose::MessageAttachments->value => [
+            // A single file a user attaches to a direct/group message. Private: reachable
+            // only through the policy-gated download route by a conversation participant,
+            // never a public CDN URL. A modest ceiling keeps messaging light.
+            'visibility' => 'private',
+            'disk' => 'private',
+            'allowed_mimes' => [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'application/zip',
+                'text/plain',
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+            ],
+            'max_kb' => 10240,
+            'transformations' => [],
+        ],
+
         MediaPurpose::Certificates->value => [
             'visibility' => 'private',
             'disk' => 'private',
