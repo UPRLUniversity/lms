@@ -126,6 +126,7 @@ class CourseController extends Controller
             'publishBlockers' => app(CoursePublishingService::class)->publishBlockers($course),
             'canManage' => request()->user()->can('update', $course),
             'canReview' => request()->user()->can('review', $course),
+            'announcements' => $course->announcements()->with('author')->get(),
         ]);
     }
 
