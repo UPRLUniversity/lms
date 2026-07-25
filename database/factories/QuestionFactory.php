@@ -19,14 +19,29 @@ class QuestionFactory extends Factory
 
     public function definition(): array
     {
+        // Real public-relations / leadership prompts (never Latin lorem) so padded
+        // bank questions read like genuine coursework.
+        $prompts = [
+            'Which of the following best describes the primary goal of public relations?',
+            'What is the first step in the RACE planning model?',
+            'Which document is used to announce news to journalists?',
+            'What does a spokesperson issue in the first hour of a crisis?',
+            'Which audience should a campaign message be tailored to?',
+            'What quality does the UPRL motto place alongside creativity and competence?',
+            'Which channel is most appropriate for reaching a professional audience?',
+            'What makes an organisational message credible to its publics?',
+            'Which metric best measures campaign reach?',
+            'What is the purpose of a holding statement?',
+        ];
+
         return [
             'category_id' => null,
             'course_id' => null,
             'created_by' => null,
             'type' => QuestionType::McqSingle->value,
             'difficulty' => QuestionDifficulty::Medium->value,
-            'prompt' => '<p>'.fake()->sentence().'?</p>',
-            'explanation' => '<p>'.fake()->sentence().'</p>',
+            'prompt' => '<p>'.fake()->randomElement($prompts).'</p>',
+            'explanation' => '<p>Review the relevant lesson to confirm the correct choice and the reasoning behind it.</p>',
             'points' => 1,
             'payload' => [
                 'options' => [

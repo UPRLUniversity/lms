@@ -71,17 +71,6 @@
             <x-input-error class="mt-2" :messages="$errors->get('bio')" />
         </div>
 
-        <div>
-            <span class="block text-sm font-medium text-ink">{{ __('Learning preferences') }}</span>
-            <label for="email_digest" class="mt-2 inline-flex items-center gap-2">
-                <input type="hidden" name="email_digest" value="0">
-                <input id="email_digest" type="checkbox" name="email_digest" value="1"
-                       @checked(old('email_digest', $user->wantsEmailDigest()))
-                       class="rounded border-line text-crimson shadow-sm focus:ring-crimson">
-                <span class="text-sm text-ink/70">{{ __('Email me a periodic learning digest') }}</span>
-            </label>
-        </div>
-
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

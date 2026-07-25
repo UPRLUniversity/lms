@@ -9,6 +9,7 @@ use App\Models\CertificateTemplate;
 use App\Models\Course;
 use App\Models\CourseGradeRecord;
 use App\Models\User;
+use App\Notifications\CertificateIssuedNotification;
 use App\Services\Grades\CourseGradeRecordService;
 use App\Services\Media\PrivateFileService;
 use Illuminate\Support\Facades\DB;
@@ -129,6 +130,8 @@ class CertificateService
             ]);
 
             GenerateCertificatePdf::dispatch($certificate->id);
+
+            $user->notify(new CertificateIssuedNotification($certificate));
 
             return $certificate;
         });

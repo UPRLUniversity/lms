@@ -200,6 +200,16 @@ class Course extends Model
     }
 
     /**
+     * Instructor-posted updates, newest first (Section 8).
+     *
+     * @return HasMany<CourseAnnouncement, $this>
+     */
+    public function announcements(): HasMany
+    {
+        return $this->hasMany(CourseAnnouncement::class)->latest();
+    }
+
+    /**
      * Categories the course's questions are grouped into.
      *
      * @return HasMany<QuestionCategory, $this>

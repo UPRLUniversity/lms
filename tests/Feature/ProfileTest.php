@@ -100,7 +100,7 @@ class ProfileTest extends TestCase
         $this->assertNotNull($user->fresh());
     }
 
-    public function test_extended_profile_fields_and_digest_preference_can_be_saved(): void
+    public function test_extended_profile_fields_can_be_saved(): void
     {
         $user = User::factory()->create();
 
@@ -110,14 +110,24 @@ class ProfileTest extends TestCase
             'phone' => '+234 800 000 0000',
             'title' => 'Senior Lecturer',
             'bio' => 'Teaches public relations.',
-            'email_digest' => '1',
         ])->assertSessionHasNoErrors();
 
         $user->refresh();
         $this->assertSame('+234 800 000 0000', $user->phone);
         $this->assertSame('Senior Lecturer', $user->title);
         $this->assertSame('Teaches public relations.', $user->bio);
-        $this->assertTrue($user->wantsEmailDigest());
+    }
+
+    public function test_digest_preference_is_saved_from_the_notifications_form(): void
+    {
+        // The digest opt-in moved to the dedicated notifications matrix in Section 8.
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->patch('/profile/notifications', [
+            'email_digest' => '1',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertTrue($user->refresh()->wantsEmailDigest());
     }
 
     public function test_avatar_can_be_uploaded_and_replaced_through_the_media_service(): void

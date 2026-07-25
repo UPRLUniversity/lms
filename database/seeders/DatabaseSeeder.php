@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\Role;
 use App\Models\User;
+use Database\Seeders\Support\Nigeria;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -29,14 +30,18 @@ class DatabaseSeeder extends Seeder
         $this->make('Amaka Okoye', 'admin1@uprl.test', Role::Admin);
         $this->make('Bello Sanusi', 'admin2@uprl.test', Role::Admin);
 
-        // 4 instructors.
-        foreach (range(1, 4) as $i) {
-            $this->make(fake()->name(), "instructor{$i}@uprl.test", Role::Instructor);
+        // 4 instructors — fixed, recognisable Nigerian names (they lead courses, author
+        // announcements and grade, so a stable identity reads better across the demo).
+        $instructorNames = ['Adebayo Ogunleye', 'Chidinma Okafor', 'Ibrahim Danjuma', 'Folake Adeniyi'];
+        foreach ($instructorNames as $i => $name) {
+            $this->make($name, 'instructor'.($i + 1).'@uprl.test', Role::Instructor, [
+                'title' => Nigeria::academicTitle(),
+            ]);
         }
 
-        // 25 students.
+        // 25 students — authentic Nigerian names across the three major ethnic groups.
         foreach (range(1, 25) as $i) {
-            $this->make(fake()->name(), "student{$i}@uprl.test", Role::Student);
+            $this->make(Nigeria::fullName(), "student{$i}@uprl.test", Role::Student);
         }
 
         // 1 read-only auditor.
@@ -71,21 +76,31 @@ class DatabaseSeeder extends Seeder
         // Certificates (Section 7): tops up the registry if the natural pipeline above
         // produced fewer than three, and revokes one so every state is demonstrable.
         $this->call(CertificateSeeder::class);
+
+        // Notifications (Section 8): most of the catalogue already fired naturally above
+        // (certificate issuance); this tops up the rest against the same real, seeded
+        // data so the bell and /notifications page are a convincing demo immediately.
+        $this->call(NotificationSeeder::class);
     }
 
     /**
      * Create-or-update a verified, active user and (re)assign its single role.
-     * Password is passed plain; the model's 'hashed' cast hashes it once.
+     * Password is passed plain; the model's 'hashed' cast hashes it once. Every demo
+     * account carries a Nigerian +234 phone; extra attributes (e.g. an instructor's
+     * academic title) merge in on top.
+     *
+     * @param  array<string, mixed>  $attributes
      */
-    protected function make(string $name, string $email, Role $role): User
+    protected function make(string $name, string $email, Role $role, array $attributes = []): User
     {
         $user = User::updateOrCreate(
             ['email' => $email],
-            [
+            array_merge([
                 'name' => $name,
                 'password' => 'password',
                 'is_active' => true,
-            ],
+                'phone' => Nigeria::phone(),
+            ], $attributes),
         );
 
         // email_verified_at is guarded; set it through the model API so the

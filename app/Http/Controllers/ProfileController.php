@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\MediaPurpose;
+use App\Enums\NotificationType;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Services\Media\MediaUploadService;
 use Illuminate\Http\RedirectResponse;
@@ -39,12 +40,6 @@ class ProfileController extends Controller
             'bio' => $data['bio'] ?? null,
         ]);
 
-        // Learning preferences (only the digest opt-in for now). Merge so future
-        // preference keys aren't clobbered by this single toggle.
-        $user->learning_preferences = array_merge($user->learning_preferences ?? [], [
-            'email_digest' => $request->boolean('email_digest'),
-        ]);
-
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
@@ -52,6 +47,35 @@ class ProfileController extends Controller
         $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Save the notification preferences matrix: per-type email/in-app toggles plus
+     * the digest frequency. Critical types are excluded from the payload (their
+     * toggle renders locked/checked), so they simply keep defaulting to on.
+     */
+    public function updateNotifications(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        foreach (NotificationType::cases() as $type) {
+            if ($type->isCritical()) {
+                continue;
+            }
+
+            $user->setNotificationPreference($type, [
+                'email' => $request->boolean("email.{$type->value}"),
+                'in_app' => $request->boolean("in_app.{$type->value}"),
+            ]);
+        }
+
+        $prefs = $user->learning_preferences ?? [];
+        $prefs['email_digest'] = $request->boolean('email_digest');
+        $user->learning_preferences = $prefs;
+
+        $user->save();
+
+        return Redirect::route('profile.edit')->with('status', 'notifications-updated');
     }
 
     /**
