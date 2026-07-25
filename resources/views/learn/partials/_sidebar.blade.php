@@ -41,10 +41,14 @@
         <h1 class="mt-2 font-display text-lg font-semibold leading-snug text-ink">{{ $course->title }}</h1>
         <div class="mt-0.5 flex items-center justify-between gap-2">
             <p class="text-xs text-ink/50">{{ $course->code }}</p>
-            <div class="flex items-center gap-3">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <a href="{{ route('learn.announcements', $course) }}"
                    class="inline-flex items-center gap-1 text-xs font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
                     <x-ui.icon name="megaphone" class="h-3.5 w-3.5" /> Announcements
+                </a>
+                <a href="{{ route('forum.index', $course) }}"
+                   class="inline-flex items-center gap-1 text-xs font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
+                    <x-ui.icon name="chat-group" class="h-3.5 w-3.5" /> Forum
                 </a>
                 <a href="{{ route('learn.grades', $course) }}"
                    class="inline-flex items-center gap-1 text-xs font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
