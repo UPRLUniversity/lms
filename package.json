@@ -20,6 +20,7 @@
     },
     "dependencies": {
         "@alpinejs/collapse": "^3.14.9",
+        "chart.js": "^4.5.1",
         "sortablejs": "^1.15.6",
         "sweetalert2": "^11.26.25"
     }
