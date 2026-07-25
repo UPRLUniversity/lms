@@ -77,6 +77,10 @@ class DatabaseSeeder extends Seeder
         // produced fewer than three, and revokes one so every state is demonstrable.
         $this->call(CertificateSeeder::class);
 
+        // Communication (Section 9): a lived-in course forum (pinned/answered/locked
+        // threads with replies) plus direct + course-group conversations for the demo.
+        $this->call(CommunicationSeeder::class);
+
         // Notifications (Section 8): most of the catalogue already fired naturally above
         // (certificate issuance); this tops up the rest against the same real, seeded
         // data so the bell and /notifications page are a convincing demo immediately.

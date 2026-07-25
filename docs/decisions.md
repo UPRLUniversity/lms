@@ -646,3 +646,66 @@ generic `fake()` output (foreign names, Latin lorem):
    smaller curated pool raised collision odds and surfaced it. Fixed by giving those two
    students explicit distinct names — the test controls its identifying text rather than
    trusting randomness.
+
+## Section 9 — Communication: Course Forums & Messaging (2026-07-25)
+
+1. **Three-tier forum authorization, all delegating to the course.** A course-scoped
+   `ForumPolicy` registers three named gates — `accessForum` (read: any member, plus
+   staff/auditor who may view the course), `participateInForum` (open threads & reply:
+   members who may write; the read-only auditor is explicitly excluded), and
+   `moderateForum` (pin/lock/remove/answer-as-staff: the same ownership rule as editing
+   the course). Per-instance rules live in auto-discovered `ForumThreadPolicy` /
+   `ForumPostPolicy` (a locked thread rejects new replies except from moderators; the
+   thread author or an instructor may accept an answer; the author or a moderator may
+   remove a post). This mirrors the existing `EnrollmentPolicy`/`CourseAnnouncementPolicy`
+   named-gate pattern rather than inventing a new one. **Membership** is a new
+   `Course::isMember()` (enrolled active/completed, or an instructor) with `members()` /
+   `enrolledStudents()` helpers.
+2. **Answered = a pointer, not a flag.** `forum_threads.answer_post_id` references the
+   accepted `forum_post` (added in a follow-up migration once `forum_posts` exists, so the
+   FK has a real target); its presence *is* the "Answered" state, so there's no separate
+   boolean to keep in sync. Soft-removing the answer post clears the pointer in
+   `ForumService` (and the FK's `nullOnDelete` covers a hard delete). Replies are capped at
+   one level: replying to a reply re-parents to its top-level post.
+3. **Direct conversations are canonical.** `MessagingService::startDirect()` finds the one
+   existing two-person direct thread (by participant match + count) or creates it, so
+   "Message instructor" and replying always land in the same conversation — never a
+   duplicate. Group conversations are staff-only (`createGroupConversation` gate); "message
+   all enrolled" reuses one durable group thread per course (`conversations.course_id`),
+   topping up membership on each broadcast so it stays a single thread.
+4. **Who-may-message-whom is service logic, not a policy.** Participation
+   (`ConversationPolicy`) gates every read/write once a conversation exists; *starting* one
+   is gated by `MessagingService::canMessage()` — staff may reach any of their course
+   members, everyone else must share a course. This keeps the "shared course" business rule
+   in one testable place rather than smeared across policies.
+5. **Unread is derived from a per-participant watermark, never stored.** `conversation_user.
+   last_read_at` is the read line; unread counts come from a single grouped query joined to
+   it (`MessagingService::unreadCounts` / `totalUnread`), and opening a conversation stamps
+   the watermark. The bell integrates for free: a `NewMessageNotification` (a normal
+   Section-8 `UprlNotification`, honouring channel preferences) is sent to *caught-up*
+   participants only — someone who already has an unread in that thread isn't re-pinged, so
+   a burst doesn't spam the bell (the spec's allowed dedupe).
+6. **Messaging & forum bodies use the existing rich-text + sanitisation stack.** Every body
+   is a `RichHtml::class.':basic'` cast (the `basic` purifier profile the constitution had
+   already earmarked for "forums / messages" — text formatting only, no images/tables),
+   authored through `<x-ui.rich-editor profile="basic">` and rendered via `<x-ui.prose>`.
+   Tests assert `<script>` is stripped from both. A new `.uprl-prose-invert` modifier keeps
+   links/quotes legible in the crimson own-message bubble.
+7. **Message attachments reuse the private-file plumbing.** A new
+   `MediaPurpose::MessageAttachments` (private disk, validated mimes/size in
+   `config/media.php`) stores a single optional attachment via the existing
+   `PrivateFileService` + `HasMedia`, served only through the policy-gated `media.download`
+   route — `MediaPolicy::view` now allows any participant of the owning message's
+   conversation. No public CDN URL, consistent with submissions/certificates.
+8. **Moderation hooks, not moderation AI.** Reporting a post (`forum_post_reports`, one flag
+   per user per post) feeds an admin-only review queue (`reviewForumReports` gate) where an
+   admin dismisses the flag or removes the post (which resolves its reports). **Profanity
+   filtering is explicitly out of scope** per the brief; the report queue and the
+   `RichHtml` sanitiser are the moderation surface. Posting is rate-limited (`throttle`
+   middleware on thread/reply/message/broadcast routes) so a runaway client can't flood.
+9. **Forum lives under `/courses/{course}/forum`, not `/learn/...`.** The learning player's
+   two-segment catch-all `/learn/{course}/{lesson}` would shadow a two-segment
+   `/learn/{course}/forum`; routing the forum under the (public-catalogue) `/courses` prefix
+   at three segments sidesteps the collision entirely while staying course-scoped by slug.
+   "Discuss this lesson" from the player deep-links to `forum.index`/`forum.create` with a
+   `lesson=` scope. A `chat` / `chat-group` icon pair was added to `<x-ui.icon>`.
