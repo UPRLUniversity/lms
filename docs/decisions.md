@@ -558,3 +558,91 @@ fixed now rather than deferred, on the same branch that found it.
     needed for the common case. A final `CertificateSeeder` only tops up to three if
     the natural pipeline produced fewer, and revokes the earliest-issued one so every
     state (valid/pending/revoked, with/without a grade) is demonstrable.
+
+## Section 8 — Notifications (Email + In-App) (2026-07-24)
+
+1. **Services notify directly; no new event classes.** The one pre-existing precedent
+   (`CourseCompleted` + auto-discovered listeners) is kept for course completion —
+   `CertificateIssuedNotification` fires from inside `CertificateService::issue()`,
+   which the completion listener already calls. Everywhere else (enrolment
+   approve/reject/confirm/waitlist, course submit/publish/return, assignment grade/
+   return, attempt finalise, new submission, bulk import) the notification is sent from
+   the **same service method that already owns the state write** (`EnrollmentService`,
+   `CoursePublishingService`, `AssignmentGradingService`, `AttemptService`,
+   `SubmissionService`, `ProcessEnrollmentImport`). Adding ~10 event+listener pairs
+   purely to relay a `->notify()` would be indirection without payoff — the services are
+   already the single, tested choke points for each action.
+2. **One base `UprlNotification` centralises channel routing.** Every catalogue class
+   extends it and implements only `type()` + `toMail()` + `toArray()`. The base `via()`
+   reads the recipient's per-type preferences (`User::notifiesInApp/notifiesByEmail`) and
+   withholds immediate mail for a digestible type when the user has opted into the daily
+   digest — so a new notification honours preferences and digest batching for free.
+3. **Preferences ride the existing `learning_preferences` JSON column**, not a new table.
+   Section 1 already had `email_digest` there; Section 8 adds a `notifications` sub-map
+   (`type => {email, in_app}`) via `User::setNotificationPreference()`, always merging so
+   unrelated keys are never clobbered. No migration for preferences.
+4. **Critical types are in-app-locked by construction.** `NotificationType::isCritical()`
+   (approvals, rejection, waitlist promotion, certificate) forces `via()` to include
+   `database` regardless of preference, and the profile matrix renders their in-app toggle
+   disabled+checked. `ProfileController::updateNotifications()` skips critical types
+   entirely, so a crafted POST can't disable them (covered by test).
+5. **Digest = a scheduled command reading real DB rows, keyed by `digested_at`.**
+   `notifications:digest` (daily) folds every un-digested, digestible database-notification
+   for each digest-opted user into one `DailyDigestNotification` (mail-only), stamping
+   `digested_at` so a row is bundled exactly once. The migration adds `digested_at` to
+   Laravel's standard notifications table — the one deviation from the framework default,
+   documented here.
+6. **Due-soon and pending-enrolment digests each get their own idempotency flag, not a
+   time-window guess.** `notifications:due-soon` (hourly) inserts an
+   `assignment_due_reminders` row per (assignment, user) it reminds, so re-running any
+   hour never double-reminds and a student who already submitted is skipped.
+   `notifications:pending-enrollment-digest` (every 15 min) stamps
+   `enrollments.pending_digested_at`, batching all new pending requests per course into
+   one instructor notification; a re-enrolment resets the flag so it's re-reported.
+   Scheduling lives in `routes/console.php` (Laravel 12 bootstrap style — no `Kernel.php`).
+7. **The bell is polled, not websocketed.** `notification-bell.js` fetches
+   `/notifications/recent` on open + every 60s. Websockets (Reverb/Pusher) are noted here
+   as the future upgrade; polling is sufficient and adds no broadcast infrastructure now.
+8. **Icon + tone are derived from the notification's stored `type` class, never stored on
+   the row.** `NotificationType::icon()/tone()/toneClasses()` are the single source; the
+   controller resolves them for the bell JSON and the Blade page resolves them per row. So
+   restyling a type's colour/icon needs no data migration. The bell dropdown shows a bell
+   glyph in a tone-tinted tile (Alpine can't swap a compiled SVG per row); the full
+   `/notifications` page — a real Blade iteration — shows each type's actual icon, and
+   groups rows into a Today/Yesterday/weekday/date timeline.
+9. **Announcements are a first-class model with a course-scoped policy.**
+   `CourseAnnouncementPolicy` (view = enrolled-or-staff, manage = course owner) is
+   registered as named gates like `EnrollmentPolicy`'s course-scoped abilities. The body
+   is a `RichHtml` field (sanitised on save, rendered through `<x-ui.prose>`); posting
+   notifies every active/completed student via their preferences.
+10. **Section-8 UI reuses the established brand system, not a new identity** — the same
+    crimson/Fraunces/gold tokens, `<x-ui.empty-state>` sunburst, `<x-dropdown>`,
+    `<x-ui.avatar>` and skeleton primitives as the prior seven sections, so the bell,
+    notifications timeline, announcements and preference matrix read as one designed
+    product. A `NotificationSeeder` tops up a varied, time-spread showcase inbox for the
+    demo student so the timeline is convincing on a fresh seed.
+
+## Section 8 — Nigerian demo data (2026-07-24)
+
+Per the human's request that the seeded demo read as authentically Nigerian rather than
+generic `fake()` output (foreign names, Latin lorem):
+
+1. **`Database\Seeders\Support\Nigeria`** is a curated reference-data helper (autoloaded
+   under the existing `Database\Seeders\` PSR-4 root, so no `composer.json` change). It
+   holds first names and surnames across the three largest ethnic groups (Yoruba, Igbo,
+   Hausa/Fulani) and pairs within a single group per person, so names read coherently
+   (`Adebayo Ogunleye`, `Chidi Okafor`, `Ibrahim Bello`) — plus `+234` phone numbers and
+   academic titles.
+2. **Wired into `UserFactory`, `UserInvitationFactory` and `DatabaseSeeder`** (instructors
+   are fixed, recognisable names; students are generated). Every seeded account also gets a
+   Nigerian phone; instructors get a title. This also improves test readability at zero
+   behavioural cost.
+3. **Real English replaces Latin lorem in visible demo content**: text-lesson bodies
+   (`CourseSeeder::lessonBody()`, on-topic PR/leadership prose) and the volume-padding
+   question prompts (`QuestionFactory` now draws from a real PR/leadership prompt pool).
+   Hand-authored seeder content was already real and untouched.
+4. **A latent flaky test was hardened, not worked around.** `EnrollmentApprovalTest`'s
+   `assertDontSee($otherStudent->name)` implicitly relied on Faker's near-unique names; the
+   smaller curated pool raised collision odds and surfaced it. Fixed by giving those two
+   students explicit distinct names — the test controls its identifying text rather than
+   trusting randomness.
