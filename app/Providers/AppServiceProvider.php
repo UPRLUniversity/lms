@@ -6,7 +6,9 @@ use App\Enums\Role;
 use App\Models\User;
 use App\Policies\CourseAnnouncementPolicy;
 use App\Policies\EnrollmentPolicy;
+use App\Policies\ForumPolicy;
 use App\Policies\GradebookPolicy;
+use App\Policies\MessagingPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -73,6 +75,24 @@ class AppServiceProvider extends ServiceProvider
         // Re-issuing a completion snapshot is an explicit admin action (never an
         // instructor one) — the super-admin already passes via Gate::before above.
         Gate::define('recompute-gradebook', fn (User $user) => $user->hasRole(Role::Admin->value));
+
+        // Course forums (Section 9) — subject is a Course, so named gates like the
+        // roster/announcement abilities above. Instance actions (view/reply/moderate a
+        // ForumThread or ForumPost) auto-discover their own policies.
+        Gate::define('accessForum', [ForumPolicy::class, 'access']);
+        Gate::define('participateInForum', [ForumPolicy::class, 'participate']);
+        Gate::define('moderateForum', [ForumPolicy::class, 'moderate']);
+
+        // Messaging (Section 9) — "may this user start a conversation?". Who-may-talk-to
+        // -whom is enforced in MessagingService; these gate the capability. messageCourse
+        // takes a Course; the others take the actor.
+        Gate::define('useMessaging', [MessagingPolicy::class, 'use']);
+        Gate::define('createGroupConversation', [MessagingPolicy::class, 'createGroup']);
+        Gate::define('messageCourseGroup', [MessagingPolicy::class, 'messageCourse']);
+
+        // Forum moderation queue: only admins review reported posts (super-admin passes
+        // via Gate::before above).
+        Gate::define('reviewForumReports', fn (User $user) => $user->hasRole(Role::Admin->value));
 
         $this->brandedAuthMail();
     }
