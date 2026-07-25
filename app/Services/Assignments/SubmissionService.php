@@ -7,8 +7,10 @@ use App\Enums\SubmissionStatus;
 use App\Models\Assignment;
 use App\Models\Submission;
 use App\Models\User;
+use App\Notifications\NewSubmissionNotification;
 use App\Services\Media\PrivateFileService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -64,6 +66,8 @@ class SubmissionService
         foreach ($files as $file) {
             $this->privateFiles->store($file, MediaPurpose::Submissions, $submission);
         }
+
+        Notification::send($assignment->course->instructors, new NewSubmissionNotification($submission));
 
         return $submission;
     }

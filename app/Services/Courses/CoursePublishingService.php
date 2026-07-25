@@ -3,7 +3,13 @@
 namespace App\Services\Courses;
 
 use App\Enums\CourseStatus;
+use App\Enums\Role;
 use App\Models\Course;
+use App\Models\User;
+use App\Notifications\CourseApprovedNotification;
+use App\Notifications\CourseReturnedNotification;
+use App\Notifications\CourseSubmittedForReviewNotification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -59,6 +65,8 @@ class CoursePublishingService
 
         // Clear any previous return note now the instructor has re-submitted.
         $course->forceFill(['review_note' => null])->save();
+
+        Notification::send($this->admins(), new CourseSubmittedForReviewNotification($course));
     }
 
     /**
@@ -81,6 +89,8 @@ class CoursePublishingService
             'review_note' => null,
             'published_at' => $course->published_at ?? now(),
         ])->save();
+
+        Notification::send($course->instructors, new CourseApprovedNotification($course));
     }
 
     /**
@@ -99,6 +109,8 @@ class CoursePublishingService
         $this->transition($course, CourseStatus::Draft);
 
         $course->forceFill(['review_note' => $note])->save();
+
+        Notification::send($course->instructors, new CourseReturnedNotification($course, $note));
     }
 
     /**
@@ -117,6 +129,16 @@ class CoursePublishingService
     {
         $this->transition($course, CourseStatus::Published);
         $course->forceFill(['published_at' => $course->published_at ?? now()])->save();
+    }
+
+    /**
+     * Every admin + super-admin — the recipients of "course submitted for review".
+     *
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    private function admins()
+    {
+        return User::role([Role::Admin->value, Role::SuperAdmin->value])->get();
     }
 
     /**

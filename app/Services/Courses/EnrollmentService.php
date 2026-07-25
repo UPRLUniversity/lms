@@ -8,6 +8,10 @@ use App\Exceptions\EnrollmentException;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\User;
+use App\Notifications\EnrollmentApprovedNotification;
+use App\Notifications\EnrollmentConfirmedNotification;
+use App\Notifications\EnrollmentRejectedNotification;
+use App\Notifications\WaitlistPromotedNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -102,6 +106,8 @@ class EnrollmentService
             'decision_note' => null,
         ])->save();
 
+        $enrollment->user->notify(new EnrollmentApprovedNotification($enrollment));
+
         return $enrollment;
     }
 
@@ -122,6 +128,8 @@ class EnrollmentService
             'approved_by' => $approver->id,
             'decision_note' => $note ? trim($note) : null,
         ])->save();
+
+        $enrollment->user->notify(new EnrollmentRejectedNotification($enrollment));
 
         $this->syncWaitlist($enrollment->course);
 
@@ -182,6 +190,7 @@ class EnrollmentService
 
             foreach ($waitlisted as $enrollment) {
                 $enrollment->forceFill(['status' => $promoteTo])->save();
+                $enrollment->user->notify(new WaitlistPromotedNotification($enrollment));
             }
 
             return $waitlisted->count();
@@ -208,7 +217,7 @@ class EnrollmentService
         EnrollmentSource $source,
         ?User $approver = null,
     ): Enrollment {
-        return Enrollment::updateOrCreate(
+        $enrollment = Enrollment::updateOrCreate(
             ['user_id' => $student->id, 'course_id' => $course->id],
             [
                 'status' => $status,
@@ -216,8 +225,21 @@ class EnrollmentService
                 'enrolled_at' => now(),
                 'approved_by' => $approver?->id,
                 'decision_note' => null,
+                // Always reset: a fresh Pending request must start undigested, even if
+                // this row was previously pending (and already digested) before a
+                // withdrawal/rejection reused it.
+                'pending_digested_at' => null,
             ],
         );
+
+        // A fresh self/admin enrolment that lands directly on Active (open course, or
+        // a staff override) — a Pending/Waitlisted outcome isn't "confirmed" yet, it
+        // notifies later via approve()/syncWaitlist() instead.
+        if ($status === EnrollmentStatus::Active) {
+            $student->notify(new EnrollmentConfirmedNotification($enrollment));
+        }
+
+        return $enrollment;
     }
 
     /**

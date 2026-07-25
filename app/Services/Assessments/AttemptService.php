@@ -9,6 +9,7 @@ use App\Models\Attempt;
 use App\Models\AttemptAnswer;
 use App\Models\Question;
 use App\Models\User;
+use App\Notifications\AttemptGradedNotification;
 use App\Services\Courses\LearningService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -164,6 +165,8 @@ class AttemptService
 
         if ($became) {
             $this->recalculateProgress($attempt);
+            $attempt->loadMissing('user');
+            $attempt->user->notify(new AttemptGradedNotification($attempt));
         }
 
         return $became;

@@ -7,6 +7,8 @@ use App\Models\Grade;
 use App\Models\RubricCriterion;
 use App\Models\Submission;
 use App\Models\User;
+use App\Notifications\AssignmentGradedNotification;
+use App\Notifications\AssignmentReturnedNotification;
 use App\Services\Courses\LearningService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -59,6 +61,8 @@ class AssignmentGradingService
 
             $this->syncProgress($submission);
 
+            $submission->user->notify(new AssignmentGradedNotification($submission));
+
             return $grade;
         });
     }
@@ -84,6 +88,8 @@ class AssignmentGradingService
         ])->save();
 
         $this->syncProgress($submission);
+
+        $submission->user->notify(new AssignmentReturnedNotification($submission));
 
         return $submission;
     }

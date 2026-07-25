@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\User;
+use App\Notifications\BulkImportCompletedNotification;
 use App\Services\Courses\BulkEnrollmentService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -48,6 +49,8 @@ class ProcessEnrollmentImport implements ShouldQueue
             'skipped' => $result['skipped'],
             'total' => $result['total'],
         ]);
+
+        $actor->notify(new BulkImportCompletedNotification($result));
 
         Storage::disk('local')->delete($this->path);
     }
