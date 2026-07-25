@@ -98,8 +98,10 @@ class EnrollmentApprovalTest extends TestCase
         $mine = Course::factory()->published()->approvalMode()->withInstructor($lead, lead: true)->create();
         $theirs = Course::factory()->published()->approvalMode()->create();
 
-        $mineStudent = $this->userWithRole(Role::Student->value);
-        $theirsStudent = $this->userWithRole(Role::Student->value);
+        // Explicit, distinct names — the assertion below tests visibility by course,
+        // so the identifying text must be controlled, not left to random generation.
+        $mineStudent = $this->userWithRole(Role::Student->value, ['name' => 'Chidera Okonkwo-Mine']);
+        $theirsStudent = $this->userWithRole(Role::Student->value, ['name' => 'Adebola Ogunleye-Theirs']);
         Enrollment::factory()->pending()->create(['user_id' => $mineStudent->id, 'course_id' => $mine->id]);
         Enrollment::factory()->pending()->create(['user_id' => $theirsStudent->id, 'course_id' => $theirs->id]);
 
