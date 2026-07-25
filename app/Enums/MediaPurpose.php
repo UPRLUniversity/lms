@@ -19,6 +19,7 @@ enum MediaPurpose: string
     case LessonResources = 'lesson_resources';
     case AssignmentResources = 'assignment_resources';
     case Submissions = 'submissions';
+    case MessageAttachments = 'message_attachments';
     case Certificates = 'certificates';
     case Signatures = 'signatures';
 
