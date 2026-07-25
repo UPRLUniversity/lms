@@ -28,13 +28,73 @@
     </h1>
 
     <div class="ml-auto flex items-center gap-1 sm:gap-2">
-        {{-- Notification bell (placeholder) --}}
-        <button type="button"
-                class="relative rounded-lg p-2 text-ink/70 hover:bg-ink/5 hover:text-ink focus-ring"
-                aria-label="Notifications">
-            <x-ui.icon name="bell" />
-            <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-crimson" aria-hidden="true"></span>
-        </button>
+        {{-- Notification bell --}}
+        <div class="relative"
+             x-data="notificationBell({ recentUrl: @js(route('notifications.recent')), markAllUrl: @js(route('notifications.mark-all-read')) })"
+             @click.outside="open = false">
+            <button type="button" @click="toggle()"
+                    class="relative rounded-lg p-2 text-ink/70 hover:bg-ink/5 hover:text-ink focus-ring"
+                    :aria-expanded="open.toString()"
+                    aria-label="Notifications">
+                <x-ui.icon name="bell" />
+                <span x-show="unreadCount > 0" x-cloak
+                      class="absolute right-1 top-1 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-crimson px-1 text-[10px] font-semibold leading-none text-white"
+                      x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
+            </button>
+
+            <div x-show="open"
+                 x-transition:enter="transition ease-out duration-150"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 class="absolute right-0 z-50 mt-2 w-80 max-w-[90vw] rounded-xl border border-line bg-card shadow-lg"
+                 style="display: none;">
+                <div class="flex items-center justify-between border-b border-line px-4 py-3">
+                    <h2 class="text-sm font-semibold text-ink">Notifications</h2>
+                    <button type="button" x-show="unreadCount > 0" @click="markAllRead()"
+                            class="text-xs font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
+                        Mark all read
+                    </button>
+                </div>
+
+                <div class="max-h-96 overflow-y-auto">
+                    <template x-if="loading">
+                        <div class="space-y-2 p-4">
+                            <x-ui.skeleton class="h-10" />
+                            <x-ui.skeleton class="h-10" />
+                            <x-ui.skeleton class="h-10" />
+                        </div>
+                    </template>
+
+                    <template x-if="! loading && notifications.length === 0">
+                        <p class="px-4 py-8 text-center text-sm text-ink/50">You're all caught up.</p>
+                    </template>
+
+                    <template x-for="n in notifications" :key="n.id">
+                        <a :href="n.url"
+                           class="relative flex gap-3 border-b border-line py-3 pl-4 pr-4 text-sm transition-colors last:border-0 hover:bg-surface focus-ring"
+                           :class="! n.read && 'bg-crimson/[0.03]'">
+                            {{-- Unread rail --}}
+                            <span x-show="! n.read" class="absolute inset-y-0 left-0 w-0.5 bg-crimson" aria-hidden="true"></span>
+                            {{-- Tinted type tile. The glyph is a bell here (Alpine can't swap the
+                                 compiled SVG per row); the tint carries the notification's tone. --}}
+                            <span class="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full" :class="n.tile">
+                                <x-ui.icon name="bell" class="h-4 w-4" />
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block truncate text-ink" :class="! n.read ? 'font-semibold' : 'font-medium'" x-text="n.title"></span>
+                                <span class="block truncate text-ink/60" x-text="n.body"></span>
+                                <span class="mt-0.5 block text-[11px] font-medium uppercase tracking-wide text-ink/35" x-text="n.time"></span>
+                            </span>
+                        </a>
+                    </template>
+                </div>
+
+                <a href="{{ route('notifications.index') }}"
+                   class="block rounded-b-xl border-t border-line px-4 py-2.5 text-center text-sm font-medium text-crimson hover:bg-surface focus-ring">
+                    View all notifications
+                </a>
+            </div>
+        </div>
 
         {{-- User menu --}}
         <x-dropdown align="right" width="48">

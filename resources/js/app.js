@@ -12,6 +12,7 @@ import { attemptRunner } from './attempt';
 import { assignmentSubmit } from './assignment-submit';
 import certificateStatus from './certificate-status';
 import { certificateTemplateEditor } from './certificate-template-editor';
+import notificationBell from './notification-bell';
 
 window.Alpine = Alpine;
 
@@ -41,6 +42,9 @@ Alpine.data('assignmentSubmit', assignmentSubmit);
 // Certificates cards); a no-op when it's already ready.
 Alpine.data('certificateStatus', certificateStatus);
 Alpine.data('certificateTemplateEditor', certificateTemplateEditor);
+
+// The topbar bell (Section 8): polls for unread count + recent items.
+Alpine.data('notificationBell', notificationBell);
 
 Alpine.start();
 

@@ -122,6 +122,11 @@
                         class="border-b-2 px-1 pb-3 text-sm font-medium focus-ring rounded-t">
                     Curriculum
                 </button>
+                <button type="button" @click="tab = 'announcements'"
+                        :class="tab === 'announcements' ? 'border-crimson text-crimson' : 'border-transparent text-ink/60 hover:text-ink'"
+                        class="border-b-2 px-1 pb-3 text-sm font-medium focus-ring rounded-t">
+                    Announcements
+                </button>
             </nav>
         </div>
 
@@ -133,6 +138,11 @@
         {{-- CURRICULUM TAB --}}
         <div x-show="tab === 'curriculum'" x-cloak class="mt-6">
             @include('courses.partials._curriculum_tab')
+        </div>
+
+        {{-- ANNOUNCEMENTS TAB --}}
+        <div x-show="tab === 'announcements'" x-cloak class="mt-6">
+            @include('courses.partials._announcements_tab')
         </div>
 
         {{-- Lesson editor slide-over --}}
