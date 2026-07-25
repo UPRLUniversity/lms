@@ -7,8 +7,13 @@ use App\Http\Controllers\Admin\CertificateController as AdminCertificateControll
 use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
+use App\Http\Controllers\Admin\ForumReportController;
 use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Communication\ConversationController;
+use App\Http\Controllers\Communication\ForumController;
+use App\Http\Controllers\Communication\ForumPostController;
+use App\Http\Controllers\Communication\MessageController;
 use App\Http\Controllers\Courses\AnnouncementController;
 use App\Http\Controllers\Assessments\AssessmentContentController;
 use App\Http\Controllers\Assessments\AssessmentController;
@@ -199,6 +204,67 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/certificates/{certificate}/download', [CertificateController::class, 'download'])->name('certificates.download');
     Route::get('/certificates/{certificate}/status', [CertificateController::class, 'status'])->name('certificates.status');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Communication (Section 9) — course forums & messaging
+|--------------------------------------------------------------------------
+| Course forums live under /courses/{course}/forum (course membership gates access;
+| the read-only auditor reads but never posts). Messaging lives under /messages
+| (participation gates every read/write; the auditor never initiates). Posting is
+| rate-limited so a runaway client can't flood a thread or an inbox.
+*/
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Course forum — the thread list, a thread, and opening one. "create" is declared
+    // before the {thread} catch so the literal segment always wins.
+    Route::get('courses/{course}/forum', [ForumController::class, 'index'])->name('forum.index');
+    Route::get('courses/{course}/forum/create', [ForumController::class, 'create'])->name('forum.create');
+    Route::post('courses/{course}/forum', [ForumController::class, 'store'])
+        ->middleware('throttle:30,1')->name('forum.store');
+    Route::get('courses/{course}/forum/{thread}', [ForumController::class, 'show'])->name('forum.show');
+
+    // Thread moderation (instructors/admins) + accept-answer (author or instructor).
+    Route::post('courses/{course}/forum/{thread}/pin', [ForumController::class, 'pin'])->name('forum.pin');
+    Route::post('courses/{course}/forum/{thread}/lock', [ForumController::class, 'lock'])->name('forum.lock');
+    Route::post('courses/{course}/forum/{thread}/answer', [ForumController::class, 'answer'])->name('forum.answer');
+    Route::delete('courses/{course}/forum/{thread}', [ForumController::class, 'destroy'])->name('forum.destroy');
+
+    // Replies — post (rate-limited), remove (author/moderator), report (any member).
+    Route::post('courses/{course}/forum/{thread}/posts', [ForumPostController::class, 'store'])
+        ->middleware('throttle:30,1')->name('posts.store');
+    Route::delete('forum-posts/{post}', [ForumPostController::class, 'destroy'])->name('posts.destroy');
+    Route::post('forum-posts/{post}/report', [ForumPostController::class, 'report'])->name('posts.report');
+
+    // Messaging — the inbox, the composer, a thread, and sending. "create" is declared
+    // before the {conversation} catch.
+    Route::get('messages', [ConversationController::class, 'index'])->name('messages.index');
+    Route::get('messages/create', [ConversationController::class, 'create'])->name('messages.create');
+    Route::post('messages', [ConversationController::class, 'store'])
+        ->middleware('throttle:30,1')->name('messages.store');
+    Route::get('messages/{conversation}', [ConversationController::class, 'show'])->name('messages.show');
+    Route::post('messages/{conversation}/messages', [MessageController::class, 'store'])
+        ->middleware('throttle:60,1')->name('messages.send');
+
+    // Entry points — "Message" a person, and an instructor's "message all enrolled".
+    Route::post('messages/to/{user}', [ConversationController::class, 'startWith'])->name('messages.start');
+    Route::post('courses/{course}/message-all', [ConversationController::class, 'messageCourse'])->name('messages.course');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Admin — forum moderation queue (Section 9)
+|--------------------------------------------------------------------------
+| Reported posts for admin review. Reporting is open to any member (a moderation
+| hook); acting on a report is admin-only (reviewForumReports gate in the controller).
+*/
+Route::middleware(['auth', 'verified'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('forum-reports', [ForumReportController::class, 'index'])->name('forum-reports.index');
+        Route::post('forum-reports/{report}/dismiss', [ForumReportController::class, 'dismiss'])->name('forum-reports.dismiss');
+        Route::post('forum-posts/{post}/remove', [ForumReportController::class, 'removePost'])->name('forum-reports.remove');
+    });
 
 /*
 |--------------------------------------------------------------------------
