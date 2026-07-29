@@ -12,6 +12,7 @@ use App\Models\CertificateTemplate;
 use App\Models\Course;
 use App\Models\Department;
 use App\Models\GradeScale;
+use App\Models\Programme;
 use App\Services\Courses\CoursePublishingService;
 use App\Services\Courses\EnrollmentService;
 use App\Services\Media\MediaUploadService;
@@ -103,6 +104,7 @@ class CourseController extends Controller
             'modules.assignments',
             'assessments' => fn ($q) => $q->orderBy('position'),
             'assignments' => fn ($q) => $q->orderBy('position'),
+            'programmeParts',
         ]);
 
         $gradeScales = GradeScale::query()->active()->orderByDesc('is_default')->orderBy('name')->get();
@@ -121,6 +123,9 @@ class CourseController extends Controller
             'course' => $course,
             'levels' => CourseLevel::cases(),
             'departments' => Department::query()->with('faculty')->orderBy('name')->get(),
+            // Active programmes only: an instructor should not be able to file a course
+            // under a qualification the institution has retired.
+            'programmes' => Programme::query()->active()->with('parts')->ordered()->get(),
             'gradeScales' => $gradeScales,
             'certificateTemplates' => $certificateTemplates,
             'publishBlockers' => app(CoursePublishingService::class)->publishBlockers($course),
@@ -155,6 +160,13 @@ class CourseController extends Controller
             'duration_minutes' => $data['duration_minutes'] ?? null,
             'learning_objectives' => $request->objectives(),
         ]);
+
+        // Programme placements are replaced wholesale; the service normalises the rows
+        // and guarantees exactly one primary. Absent key = the form didn't render the
+        // repeater (no programmes exist), so leave existing placements alone.
+        if ($request->has('placements')) {
+            $course->syncProgrammePlacements($request->placements());
+        }
 
         // A raised or removed cap may open seats for waitlisted students.
         $newCapacity = $course->capacity;

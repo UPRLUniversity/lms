@@ -4,7 +4,7 @@ import './confirm'; // exposes window.uprlConfirm (branded SweetAlert2)
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
 import dataTable from './data-table';
-import { courseBuilder, courseSettings, objectiveRows } from './course-builder';
+import { courseBuilder, courseSettings, objectiveRows, programmePlacements } from './course-builder';
 import learnPlayer from './learn';
 import { questionEditor } from './question-bank';
 import { assessmentBuilder } from './assessment-builder';
@@ -25,6 +25,7 @@ Alpine.data('dataTable', dataTable);
 Alpine.data('courseBuilder', courseBuilder);
 Alpine.data('courseSettings', courseSettings);
 Alpine.data('objectiveRows', objectiveRows);
+Alpine.data('programmePlacements', programmePlacements);
 
 // Learning player (sidebar curriculum, Complete & Continue, video resume).
 Alpine.data('learnPlayer', learnPlayer);

@@ -376,6 +376,72 @@ export function courseSettings() {
     };
 }
 
+/* --------------------------------------------- programme placement rows */
+
+/**
+ * The "which qualifications does this course count toward" repeater on the settings
+ * tab. A course may sit in several programme parts at once (the NIPR curriculum lists
+ * five papers under two programmes), each with its own credit load and status.
+ *
+ * Exactly one row is primary — it decides which programme's per-paper fee the course
+ * inherits, so a paper listed under both CPR and the Professional Variant has one
+ * unambiguous price. The radio enforces "one" in the UI; Course::syncProgrammePlacements
+ * enforces it again server-side, because a crafted POST can send whatever it likes.
+ *
+ * @param {Array} programmes [{ id, code, name, parts: [{ id, name }] }]
+ * @param {Array} initial    [{ programme_id, programme_part_id, credit_load, requirement, is_primary }]
+ */
+export function programmePlacements(programmes = [], initial = []) {
+    const newKey = () => Date.now() + '-' + Math.random();
+
+    return {
+        programmes,
+        rows: initial.map((row) => ({
+            key: newKey(),
+            programme_id: String(row.programme_id ?? ''),
+            programme_part_id: String(row.programme_part_id ?? ''),
+            credit_load: row.credit_load ?? '',
+            requirement: row.requirement ?? '',
+            primary: !!row.is_primary,
+        })),
+
+        add() {
+            const first = this.programmes[0];
+            this.rows.push({
+                key: newKey(),
+                programme_id: first ? String(first.id) : '',
+                programme_part_id: '',
+                credit_load: '',
+                requirement: 'compulsory',
+                // The first row a course ever gets is its primary by definition.
+                primary: this.rows.length === 0,
+            });
+        },
+
+        remove(index) {
+            const wasPrimary = this.rows[index]?.primary;
+            this.rows.splice(index, 1);
+            // Never leave the course with placements but no primary.
+            if (wasPrimary && this.rows.length) this.rows[0].primary = true;
+        },
+
+        /** Radios are mutually exclusive within the group, mirrored into row state. */
+        setPrimary(index) {
+            this.rows.forEach((row, i) => (row.primary = i === index));
+        },
+
+        /** Parts of the programme a given row has selected. */
+        partsFor(row) {
+            return this.programmes.find((p) => String(p.id) === String(row.programme_id))?.parts ?? [];
+        },
+
+        /** Changing the programme invalidates the part chosen under the old one. */
+        onProgrammeChange(row) {
+            row.programme_part_id = '';
+        },
+    };
+}
+
 /* ------------------------------------------------ dynamic objective rows */
 
 export function objectiveRows(initial = []) {

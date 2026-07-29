@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Courses;
 
 use App\Enums\CourseLevel;
+use App\Enums\CourseRequirement;
 use App\Enums\CourseVisibility;
 use App\Enums\EnrollmentMode;
 use App\Enums\ProgressionMode;
@@ -43,7 +44,49 @@ class UpdateCourseSettingsRequest extends FormRequest
             'learning_objectives' => ['nullable', 'array', 'max:25'],
             'learning_objectives.*' => ['nullable', 'string', 'max:255'],
             'cover' => ['nullable', 'image', 'mimes:jpeg,png,webp', "max:{$coverMaxKb}"],
+
+            // Programme placements. programme_id rides along so the repeater can filter
+            // parts client-side, but it is NOT validated as authoritative — the part id
+            // already determines the programme, and trusting a mismatched pair would let
+            // a crafted post file a course under a programme it never chose.
+            'placements' => ['nullable', 'array', 'max:10'],
+            'placements.*.programme_part_id' => ['nullable', 'integer', 'exists:programme_parts,id'],
+            'placements.*.credit_load' => ['nullable', 'integer', 'min:0', 'max:60'],
+            'placements.*.requirement' => ['nullable', Rule::in(CourseRequirement::values())],
+            'placements.*.is_primary' => ['nullable', 'boolean'],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'placements.*.programme_part_id.exists' => 'One of the programme parts you chose no longer exists.',
+            'placements.max' => 'A course can be placed in at most 10 programme parts.',
+        ];
+    }
+
+    /**
+     * Placement rows with no part chosen are dropped — the repeater always renders an
+     * empty "Choose…" option, and a half-filled row is a user who changed their mind,
+     * not an error worth blocking the whole settings save over.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function placements(): array
+    {
+        return collect($this->input('placements', []))
+            ->filter(fn ($row) => is_array($row) && ! empty($row['programme_part_id']))
+            ->map(fn ($row) => [
+                'programme_part_id' => (int) $row['programme_part_id'],
+                'credit_load' => $row['credit_load'] ?? null,
+                'requirement' => $row['requirement'] ?? null,
+                'is_primary' => filter_var($row['is_primary'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            ])
+            ->values()
+            ->all();
     }
 
     protected function prepareForValidation(): void
