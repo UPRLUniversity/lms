@@ -20,10 +20,21 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ReportExporter
 {
-    /** Above this row count an export is queued rather than streamed inline. */
+    /** Default row count above which an export is queued rather than streamed inline. */
     public const QUEUE_THRESHOLD = 2000;
 
     public function __construct(private readonly ReportPdf $pdf) {}
+
+    /**
+     * The effective queue threshold. Config-driven (`reports.queue_threshold`, settable
+     * via REPORTS_QUEUE_THRESHOLD) so operations can tune where "large" starts without a
+     * deploy — and so the queued path can actually be exercised on a small dataset,
+     * which the demo seed is, without manufacturing thousands of throwaway enrolments.
+     */
+    public static function queueThreshold(): int
+    {
+        return (int) config('reports.queue_threshold', self::QUEUE_THRESHOLD);
+    }
 
     /**
      * A friendly, safe download filename for a report/format.

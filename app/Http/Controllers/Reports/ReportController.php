@@ -67,7 +67,7 @@ class ReportController extends Controller
         $format = $request->validate(['format' => ['required', 'in:xlsx,csv,pdf']])['format'];
         $filters = $definition->validate($request);
 
-        if ($definition->count($filters) > ReportExporter::QUEUE_THRESHOLD) {
+        if ($definition->count($filters) > ReportExporter::queueThreshold()) {
             $generated = $this->exporter->queue($definition, $filters, $format, $request->user()->id, $definition->count($filters));
             GenerateReportExport::dispatch($generated->id);
 
