@@ -35,6 +35,7 @@ enum NotificationType: string
     // Admin.
     case CourseSubmittedForReview = 'course_submitted_for_review';
     case BulkImportCompleted = 'bulk_import_completed';
+    case ReportReady = 'report_ready';
 
     public function label(): string
     {
@@ -57,6 +58,7 @@ enum NotificationType: string
             self::NewPendingEnrollment => 'New pending enrollment',
             self::CourseSubmittedForReview => 'Course submitted for review',
             self::BulkImportCompleted => 'Bulk import completed',
+            self::ReportReady => 'Report ready to download',
         };
     }
 
@@ -81,6 +83,7 @@ enum NotificationType: string
             self::NewPendingEnrollment => 'user-plus',
             self::CourseSubmittedForReview => 'flag',
             self::BulkImportCompleted => 'users',
+            self::ReportReady => 'download',
         };
     }
 
@@ -98,7 +101,8 @@ enum NotificationType: string
             self::EnrollmentRejected, self::AssignmentReturned, self::CourseReturned => 'crimson',
             self::CertificateIssued, self::AssignmentGraded, self::AttemptGraded, self::AssignmentDueSoon,
             self::CourseAnnouncement, self::NewMessage, self::ForumReply, self::NewSubmission,
-            self::NewPendingEnrollment, self::CourseSubmittedForReview, self::BulkImportCompleted => 'gold',
+            self::NewPendingEnrollment, self::CourseSubmittedForReview, self::BulkImportCompleted,
+            self::ReportReady => 'gold',
         };
     }
 
@@ -115,7 +119,7 @@ enum NotificationType: string
             self::NewMessage, self::ForumReply => 'Messages & forums',
             self::CourseApproved, self::CourseReturned, self::CourseSubmittedForReview => 'Course workflow',
             self::NewSubmission, self::NewPendingEnrollment => 'Teaching',
-            self::BulkImportCompleted => 'Administration',
+            self::BulkImportCompleted, self::ReportReady => 'Administration',
         };
     }
 

@@ -110,11 +110,11 @@
                                 @if (in_array($status, [EnrollmentStatus::Active, EnrollmentStatus::Pending, EnrollmentStatus::Waitlisted], true))
                                     <form method="POST" action="{{ route('enrollment.withdraw', $enrollment) }}"
                                           x-data
-                                          @submit.prevent="if (await window.uprlConfirm({
-                                              title: 'Withdraw from this course?',
-                                              text: @js('You can re-enrol later if a place is available.'),
-                                              confirmText: 'Yes, withdraw',
-                                          })) $el.submit()">
+                                          {{-- Must stay on ONE line. Alpine only wraps a statement-style
+                                               expression in an async IIFE when /^[\n\s]*if.*\(.*\)/ matches,
+                                               and that `.` never matches a newline — so a wrapped `if (await …)`
+                                               is a silent SyntaxError and the button does nothing at all. --}}
+                                          @submit.prevent="if (await window.uprlConfirm({ title: 'Withdraw from this course?', text: @js('You can re-enrol later if a place is available.'), confirmText: 'Yes, withdraw' })) $el.submit()">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="mt-2 w-full rounded-lg py-1.5 text-center text-xs font-medium text-ink/50 hover:text-crimson focus-ring">
                                             {{ $status === EnrollmentStatus::Waitlisted ? 'Leave the waitlist' : 'Withdraw' }}

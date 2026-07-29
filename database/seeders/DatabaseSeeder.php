@@ -85,6 +85,11 @@ class DatabaseSeeder extends Seeder
         // (certificate issuance); this tops up the rest against the same real, seeded
         // data so the bell and /notifications page are a convincing demo immediately.
         $this->call(NotificationSeeder::class);
+
+        // Reporting (Section 10): recent sign-in times + back-dated enrolments across the
+        // year so the dashboards' "active users", enrolment trend and top courses read
+        // like a lived-in platform. Real rows the reports then aggregate.
+        $this->call(ReportingDemoSeeder::class);
     }
 
     /**

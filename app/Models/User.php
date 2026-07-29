@@ -84,6 +84,17 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Certificates issued to this user (Section 7) — surfaced on the student
+     * dashboard's achievements strip and the reporting layer.
+     *
+     * @return HasMany<Certificate, $this>
+     */
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    /**
      * This user's per-lesson progress rows (the basis of the learning player and
      * history). Keyed work happens in LearningService.
      *

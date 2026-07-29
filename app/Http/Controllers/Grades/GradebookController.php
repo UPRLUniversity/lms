@@ -3,18 +3,17 @@
 namespace App\Http\Controllers\Grades;
 
 use App\Enums\EnrollmentStatus;
-use App\Exports\GradebookExport;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseGradeRecord;
 use App\Models\User;
 use App\Services\Grades\CourseGradeRecordService;
 use App\Services\Grades\GradebookService;
+use App\Services\Reporting\ReportExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
-use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * The gradebook: a student's own "Grades" tab and the instructor's per-course matrix.
@@ -136,10 +135,17 @@ class GradebookController extends Controller
         ]);
     }
 
-    public function export(Course $course): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    /**
+     * The gradebook summary export — one row per active/completed student. Wired into the
+     * Section-10 unified export path (ReportExporter), so it produces the same branded
+     * xlsx/csv/pdf as the report centre rather than a bespoke CSV writer. Format defaults
+     * to CSV to preserve the old link's behaviour.
+     */
+    public function export(Request $request, Course $course, ReportExporter $exporter): \Symfony\Component\HttpFoundation\Response
     {
         $this->authorize('viewGradebookMatrix', $course);
 
+        $format = in_array($request->query('format'), ['xlsx', 'csv', 'pdf'], true) ? $request->query('format') : 'csv';
         $scale = $course->gradeScaleOrDefault();
 
         $students = $course->enrollments()
@@ -153,17 +159,26 @@ class GradebookController extends Controller
         $itemsByUser = $scale ? $this->gradebook->itemsForMany($students, $course) : collect();
 
         $rows = $students->map(function (User $student) use ($itemsByUser, $scale) {
-            $items = $itemsByUser->get($student->id, collect());
+            $summary = $scale ? $this->gradebook->summarize($itemsByUser->get($student->id, collect()), $scale) : null;
 
             return [
-                'user' => $student,
-                'summary' => $scale ? $this->gradebook->summarize($items, $scale) : null,
+                $student->name,
+                $student->email,
+                $summary?->percent !== null ? round($summary->percent).'%' : '',
+                $summary?->gradeLabel() ?? '',
+                $summary?->gradePoint() !== null ? number_format($summary->gradePoint(), 1) : '',
+                $summary === null || ! $summary->hasItems() ? 'No gradable items' : ($summary->provisional ? 'Provisional' : 'Final'),
             ];
-        });
+        })->all();
 
-        $filename = 'gradebook-'.$course->slug.'-'.now()->format('Ymd').'.csv';
-
-        return Excel::download(new GradebookExport($rows), $filename, \Maatwebsite\Excel\Excel::CSV);
+        return $exporter->downloadRows(
+            'Gradebook · '.$course->title,
+            ['Name', 'Email', 'Percentage', 'Grade', 'Grade point', 'Status'],
+            $rows,
+            $format,
+            'gradebook-'.$course->slug.'-'.now()->format('Ymd').'.'.$format,
+            ['Course' => $course->title],
+        );
     }
 
     /**

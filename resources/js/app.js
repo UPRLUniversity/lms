@@ -53,3 +53,8 @@ Alpine.start();
 if (document.querySelector('[data-rich-editor]')) {
     import('./rich-editor');
 }
+
+// Lazy-load Chart.js (dashboards + report analytics) only where a chart renders.
+if (document.querySelector('canvas[data-chart]')) {
+    import('./charts').then(({ default: initCharts }) => initCharts());
+}
