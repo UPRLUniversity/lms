@@ -25,10 +25,14 @@ export default function notificationBell({ recentUrl, markAllUrl }) {
 
         fetchRecent() {
             fetch(recentUrl, { headers: { Accept: 'application/json' } })
-                .then((r) => r.json())
+                .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
                 .then((data) => {
-                    this.unreadCount = data.unread_count;
-                    this.notifications = data.notifications;
+                    // Stay defensive about the shape: an expired session answers this
+                    // poll with a JSON body that parses fine but carries no
+                    // `notifications` key, and assigning that undefined straight through
+                    // breaks every `notifications.length` binding in the dropdown.
+                    this.unreadCount = data?.unread_count ?? 0;
+                    this.notifications = Array.isArray(data?.notifications) ? data.notifications : [];
                     this.loading = false;
                 })
                 .catch(() => {
