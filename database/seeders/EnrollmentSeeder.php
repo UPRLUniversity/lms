@@ -96,9 +96,13 @@ class EnrollmentSeeder extends Seeder
             $this->enrol($c, $s(3), EnrollmentStatus::Active, EnrollmentSource::Bulk, now()->subDays(7), $admin);
         }
 
-        // 7) LDS110 — approval, capacity 5: full of active, with a pending and a reject.
+        // 7) LDS110 — approval, capacity 5: seats exactly full, with a pending and a reject.
+        // A PENDING request holds a reserved seat (EnrollmentStatus::occupiesSeat), so the
+        // course is full at 4 active + 1 pending — NOT 5 active + 1 pending, which would
+        // print "6 / 5" on the capacity meter and contradict the rule the app enforces
+        // everywhere else. Approving the pending request keeps it at 5/5.
         if ($c = $courses['LDS110'] ?? null) {
-            foreach (range(0, 4) as $i) {
+            foreach (range(0, 3) as $i) {
                 $this->enrol($c, $s($i), EnrollmentStatus::Active, EnrollmentSource::Self, now()->subDays(25 - $i), $admin);
             }
             $this->enrol($c, $s(5), EnrollmentStatus::Pending, EnrollmentSource::Self, now()->subDay());
