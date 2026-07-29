@@ -87,6 +87,29 @@ class Course extends Model
     }
 
     /**
+     * The programme parts this course is placed in — the second classification axis
+     * alongside department. Many-to-many because the published curriculum genuinely
+     * lists the same paper under more than one programme (CPR 112 and CPR 115 each
+     * appear in both CPR Part I and Professional Variant Part 1).
+     *
+     * credit_load and requirement ride on the pivot because they are properties of
+     * the placement, not of the course.
+     *
+     * @return BelongsToMany<ProgrammePart, $this>
+     */
+    public function programmeParts(): BelongsToMany
+    {
+        return $this->belongsToMany(ProgrammePart::class, 'course_programme_part')
+            // The explicit pivot model is what casts requirement to CourseRequirement and
+            // credit_load to int — without it every read is a raw string and the views
+            // would have to re-hydrate the enum by hand.
+            ->using(CourseProgrammePart::class)
+            ->withPivot(['credit_load', 'requirement', 'is_primary', 'position'])
+            ->withTimestamps()
+            ->orderBy('course_programme_part.position');
+    }
+
+    /**
      * This course's grade-scale override, if any (null = system default).
      *
      * @return BelongsTo<GradeScale, $this>
@@ -317,6 +340,83 @@ class Course extends Model
             $q->where('created_by', $user->id)
                 ->orWhereHas('instructors', fn (Builder $i) => $i->whereKey($user->id));
         });
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Programme placement (Section 11)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * The placement that decides this course's identity when it sits in more than one
+     * programme — the one flagged primary, falling back to the first placement.
+     *
+     * Section 12 resolves the course's inherited price from this placement's
+     * programme, which is the whole reason the flag exists: a paper listed in both CPR
+     * (₦7,000) and the Professional Variant (₦15,000) otherwise has no single price.
+     */
+    public function primaryPlacement(): ?ProgrammePart
+    {
+        $parts = $this->relationLoaded('programmeParts')
+            ? $this->programmeParts
+            : $this->programmeParts()->get();
+
+        return $parts->firstWhere(fn (ProgrammePart $p) => (bool) $p->pivot->is_primary)
+            ?? $parts->first();
+    }
+
+    public function primaryProgramme(): ?Programme
+    {
+        return $this->primaryPlacement()?->programme;
+    }
+
+    /**
+     * Replace this course's placements wholesale.
+     *
+     * Takes rows of [programme_part_id, credit_load, requirement, is_primary] and
+     * normalises them before writing: exactly one row may be primary (the first one
+     * claiming it wins; if none does, the first row is promoted), so
+     * primaryPlacement() always has a deterministic answer. This is the only place
+     * placements are written — the "at most one primary" rule is an application
+     * invariant because a partial unique index is not portable to sqlite.
+     *
+     * @param  array<int, array{programme_part_id: int|string, credit_load?: int|string|null, requirement?: string|null, is_primary?: bool}>  $rows
+     */
+    public function syncProgrammePlacements(array $rows): void
+    {
+        $seenPrimary = false;
+        $sync = [];
+        $position = 1;
+
+        foreach ($rows as $row) {
+            $partId = (int) ($row['programme_part_id'] ?? 0);
+            if ($partId <= 0 || isset($sync[$partId])) {
+                continue;   // skip blank repeater rows and duplicate parts
+            }
+
+            $wantsPrimary = (bool) ($row['is_primary'] ?? false);
+            $isPrimary = $wantsPrimary && ! $seenPrimary;
+            $seenPrimary = $seenPrimary || $isPrimary;
+
+            $credit = $row['credit_load'] ?? null;
+
+            $sync[$partId] = [
+                'credit_load' => ($credit === null || $credit === '') ? null : (int) $credit,
+                'requirement' => ($row['requirement'] ?? null) ?: null,
+                'is_primary' => $isPrimary,
+                'position' => $position++,
+            ];
+        }
+
+        // A course with placements always has exactly one primary.
+        if (! $seenPrimary && $sync !== []) {
+            $first = array_key_first($sync);
+            $sync[$first]['is_primary'] = true;
+        }
+
+        $this->programmeParts()->sync($sync);
+        $this->unsetRelation('programmeParts');
     }
 
     /*
