@@ -17,13 +17,15 @@
     </section>
 
     <div class="mx-auto max-w-7xl px-6 py-10 lg:px-8"
-         x-data="dataTable('{{ route('catalogue.index') }}', { params: { q: '', faculty: '', department: '', level: '', sort: 'newest' } })">
+         x-data="dataTable('{{ route('catalogue.index') }}', { params: { q: '', faculty: '', department: '', level: '', programme: '', part: '', sort: 'newest' } })">
 
-        {{-- Filters — live (fetch + swap, no full reload). The GET form is the no-JS fallback. --}}
+        {{-- Filters — live (fetch + swap, no full reload). The GET form is the no-JS fallback.
+             Two axes sit side by side here: programme/part (what a course counts toward) and
+             faculty/department (who teaches it). --}}
         <form method="GET" action="{{ route('catalogue.index') }}"
-              class="grid grid-cols-1 gap-3 rounded-2xl border border-line bg-card p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5"
+              class="grid grid-cols-1 gap-3 rounded-2xl border border-line bg-card p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-4"
               @submit.prevent="filter()">
-            <div class="sm:col-span-2 lg:col-span-1">
+            <div class="sm:col-span-2">
                 <label for="q" class="sr-only">Search courses</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/40">
@@ -33,6 +35,37 @@
                                 placeholder="Search title or code…" class="pl-10"
                                 x-model="params.q" @input.debounce.350ms="filter()" aria-controls="catalogue-results" />
                 </div>
+            </div>
+
+            <div>
+                <label for="programme" class="sr-only">Programme</label>
+                <select id="programme" name="programme" x-model="params.programme" @change="params.part = ''; filter()"
+                        aria-controls="catalogue-results"
+                        class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                    <option value="">All programmes</option>
+                    @foreach ($programmes as $p)
+                        <option value="{{ $p->slug }}" @selected($filters['programme'] === $p->slug)>{{ $p->code }} — {{ $p->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label for="part" class="sr-only">Part</label>
+                {{-- Part slugs are only unique within a programme, so this is disabled until
+                     one is chosen — filtering by a bare "part-i" would match three programmes. --}}
+                <select id="part" name="part" x-model="params.part" @change="filter()"
+                        aria-controls="catalogue-results"
+                        :disabled="params.programme === ''"
+                        class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink/40">
+                    <option value="">All parts</option>
+                    @foreach ($programmes as $p)
+                        <optgroup label="{{ $p->code }}" x-show="params.programme === @js($p->slug)">
+                            @foreach ($p->parts as $part)
+                                <option value="{{ $part->slug }}" @selected($filters['programme'] === $p->slug && $filters['part'] === $part->slug)>{{ $part->name }}</option>
+                            @endforeach
+                        </optgroup>
+                    @endforeach
+                </select>
             </div>
 
             <div>
@@ -75,7 +108,7 @@
                 </select>
             </div>
 
-            <div class="flex gap-2">
+            <div class="flex gap-2 sm:col-span-2 lg:col-span-1">
                 <div class="flex-1">
                     <label for="sort" class="sr-only">Sort</label>
                     <select id="sort" name="sort" x-model="params.sort" @change="filter()"

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CourseLevel;
 use App\Models\Course;
 use App\Models\Faculty;
+use App\Models\Programme;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -25,6 +26,8 @@ class CatalogueController extends Controller
         $faculty = (string) $request->query('faculty', '');
         $department = (string) $request->query('department', '');
         $level = (string) $request->query('level', '');
+        $programme = (string) $request->query('programme', '');
+        $part = (string) $request->query('part', '');
 
         $sort = (string) $request->query('sort', 'newest');
         if (! in_array($sort, self::SORTS, true)) {
@@ -33,8 +36,14 @@ class CatalogueController extends Controller
 
         $courses = Course::query()
             ->inCatalogue()
-            ->with(['department.faculty', 'media', 'instructors'])
+            // instructors.media, not just instructors: each card renders the lead's
+            // avatar, which is itself a media lookup.
+            ->with(['department.faculty', 'media', 'instructors.media', 'programmeParts.programme'])
             ->withCount('lessons')
+            // The card reads `total_duration` and falls back to a per-course SUM when it
+            // is absent — which on a 9-card page was nine extra queries. Aggregate it in
+            // the one list query instead.
+            ->withSum('lessons as total_duration', 'duration_minutes')
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', "%{$search}%")
@@ -45,6 +54,18 @@ class CatalogueController extends Controller
             ->when(in_array($level, CourseLevel::values(), true), fn ($q) => $q->where('level', $level))
             ->when($department !== '', fn ($q) => $q->whereHas('department', fn ($d) => $d->where('slug', $department)))
             ->when($faculty !== '', fn ($q) => $q->whereHas('department.faculty', fn ($f) => $f->where('slug', $faculty)))
+            // Programme/part is the second classification axis. Filtering by part alone
+            // is meaningless — part slugs ("part-i") are unique only within a programme —
+            // so a part narrows an already-chosen programme rather than standing alone.
+            ->when($programme !== '', fn ($q) => $q->whereHas(
+                'programmeParts.programme',
+                fn ($p) => $p->where('programmes.slug', $programme),
+            ))
+            ->when($programme !== '' && $part !== '', fn ($q) => $q->whereHas(
+                'programmeParts',
+                fn ($p) => $p->where('programme_parts.slug', $part)
+                    ->whereHas('programme', fn ($pr) => $pr->where('programmes.slug', $programme)),
+            ))
             ->when($sort === 'title', fn ($q) => $q->orderBy('title'))
             ->when($sort === 'oldest', fn ($q) => $q->oldest('published_at'))
             ->when($sort === 'newest', fn ($q) => $q->latest('published_at'))
@@ -54,8 +75,9 @@ class CatalogueController extends Controller
         $data = [
             'courses' => $courses,
             'faculties' => Faculty::query()->with('departments')->orderBy('name')->get(),
+            'programmes' => Programme::query()->active()->with('parts')->ordered()->get(),
             'levels' => CourseLevel::cases(),
-            'filters' => compact('search', 'faculty', 'department', 'level', 'sort'),
+            'filters' => compact('search', 'faculty', 'department', 'level', 'programme', 'part', 'sort'),
         ];
 
         // Live filtering: return only the results grid for an AJAX request, the
