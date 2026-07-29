@@ -221,6 +221,37 @@
                                 @endif
                             </dl>
 
+                            {{-- Qualifications this paper counts toward. Several are listed
+                                 under more than one programme, so this is a list, not a field. --}}
+                            @if ($course->programmeParts->isNotEmpty())
+                                <div class="mt-5 border-t border-line pt-5">
+                                    <p class="text-xs font-medium uppercase tracking-wide text-ink/50">Counts toward</p>
+                                    <ul class="mt-2 space-y-2">
+                                        @foreach ($course->programmeParts as $placement)
+                                            <li class="flex items-start justify-between gap-3 text-sm">
+                                                <span class="min-w-0">
+                                                    <a href="{{ route('catalogue.index', ['programme' => $placement->programme->slug, 'part' => $placement->slug]) }}"
+                                                       class="font-medium text-ink hover:text-crimson focus-ring rounded">
+                                                        {{ $placement->programme->name }}
+                                                    </a>
+                                                    <span class="block text-xs text-ink/55">{{ $placement->name }}</span>
+                                                </span>
+                                                <span class="shrink-0 text-right">
+                                                    @if ($placement->pivot->requirement)
+                                                        <x-ui.badge :variant="$placement->pivot->requirement->badge()">
+                                                            {{ $placement->pivot->requirement->shortLabel() }}
+                                                        </x-ui.badge>
+                                                    @endif
+                                                    @if ($placement->pivot->credit_load)
+                                                        <span class="mt-0.5 block text-xs text-ink/50">{{ $placement->pivot->credit_load }} credits</span>
+                                                    @endif
+                                                </span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
                             <div class="mt-6">
                                 @include('catalogue._enrol')
                             </div>

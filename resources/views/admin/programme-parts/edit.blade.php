@@ -1,0 +1,34 @@
+<x-app-layout :title="$part->name">
+    <div class="mx-auto max-w-xl space-y-6">
+        <a href="{{ route('admin.programmes.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+            <x-ui.icon name="arrow-left" class="h-4 w-4" /> Programmes
+        </a>
+        <div>
+            <h2 class="font-display text-2xl font-semibold text-ink">{{ $part->name }}</h2>
+            <p class="mt-0.5 text-sm text-ink/60">{{ $part->programme->name }}</p>
+        </div>
+
+        <x-ui.card>
+            <form method="POST" action="{{ route('admin.programme-parts.update', $part) }}" class="space-y-5">
+                @csrf
+                @method('PUT')
+
+                <x-ui.field name="name" label="Part name" required :value="old('name', $part->name)" />
+
+                <x-ui.field name="credit_target" label="Stated credit total" type="number"
+                            :value="old('credit_target', $part->credit_target)" min="0" step="1"
+                            hint="The total the printed curriculum states for this part. Leave blank if it states none. Compulsory and required-elective credits are counted against it; pure electives and GNS are not." />
+
+                <x-ui.field name="description" label="Description" hint="Optional">
+                    <textarea id="description" name="description" rows="2"
+                              class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">{{ old('description', $part->description) }}</textarea>
+                </x-ui.field>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <x-ui.button variant="ghost" :href="route('admin.programmes.index')">Cancel</x-ui.button>
+                    <x-ui.button type="submit">Save changes</x-ui.button>
+                </div>
+            </form>
+        </x-ui.card>
+    </div>
+</x-app-layout>

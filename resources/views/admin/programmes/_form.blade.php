@@ -1,0 +1,102 @@
+@php
+    use App\Enums\MediaPurpose;
+
+    /** @var \App\Models\Programme|null $programme */
+    $programme ??= null;
+    $maxMb = round(MediaPurpose::ProgrammeCovers->maxKb() / 1024);
+@endphp
+
+<div class="space-y-6"
+     x-data="{
+        coverPreview: null,
+        coverName: '',
+        previewCover(event) {
+            const file = event.target.files[0];
+            if (!file) { this.coverPreview = null; this.coverName = ''; return; }
+            this.coverName = file.name;
+            this.coverPreview = URL.createObjectURL(file);
+        },
+     }">
+
+    {{-- Cover --}}
+    <div>
+        <span class="block text-sm font-medium text-ink">Cover image</span>
+        <p class="text-xs text-ink/60">Shown on the programme card and its landing page. 1600×600 works best. JPG, PNG or WebP, up to {{ $maxMb }}MB.</p>
+        <div class="mt-2 flex flex-wrap items-center gap-4">
+            <div class="relative aspect-[8/3] w-56 overflow-hidden rounded-xl border border-line bg-gradient-to-br from-crimson to-crimson-dark">
+                <template x-if="coverPreview">
+                    <img :src="coverPreview" alt="" class="h-full w-full object-cover">
+                </template>
+                @if ($programme?->coverUrl())
+                    <img x-show="!coverPreview" src="{{ $programme->coverUrl() }}" alt="Current cover" class="h-full w-full object-cover">
+                @else
+                    <div x-show="!coverPreview" class="absolute inset-0 flex items-center justify-center">
+                        <span class="font-display text-lg font-bold text-white/80">{{ $programme->code ?? 'Cover' }}</span>
+                    </div>
+                @endif
+            </div>
+            <div>
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-line bg-card px-4 py-2.5 text-sm font-medium text-ink hover:bg-surface focus-within:ring-2 focus-within:ring-crimson">
+                    <x-ui.icon name="camera" class="h-5 w-5" /> Choose image
+                    <input type="file" name="cover" accept="image/png,image/jpeg,image/webp" class="sr-only"
+                           @change="previewCover($event)">
+                </label>
+                <p class="mt-1 text-xs text-ink/50" x-text="coverName"></p>
+            </div>
+        </div>
+        <x-input-error :messages="$errors->get('cover')" class="mt-2" />
+    </div>
+
+    {{-- Identity --}}
+    <div class="grid gap-5 sm:grid-cols-3">
+        <x-ui.field class="sm:col-span-2" name="name" label="Programme name" required
+                    :value="old('name', $programme?->name)"
+                    placeholder="e.g. Professional Certificate in Public Relations" />
+        <x-ui.field name="code" label="Code" required
+                    :value="old('code', $programme?->code)"
+                    hint="Short, e.g. CPR" placeholder="CPR" />
+    </div>
+
+    <x-ui.field name="tagline" label="Tagline" hint="One line, shown on the programme card."
+                :value="old('tagline', $programme?->tagline)"
+                placeholder="e.g. The entry qualification for practising public relations in Nigeria." />
+
+    <x-ui.rich-editor
+        name="description"
+        label="Description"
+        profile="basic"
+        hint="Optional. Appears on the programme's public page."
+        :value="old('description', $programme?->description)" />
+
+    {{-- Fees --}}
+    <fieldset class="rounded-xl border border-line bg-surface/40 p-4">
+        <legend class="px-1.5 text-sm font-medium text-ink">Fee schedule</legend>
+        <p class="mb-3 text-xs text-ink/60">
+            Registration and administration are charged <strong class="font-medium text-ink/75">once</strong>, on a student's
+            first purchase in this programme. Per paper is the default price of each course placed here — an individual
+            course can override it.
+        </p>
+        <div class="grid gap-4 sm:grid-cols-3">
+            <x-ui.field name="registration_fee" label="Registration" type="number"
+                        :value="old('registration_fee', $programme?->registration_fee ?? 0)"
+                        min="0" step="0.01" inputmode="decimal" />
+            <x-ui.field name="administration_fee" label="Administration" type="number"
+                        :value="old('administration_fee', $programme?->administration_fee ?? 0)"
+                        min="0" step="0.01" inputmode="decimal" />
+            <x-ui.field name="per_paper_fee" label="Per paper" type="number"
+                        :value="old('per_paper_fee', $programme?->per_paper_fee ?? 0)"
+                        min="0" step="0.01" inputmode="decimal" />
+        </div>
+    </fieldset>
+
+    {{-- Visibility --}}
+    <label class="flex items-start gap-3 rounded-xl border border-line p-4 hover:bg-surface/60 focus-within:ring-2 focus-within:ring-crimson">
+        <input type="hidden" name="is_active" value="0">
+        <input type="checkbox" name="is_active" value="1" class="mt-0.5 rounded border-line text-crimson focus:ring-crimson"
+               @checked(old('is_active', $programme?->is_active ?? true))>
+        <span>
+            <span class="block text-sm font-medium text-ink">Active</span>
+            <span class="block text-xs text-ink/60">Inactive programmes stay intact but are hidden from the public catalogue filters.</span>
+        </span>
+    </label>
+</div>

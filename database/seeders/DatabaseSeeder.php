@@ -54,6 +54,12 @@ class DatabaseSeeder extends Seeder
         // Academic structure + a clickable course catalogue.
         $this->call(CourseSeeder::class);
 
+        // The NIPR qualification structure (CPR / DPR / Professional Variant), its parts
+        // and the full published paper list. Runs after CourseSeeder because these
+        // courses join the faculty/department hierarchy it builds, and because it also
+        // places the eight hand-written demo courses into parts.
+        $this->call(ProgrammeSeeder::class);
+
         // A realistic spread of enrolments across every mode and status.
         $this->call(EnrollmentSeeder::class);
 

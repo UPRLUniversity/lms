@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\ForumReportController;
 use App\Http\Controllers\Admin\InvitationController;
+use App\Http\Controllers\Admin\ProgrammeController;
+use App\Http\Controllers\Admin\ProgrammePartController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Communication\ConversationController;
 use App\Http\Controllers\Communication\ForumController;
@@ -263,6 +265,34 @@ Route::middleware(['auth', 'verified'])
         Route::get('departments/{department}/edit', [DepartmentController::class, 'edit'])->name('departments.edit');
         Route::put('departments/{department}', [DepartmentController::class, 'update'])->name('departments.update');
         Route::delete('departments/{department}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin — programmes & parts (Section 11)
+|--------------------------------------------------------------------------
+| The qualification structure (CPR, DPR, Professional Variant …) courses are
+| packaged and examined under — a second axis alongside faculty/department.
+| Admins manage, auditors and instructors read (an instructor places their own
+| course into a part from the course builder, but cannot edit the structure).
+| Each action is authorized in the controller via Programme/ProgrammePartPolicy.
+*/
+Route::middleware(['auth', 'verified', 'permission:programmes.view'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('programmes', [ProgrammeController::class, 'index'])->name('programmes.index');
+        Route::get('programmes/create', [ProgrammeController::class, 'create'])->name('programmes.create');
+        Route::post('programmes', [ProgrammeController::class, 'store'])->name('programmes.store');
+        Route::get('programmes/{programme}/edit', [ProgrammeController::class, 'edit'])->name('programmes.edit');
+        Route::put('programmes/{programme}', [ProgrammeController::class, 'update'])->name('programmes.update');
+        Route::delete('programmes/{programme}', [ProgrammeController::class, 'destroy'])->name('programmes.destroy');
+
+        Route::get('programme-parts/create', [ProgrammePartController::class, 'create'])->name('programme-parts.create');
+        Route::post('programme-parts', [ProgrammePartController::class, 'store'])->name('programme-parts.store');
+        Route::get('programme-parts/{part}/edit', [ProgrammePartController::class, 'edit'])->name('programme-parts.edit');
+        Route::put('programme-parts/{part}', [ProgrammePartController::class, 'update'])->name('programme-parts.update');
+        Route::delete('programme-parts/{part}', [ProgrammePartController::class, 'destroy'])->name('programme-parts.destroy');
     });
 
 /*

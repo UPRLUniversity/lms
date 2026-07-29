@@ -1,7 +1,24 @@
 @php
+    use App\Enums\CourseRequirement;
     use App\Enums\CourseVisibility;
     use App\Enums\EnrollmentMode;
     use App\Enums\ProgressionMode;
+
+    // Programme placements: the shape the Alpine repeater and the FormRequest agree on.
+    $placementRows = old('placements', $course->programmeParts->map(fn ($part) => [
+        'programme_id' => $part->programme_id,
+        'programme_part_id' => $part->id,
+        'credit_load' => $part->pivot->credit_load,
+        'requirement' => $part->pivot->requirement,
+        'is_primary' => (bool) $part->pivot->is_primary,
+    ])->values()->all());
+
+    $programmeOptions = $programmes->map(fn ($p) => [
+        'id' => $p->id,
+        'code' => $p->code,
+        'name' => $p->name,
+        'parts' => $p->parts->map(fn ($part) => ['id' => $part->id, 'name' => $part->name])->values(),
+    ])->values();
 
     $objectives = old('learning_objectives', $course->learning_objectives ?: ['']);
     $currentMode = old('enrollment_mode', $course->enrollment_mode?->value ?? EnrollmentMode::Open->value);
@@ -247,6 +264,124 @@
                     <button type="button" @click="add()" class="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
                         <x-ui.icon name="plus" class="h-4 w-4" /> Add objective
                     </button>
+                </div>
+
+                {{-- Programme placement --}}
+                <div class="rounded-xl border border-line bg-surface/40 p-4"
+                     x-data="programmePlacements(@js($programmeOptions), @js($placementRows))"
+                     @change="dirty = true">
+                    <label class="block text-sm font-medium text-ink">Programme placement</label>
+                    <p class="mt-0.5 text-xs text-ink/60">
+                        Which qualifications this course counts toward. A course may sit in more than one —
+                        the primary one decides the price it inherits.
+                    </p>
+
+                    @if ($programmes->isEmpty())
+                        <p class="mt-3 text-sm text-ink/50">
+                            No programmes exist yet. An administrator creates them under Programmes.
+                        </p>
+                    @else
+                        <div class="mt-3 space-y-3">
+                            <template x-if="rows.length === 0">
+                                <p class="text-sm text-ink/50">
+                                    Not placed in any programme. This course still appears in the catalogue, but under
+                                    no qualification.
+                                </p>
+                            </template>
+
+                            <template x-for="(row, index) in rows" :key="row.key">
+                                <div class="rounded-xl border border-line bg-card p-3">
+                                    {{-- Stacks on mobile, 12-col grid from sm up. --}}
+                                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-12">
+                                        {{-- Both selects re-assert their value on the next tick. Alpine applies
+                                             x-model BEFORE x-for has rendered the options, so on first paint the
+                                             select has no matching option yet and the browser silently falls back
+                                             to its first one — which loses the saved placement. Reading
+                                             row.programme_id/row.programme_part_id inside x-effect registers the
+                                             dependency, and $nextTick defers the assignment until the options exist. --}}
+                                        <div class="sm:col-span-4">
+                                            <label class="block text-xs font-medium text-ink/70" :for="'placement-programme-' + row.key">Programme</label>
+                                            <select :id="'placement-programme-' + row.key"
+                                                    :name="'placements[' + index + '][programme_id]'"
+                                                    x-model="row.programme_id"
+                                                    x-effect="row.programme_id; $nextTick(() => $el.value = row.programme_id)"
+                                                    @change="onProgrammeChange(row)"
+                                                    class="mt-1 block w-full rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                                                {{-- Rendered server-side: the programme list is static, so there is no
+                                                     reason to make Alpine build it (and every reason not to). --}}
+                                                @foreach ($programmes as $p)
+                                                    <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="sm:col-span-3">
+                                            <label class="block text-xs font-medium text-ink/70" :for="'placement-part-' + row.key">Part</label>
+                                            <select :id="'placement-part-' + row.key"
+                                                    :name="'placements[' + index + '][programme_part_id]'"
+                                                    x-model="row.programme_part_id"
+                                                    x-effect="row.programme_id; row.programme_part_id; $nextTick(() => $el.value = row.programme_part_id)"
+                                                    class="mt-1 block w-full rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                                                <option value="">Choose…</option>
+                                                <template x-for="part in partsFor(row)" :key="part.id">
+                                                    <option :value="String(part.id)" x-text="part.name"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+
+                                        <div class="sm:col-span-2">
+                                            <label class="block text-xs font-medium text-ink/70" :for="'placement-credit-' + row.key">Credits</label>
+                                            <input type="number" min="0" max="60" step="1"
+                                                   :id="'placement-credit-' + row.key"
+                                                   :name="'placements[' + index + '][credit_load]'"
+                                                   x-model="row.credit_load"
+                                                   placeholder="—"
+                                                   class="mt-1 block w-full rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                                        </div>
+
+                                        <div class="sm:col-span-3">
+                                            <label class="block text-xs font-medium text-ink/70" :for="'placement-status-' + row.key">Status</label>
+                                            <select :id="'placement-status-' + row.key"
+                                                    :name="'placements[' + index + '][requirement]'"
+                                                    x-model="row.requirement"
+                                                    class="mt-1 block w-full rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                                                <option value="">Not stated</option>
+                                                @foreach (CourseRequirement::cases() as $requirement)
+                                                    <option value="{{ $requirement->value }}">{{ $requirement->label() }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
+                                        <label class="inline-flex cursor-pointer items-center gap-2 text-xs text-ink/70">
+                                            <input type="radio" name="placement_primary"
+                                                   :checked="row.primary"
+                                                   @change="setPrimary(index)"
+                                                   class="border-line text-crimson focus:ring-crimson">
+                                            Primary — this course inherits its price
+                                        </label>
+                                        {{-- The radio itself is display-only; the submitted value is this hidden
+                                             field, so the server receives a flag per row rather than an index. --}}
+                                        <input type="hidden" :name="'placements[' + index + '][is_primary]'" :value="row.primary ? 1 : 0">
+
+                                        <button type="button" @click="remove(index)"
+                                                class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-ink/50 hover:text-crimson focus-ring">
+                                            <x-ui.icon name="trash" class="h-3.5 w-3.5" /> Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <button type="button" @click="add()"
+                                class="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
+                            <x-ui.icon name="plus" class="h-4 w-4" /> Add placement
+                        </button>
+                    @endif
+
+                    <x-input-error :messages="$errors->get('placements')" class="mt-2" />
+                    <x-input-error :messages="$errors->get('placements.*.programme_part_id')" class="mt-2" />
                 </div>
 
                 {{-- Rich description --}}

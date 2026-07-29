@@ -19,6 +19,11 @@ enum Permission: string
     case CoursesCreate = 'courses.create';
     case CoursesManage = 'courses.manage';
 
+    // Programmes & parts (Section 11) — the CPR/DPR qualification structure that
+    // sits alongside the faculty/department hierarchy.
+    case ProgrammesView = 'programmes.view';
+    case ProgrammesManage = 'programmes.manage';
+
     // Enrolment.
     case EnrollmentsView = 'enrollments.view';
     case EnrollmentsApprove = 'enrollments.approve';

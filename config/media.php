@@ -54,6 +54,16 @@ return [
             'transformations' => ['width' => 1200, 'height' => 630, 'crop' => 'fill'],
         ],
 
+        MediaPurpose::ProgrammeCovers->value => [
+            // The hero image on a programme card and its landing page. Wider crop than a
+            // course cover because it is displayed as a banner, not a 3:2 card thumbnail.
+            'visibility' => 'public',
+            'disk' => 'public',
+            'allowed_mimes' => ['image/jpeg', 'image/png', 'image/webp'],
+            'max_kb' => 4096,
+            'transformations' => ['width' => 1600, 'height' => 600, 'crop' => 'fill'],
+        ],
+
         MediaPurpose::LessonImages->value => [
             'visibility' => 'public',
             'disk' => 'public',

@@ -8,6 +8,10 @@
     $duration = $minutes > 0
         ? ($hours > 0 ? $hours.'h'.($minutes % 60 ? ' '.($minutes % 60).'m' : '') : $minutes.'m')
         : null;
+
+    // Qualifications this course counts toward. Guarded with relationLoaded so a card
+    // rendered outside the catalogue (which eager-loads it) can't trigger an N+1.
+    $placements = $course->relationLoaded('programmeParts') ? $course->programmeParts : collect();
 @endphp
 
 <a href="{{ route('catalogue.show', $course) }}"
@@ -32,6 +36,19 @@
 
         @if ($course->summary)
             <p class="mt-2 text-sm leading-relaxed text-ink/70 line-clamp-2">{{ $course->summary }}</p>
+        @endif
+
+        @if ($placements->isNotEmpty())
+            <div class="mt-3 flex flex-wrap items-center gap-1.5">
+                @foreach ($placements as $placement)
+                    <span class="inline-flex items-center gap-1 rounded-lg bg-crimson/8 px-2 py-0.5 text-[11px] font-medium text-crimson">
+                        {{ $placement->programme->code }} · {{ $placement->name }}
+                        @if ($placement->pivot->credit_load)
+                            <span class="text-crimson/60">{{ $placement->pivot->credit_load }}cr</span>
+                        @endif
+                    </span>
+                @endforeach
+            </div>
         @endif
 
         @if ($course->department)

@@ -35,10 +35,19 @@ trait HasMedia
     /**
      * All media for a given purpose.
      *
+     * Reads the eager-loaded relation when there is one. Without this the catalogue
+     * eager-loads `media` and then throws the result away — every cover image on a
+     * list page fired its own query, which is exactly the N+1 the eager load exists
+     * to prevent.
+     *
      * @return Collection<int, Media>
      */
     public function mediaFor(MediaPurpose $purpose): Collection
     {
+        if ($this->relationLoaded('media')) {
+            return $this->media->where('purpose', $purpose->value)->values();
+        }
+
         return $this->media()->where('purpose', $purpose->value)->get();
     }
 
@@ -47,6 +56,12 @@ trait HasMedia
      */
     public function firstMediaFor(MediaPurpose $purpose): ?Media
     {
+        if ($this->relationLoaded('media')) {
+            // sortByDesc('id') rather than latest('id') — same "newest wins" rule as the
+            // query branch, applied in memory.
+            return $this->media->where('purpose', $purpose->value)->sortByDesc('id')->first();
+        }
+
         return $this->media()->where('purpose', $purpose->value)->latest('id')->first();
     }
 }

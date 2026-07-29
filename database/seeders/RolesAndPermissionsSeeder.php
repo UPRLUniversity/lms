@@ -53,6 +53,8 @@ class RolesAndPermissionsSeeder extends Seeder
             Perm::CoursesView->value,
             Perm::CoursesCreate->value,
             Perm::CoursesManage->value,
+            Perm::ProgrammesView->value,
+            Perm::ProgrammesManage->value,
             Perm::EnrollmentsView->value,
             Perm::EnrollmentsApprove->value,
             Perm::AssessmentsView->value,
@@ -71,6 +73,9 @@ class RolesAndPermissionsSeeder extends Seeder
             Perm::CoursesView->value,
             Perm::CoursesCreate->value,
             Perm::CoursesManage->value,
+            // Read-only: an instructor places their course into an existing part from the
+            // course builder, but cannot create or rename the programme structure itself.
+            Perm::ProgrammesView->value,
             Perm::EnrollmentsView->value,
             Perm::EnrollmentsApprove->value,
             Perm::AssessmentsView->value,
