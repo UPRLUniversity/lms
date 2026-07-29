@@ -56,6 +56,16 @@ return [
         'roles' => ['admin', 'super-admin', 'auditor'],
     ],
     [
+        // The CPR/DPR qualification structure. Sits next to "Academic structure"
+        // because the two are the same kind of thing from different angles: one is
+        // who teaches a course, the other is what it counts toward.
+        'label' => 'Programmes',
+        'icon' => 'layers',
+        'route' => 'admin.programmes.index',
+        'match' => 'admin.programmes.*',
+        'roles' => ['admin', 'super-admin', 'auditor'],
+    ],
+    [
         'label' => 'Grade scales',
         'icon' => 'list',
         'route' => 'admin.grade-scales.index',
