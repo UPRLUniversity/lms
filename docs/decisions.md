@@ -758,3 +758,70 @@ generic `fake()` output (foreign names, Latin lorem):
    expression (sqlite/mysql/pgsql). New indexes (`add_reporting_indexes`) back the trend,
    certification, assessment-analytics and active-users queries; the warm admin dashboard
    stays within the ~15-query budget (asserted).
+
+## Sections 0–10 — Full demo QA pass & fixes (2026-07-25)
+
+A complete pre-demo audit: 447 tests green, every page crawled as all five roles (no 500s;
+every 403 correct by design), and the headline interactive flows driven end-to-end in a real
+browser. Five genuine defects were found that no test covered, because each one lived in a
+seam the suite doesn't reach — seeded data shape, an Alpine expression, and a JSON response
+shape. All are fixed on this branch.
+
+1. **`ReportingDemoSeeder` was writing enrolments straight past course capacity.** It creates
+   rows with `Enrollment::create()` rather than through `EnrollmentService`, so PRL305 (cap 3)
+   ended up with **10 active seats** — the roster meter printed "10 / 3", and, far worse, the
+   Section-3 waitlist auto-promotion demo was silently dead: withdrawing a student freed
+   nothing because the course was still over capacity, so nobody was ever promoted. The seeder
+   now tracks seats in memory and only adds a seat-holding (active) row while a seat is free;
+   `completed` rows release their seat and stay unrestricted, so the trend/top-courses/
+   completion-rate figures are unaffected. Documented as invariant #1 in the class docblock.
+2. **`EnrollmentSeeder` over-filled LDS110 for the same reason** (pre-existing, unrelated to
+   Section 10): it seeded 5 active + 1 pending against a capacity of 5. A *pending* request
+   holds a reserved seat (`EnrollmentStatus::occupiesSeat()`), so that is 6/5. Reduced to 4
+   active + 1 pending — the course is still exactly full, which was the seeder's stated intent,
+   and approving the pending request keeps it at 5/5.
+3. **Back-dated enrolments had a cached `progress_percent` with nothing behind it.** A
+   "completed" historical enrolment showed 100% while its lesson-progress heat-strip was empty,
+   so the instructor progress page and the course analytics contradicted the roster. The seeder
+   now bulk-inserts matching `lesson_progress` rows (with `seconds_spent`, so time-spent columns
+   read sensibly too). Deliberately NOT replayed through `LearningService` — these are
+   historical records, and the live pipeline would re-fire course completion, re-issue
+   certificates and re-notify for events dated months ago.
+4. **The "Withdraw" button on My Learning did nothing at all.** Alpine only wraps a
+   statement-style expression in an async IIFE when `/^[\n\s]*if.*\(.*\)/` matches, and `.`
+   never matches a newline — so the multi-line `@submit.prevent="if (await window.uprlConfirm({…`
+   in `learning/index.blade.php` was a silent `SyntaxError` and the form never submitted. Every
+   other `uprlConfirm` call site in the codebase is single-line and was unaffected. Fixed by
+   collapsing it to one line, with a comment recording why it must stay that way. **Worth
+   remembering: an Alpine expression starting with `if (` must never be wrapped across lines.**
+5. **The notification bell crashed when its poll failed.** `fetchRecent()` assigned
+   `data.notifications` unconditionally; an expired session answers with a JSON body that parses
+   fine but has no `notifications` key, so `notifications` became `undefined` and every
+   `notifications.length` binding in the dropdown threw. Now checks `r.ok` and coerces both
+   fields defensively.
+6. **Padded question-bank items showed placeholder answers.** Section 8 replaced Latin lorem in
+   the *prompts* but left `QuestionFactory`'s options as `Correct` / `Wrong A` / `Wrong B` — so
+   the seeded Final exam rendered a real question above options whose correct answer was
+   literally labelled "Correct", and `fillBlank`/`matching` padding carried unrelated
+   geography answers under PR prompts. Each factory state now draws a prompt and its own
+   answers *together* from an on-topic pool, so a padded item is internally coherent. Option ids
+   and which id is correct are unchanged, so the 57 assessment tests pass untouched.
+
+### Also changed
+
+7. **The queued-export threshold is now config-driven** (`config/reports.php` →
+   `reports.queue_threshold`, env `REPORTS_QUEUE_THRESHOLD`, default unchanged at 2 000).
+   `ReportExporter::QUEUE_THRESHOLD` stays as the default constant; `ReportExporter::
+   queueThreshold()` is what the controller reads. Ops can tune where "large" starts without a
+   deploy, and — the immediate reason — the queued path is otherwise undemonstrable on any
+   realistic demo dataset without manufacturing thousands of throwaway enrolments.
+8. **Local `.env` switched to `MAIL_MAILER=log`** (human approved). With
+   `QUEUE_CONNECTION=sync`, every notifying action was blocking on a live SMTP handshake:
+   ~1.5s per action, `NotificationSeeder` alone taking 35–48s, and a hard failure anywhere
+   port 465 is blocked. Log driver makes actions instant and network-independent; seeding drops
+   to ~4s. `.env` is untracked, so this is a local-machine change only — production
+   configuration is unchanged.
+9. **`docs/UPRL-LMS-Demo-Guide.pdf`** (+ its `docs/demo-guide.html` source) is the current
+   presenter runbook, covering Sections 0–10. It supersedes `docs/demo-script.md`, which only
+   covers Sections 0–4 and is now stale — kept for now rather than deleted, since removing a
+   file is the human's call.

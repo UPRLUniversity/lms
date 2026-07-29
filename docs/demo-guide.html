@@ -1,0 +1,1254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UPRL LMS — Demo & Test Guide</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm 18mm 14mm; }
+  @page :first { margin: 0; }
+
+  :root {
+    --crimson: #C8102E;
+    --crimson-dark: #9E0B22;
+    --ink: #1C1917;
+    --ink-60: #57534E;
+    --ink-45: #78716C;
+    --surface: #FAF9F6;
+    --green: #0F6B3E;
+    --gold: #C9A227;
+    --gold-ink: #8A6A12;
+    --border: #E7E5E4;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: "Segoe UI", Inter, -apple-system, Arial, sans-serif;
+    font-size: 9.6pt;
+    line-height: 1.5;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  /* ---------- Cover ---------- */
+  .cover {
+    height: 297mm;
+    background: linear-gradient(150deg, #C8102E 0%, #9E0B22 55%, #6E0718 100%);
+    color: #fff;
+    padding: 30mm 20mm;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+  .cover::after {
+    content: "";
+    position: absolute;
+    top: -60mm; right: -60mm;
+    width: 150mm; height: 150mm;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,162,39,.35) 0%, rgba(201,162,39,0) 68%);
+  }
+  .cover .kicker {
+    font-size: 10pt; letter-spacing: .22em; text-transform: uppercase;
+    opacity: .85; margin-bottom: 8mm;
+  }
+  .cover h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 40pt; line-height: 1.05; margin: 0 0 6mm; font-weight: 700;
+  }
+  .cover .sub { font-size: 13pt; opacity: .92; max-width: 120mm; line-height: 1.45; }
+  .cover .motto {
+    position: absolute; bottom: 30mm; left: 20mm;
+    font-family: Georgia, serif; font-style: italic;
+    font-size: 12pt; color: #F0D67E;
+  }
+  .cover .meta {
+    position: absolute; bottom: 18mm; left: 20mm; right: 20mm;
+    font-size: 9pt; opacity: .8;
+    border-top: 1px solid rgba(255,255,255,.25); padding-top: 4mm;
+    display: flex; justify-content: space-between;
+  }
+  .cover .badge-row { margin-top: 12mm; display: flex; gap: 4mm; flex-wrap: wrap; }
+  .cover .badge-row span {
+    border: 1px solid rgba(255,255,255,.45); border-radius: 999px;
+    padding: 1.5mm 4mm; font-size: 8.5pt;
+  }
+
+  /* ---------- Structure ---------- */
+  h2 {
+    font-family: Georgia, serif; font-size: 17pt; color: var(--crimson);
+    margin: 0 0 1mm; padding-bottom: 2mm; border-bottom: 2px solid var(--crimson);
+    page-break-after: avoid;
+  }
+  h2 .num {
+    display: inline-block; background: var(--crimson); color: #fff;
+    width: 8mm; height: 8mm; line-height: 8mm; text-align: center;
+    border-radius: 2mm; font-size: 11pt; margin-right: 3mm;
+    font-family: "Segoe UI", sans-serif;
+  }
+  h3 {
+    font-family: Georgia, serif; font-size: 12.5pt; color: var(--ink);
+    margin: 6mm 0 2mm; page-break-after: avoid;
+  }
+  h4 {
+    font-size: 10pt; margin: 4mm 0 1.5mm; color: var(--crimson-dark);
+    text-transform: uppercase; letter-spacing: .06em; page-break-after: avoid;
+  }
+  .section { page-break-before: always; }
+  p { margin: 0 0 2.5mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 5mm; }
+  li { margin-bottom: 1.2mm; }
+  a { color: var(--crimson-dark); text-decoration: none; }
+
+  /* ---------- Tables ---------- */
+  table { width: 100%; border-collapse: collapse; margin: 2mm 0 4mm; font-size: 8.8pt; }
+  th {
+    background: var(--crimson); color: #fff; text-align: left;
+    padding: 2mm 2.5mm; font-weight: 600; font-size: 8.4pt;
+    text-transform: uppercase; letter-spacing: .04em;
+  }
+  td { padding: 1.8mm 2.5mm; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: #FBFAF8; }
+  table.tight td, table.tight th { padding: 1.4mm 2mm; font-size: 8.3pt; }
+
+  /* ---------- Code / copy-paste ---------- */
+  code {
+    font-family: "Consolas", "Courier New", monospace;
+    background: #F5F3F0; border: 1px solid var(--border);
+    border-radius: 2px; padding: 0 .8mm; font-size: 8.6pt;
+    color: var(--crimson-dark); white-space: nowrap;
+  }
+  pre {
+    font-family: "Consolas", "Courier New", monospace;
+    background: #1C1917; color: #F5F3F0;
+    padding: 3mm 3.5mm; border-radius: 2mm; font-size: 8.3pt;
+    line-height: 1.55; margin: 2mm 0 3.5mm; overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  pre .c { color: #A8A29E; }
+  .paste {
+    background: #FFFDF5; border: 1px solid var(--gold);
+    border-left: 3mm solid var(--gold);
+    padding: 2.5mm 3mm; margin: 2mm 0 3mm; border-radius: 0 2mm 2mm 0;
+    font-family: "Consolas", "Courier New", monospace; font-size: 8.5pt;
+    line-height: 1.6; white-space: pre-wrap;
+  }
+  .paste b { font-family: "Segoe UI", sans-serif; color: var(--gold-ink); }
+
+  /* ---------- Callouts ---------- */
+  .note, .warn, .win {
+    padding: 2.5mm 3mm; margin: 2.5mm 0 3.5mm; border-radius: 2mm; font-size: 9pt;
+    border-left: 3mm solid;
+  }
+  .note { background: #F5F3F0; border-color: var(--ink-45); }
+  .warn { background: #FDF2F4; border-color: var(--crimson); }
+  .win  { background: #F1F8F4; border-color: var(--green); }
+  /* Only the LEADING bold is the callout's heading; bold used mid-sentence inside a
+     callout must stay inline, or every emphasised phrase becomes its own line. */
+  .note > b:first-child, .warn > b:first-child, .win > b:first-child {
+    display: block; margin-bottom: .8mm;
+  }
+  .warn > b:first-child { color: var(--crimson-dark); }
+  .win  > b:first-child { color: var(--green); }
+
+  /* ---------- Steps ---------- */
+  ol.steps { counter-reset: s; list-style: none; padding-left: 0; margin: 2mm 0 4mm; }
+  ol.steps > li {
+    counter-increment: s; position: relative;
+    padding-left: 8mm; margin-bottom: 2.5mm;
+    page-break-inside: avoid;
+  }
+  ol.steps > li::before {
+    content: counter(s);
+    position: absolute; left: 0; top: 0;
+    width: 5.5mm; height: 5.5mm; line-height: 5.5mm;
+    background: var(--crimson); color: #fff;
+    border-radius: 50%; text-align: center;
+    font-size: 7.5pt; font-weight: 700;
+  }
+  .nav {
+    display: inline-block; background: #EEF2F5; border: 1px solid #D6DDE3;
+    border-radius: 2px; padding: .3mm 1.5mm; font-size: 8.5pt;
+    font-weight: 600; color: #1F3A4D; white-space: nowrap;
+  }
+  .say {
+    border-left: 2px solid var(--gold); padding-left: 3mm;
+    color: var(--ink-60); font-style: italic; margin: 1.5mm 0 0;
+    font-size: 8.8pt;
+  }
+  .say b { font-style: normal; color: var(--gold-ink); }
+
+  /* ---------- Misc ---------- */
+  .pill {
+    display: inline-block; border-radius: 999px; padding: .4mm 2mm;
+    font-size: 7.6pt; font-weight: 700; letter-spacing: .03em;
+  }
+  .pill.crimson { background: var(--crimson); color: #fff; }
+  .pill.green   { background: var(--green); color: #fff; }
+  .pill.gold    { background: #FBF3D9; color: var(--gold-ink); border: 1px solid var(--gold); }
+  .pill.grey    { background: #E7E5E4; color: var(--ink-60); }
+  .timing { float: right; font-size: 8.5pt; color: var(--ink-45); font-weight: 600; }
+  .two-col { column-count: 2; column-gap: 8mm; }
+  .lead { font-size: 10.5pt; color: var(--ink-60); margin-bottom: 4mm; }
+  .toc-item {
+    display: flex; justify-content: space-between; gap: 3mm;
+    padding: 1.6mm 0; border-bottom: 1px dotted var(--border); font-size: 9.5pt;
+  }
+  .toc-item b { font-weight: 600; }
+  .toc-item .t { color: var(--ink-45); font-size: 8.5pt; white-space: nowrap; }
+  .avoid { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ============================= COVER ============================= -->
+<div class="cover">
+  <div class="kicker">University of Public Relations &amp; Leadership</div>
+  <h1>UPRL&nbsp;LMS<br>Demo &amp; Test Guide</h1>
+  <div class="sub">
+    A complete, click-by-click walkthrough of the Learning Management System —
+    every role, every feature, every field you need to type. Written to be read
+    aloud from a second screen while you present.
+  </div>
+  <div class="badge-row">
+    <span>10 sections delivered</span>
+    <span>5 roles</span>
+    <span>447 automated tests</span>
+    <span>~60 minute deep dive</span>
+  </div>
+  <div class="motto">Creativity, Competence, Character</div>
+  <div class="meta">
+    <span>Prepared 25 July 2026</span>
+    <span>Branch: section/10-reporting-analytics-exports</span>
+  </div>
+</div>
+
+<!-- ============================= HOW TO USE ============================= -->
+<div>
+  <h2><span class="num">0</span>How to use this guide</h2>
+  <p class="lead">Read this page once before you start. It will save you every avoidable surprise tonight.</p>
+
+  <ul>
+    <li><b>Everything here has been executed against the real running app</b>, not written from the code. Where a screen is quoted, that is what it actually says.</li>
+    <li><b>Follow the numbered steps literally.</b> Each one names the exact menu item, tab or button to click. Grey boxes like <span class="nav">Teaching</span> are things you click in the left sidebar; every step also gives a fallback URL you can paste into the address bar if you lose your place.</li>
+    <li><b>Gold boxes are copy-paste.</b> Anything you need to type during the demo is in a gold box, ready to copy.</li>
+    <li><b>Italic lines marked <i>Say:</i></b> are optional talking points — the "why this matters" for your teammate.</li>
+  </ul>
+
+  <div class="warn">
+    <b>The single most important rule: refer to people by e-mail, never by name.</b>
+    Student <i>names</i> are randomly generated on every re-seed, so the "Chukwuemeka Chukwu"
+    you see tonight will be someone else tomorrow. E-mail addresses
+    (<code>student1@uprl.test</code> …) and course codes (<code>PRL101</code> …) are
+    <b>stable forever</b>. This guide always identifies people by e-mail. The names printed
+    in tables here are only what the seed produced at the time of writing.
+  </div>
+
+  <div class="note">
+    <b>Two browser windows will make this demo</b>
+    Several of the best moments are two-sided (a student acts, staff sees it). Open a
+    <b>normal window</b> and an <b>incognito/private window</b> side by side so you can be
+    signed in as two people at once. This guide labels them <b>Window A</b> (student) and
+    <b>Window B</b> (staff).
+  </div>
+
+  <h3>Contents</h3>
+  <div class="toc-item"><b>1 &nbsp; Pre-flight — get the machine ready</b><span class="t">before you start</span></div>
+  <div class="toc-item"><b>2 &nbsp; The system at a glance</b><span class="t">reference</span></div>
+  <div class="toc-item"><b>3 &nbsp; Accounts, courses &amp; seeded data</b><span class="t">reference</span></div>
+  <div class="toc-item"><b>4 &nbsp; Act 1 — The front door</b><span class="t">5 min</span></div>
+  <div class="toc-item"><b>5 &nbsp; Act 2 — The administrator</b><span class="t">8 min</span></div>
+  <div class="toc-item"><b>6 &nbsp; Act 3 — The instructor builds a course</b><span class="t">8 min</span></div>
+  <div class="toc-item"><b>7 &nbsp; Act 4 — The learner ★</b><span class="t">10 min</span></div>
+  <div class="toc-item"><b>8 &nbsp; Act 5 — Assessment &amp; grading</b><span class="t">9 min</span></div>
+  <div class="toc-item"><b>9 &nbsp; Act 6 — Enrolment operations ★</b><span class="t">7 min</span></div>
+  <div class="toc-item"><b>10 &nbsp; Act 7 — Certificates &amp; public verification ★</b><span class="t">5 min</span></div>
+  <div class="toc-item"><b>11 &nbsp; Act 8 — Communication &amp; moderation</b><span class="t">5 min</span></div>
+  <div class="toc-item"><b>12 &nbsp; Act 9 — Reporting, analytics &amp; exports</b><span class="t">6 min</span></div>
+  <div class="toc-item"><b>13 &nbsp; Act 10 — The auditor &amp; the wrap</b><span class="t">3 min</span></div>
+  <div class="toc-item"><b>14 &nbsp; User stories — the acceptance checklist</b><span class="t">reference</span></div>
+  <div class="toc-item"><b>15 &nbsp; If something goes wrong</b><span class="t">reference</span></div>
+  <div class="toc-item"><b>16 &nbsp; Scope, roadmap &amp; quick-reference URLs</b><span class="t">reference</span></div>
+</div>
+
+<!-- ============================= 1 PRE-FLIGHT ============================= -->
+<div class="section">
+  <h2><span class="num">1</span>Pre-flight — get the machine ready</h2>
+  <p class="lead">Do this ~10 minutes before your teammate joins. It takes about 3 minutes of typing and 2 minutes of waiting.</p>
+
+  <h3>Step 1 — Open a terminal in the project folder</h3>
+  <div class="paste">cd "c:\Users\OLASQUARE\Desktop\My Projects\UPRLUniversity\lms"</div>
+
+  <h3>Step 2 — Reset the demo data to a known-good state</h3>
+  <p>This wipes and rebuilds the database so everything in this guide matches exactly. It takes about <b>90 seconds</b> — start it, then read on.</p>
+  <div class="paste">php artisan migrate:fresh --seed</div>
+  <p>You are looking for a final line similar to:</p>
+  <pre>ReportingDemoSeeder: 84 historical enrolments, 292 lesson-progress rows,
+19 skipped to respect course capacity.</pre>
+
+  <h3>Step 3 — Build the front-end assets</h3>
+  <p>Only needed if you have changed any file under <code>resources/</code> since the last build. If in doubt, run it — it takes ~45 seconds.</p>
+  <div class="paste">npm run build</div>
+
+  <h3>Step 4 — Start the server</h3>
+  <p>Leave this terminal window open and running for the whole demo.</p>
+  <div class="paste">php artisan serve</div>
+  <p>Then open <code>http://127.0.0.1:8000</code> in your browser.</p>
+
+  <div class="win">
+    <b>Mail has already been set to "log" mode for you</b>
+    Your <code>.env</code> previously pointed at a live SMTP server and sent mail
+    <i>synchronously</i>. That made every notifying action (approving an enrolment, posting
+    an announcement, grading a submission) pause for ~1.5 seconds — and it would have failed
+    outright if tonight's network blocks port 465. <code>MAIL_MAILER</code> is now
+    <code>log</code>: actions are instant, nothing depends on the network, and the e-mail
+    bodies are still written to <code>storage/logs/laravel.log</code> if you want to show one.
+    <br><br>
+    <b>To restore live sending after the demo:</b> open <code>.env</code>, change
+    <code>MAIL_MAILER=log</code> back to <code>MAIL_MAILER=smtp</code>, then run
+    <code>php artisan config:clear</code>.
+  </div>
+
+  <h3>Step 5 — Browser setup (60 seconds, worth it)</h3>
+  <ol class="steps">
+    <li>Open a <b>normal window</b> — this is <b>Window A</b> (you will be the student here).</li>
+    <li>Open an <b>incognito / private window</b> — this is <b>Window B</b> (you will be staff here). Put them side by side, or use two virtual desktops you can flip between.</li>
+    <li>Zoom both to <b>110–125%</b> (<code>Ctrl</code> + <code>+</code>) so the room can read them.</li>
+    <li>Close any other tabs. Hide your bookmarks bar.</li>
+  </ol>
+
+  <div class="note">
+    <b>Optional — only if you want to demo the queued-export path (Act 9, step 8)</b>
+    That feature only triggers above a row threshold, and the demo dataset is deliberately
+    small. To make it demonstrable, add this line to <code>.env</code>, then run
+    <code>php artisan config:clear</code>:
+    <div class="paste" style="margin-top:2mm">REPORTS_QUEUE_THRESHOLD=50</div>
+    Remove the line (or set it back to <code>2000</code>) afterwards. No queue worker is
+    needed — <code>QUEUE_CONNECTION</code> is <code>sync</code>, so the job runs immediately.
+  </div>
+
+  <h3>Step 6 — Optional confidence check</h3>
+  <p>If you want to open by stating the test count, run this first (takes ~5 minutes, so do it early or skip it):</p>
+  <div class="paste">php artisan test</div>
+  <p>Expected: <b>447 passed</b>.</p>
+</div>
+
+<!-- ============================= 2 AT A GLANCE ============================= -->
+<div class="section">
+  <h2><span class="num">2</span>The system at a glance</h2>
+  <p class="lead">One page you can hold in your head. Useful if your teammate asks "so what <i>is</i> this?"</p>
+
+  <p><b>UPRL LMS</b> is a Learning Management System for a single Nigerian university —
+  the University of Public Relations and Leadership. It covers the full lifecycle:
+  a public course catalogue, enrolment (with approvals, capacity and waitlists), an
+  authoring toolkit for instructors, a distraction-free learning player, quizzes and
+  assignments with rubric grading, a gradebook mapped to Nigerian grading scales,
+  verifiable PDF certificates, forums and messaging, notifications, and an exportable
+  reporting suite.</p>
+
+  <h3>The five roles</h3>
+  <table>
+    <tr><th style="width:24%">Role</th><th>What it can do</th></tr>
+    <tr><td><b>Super-admin</b></td><td>Everything, without exception. Bypasses every permission check. Cannot deactivate itself.</td></tr>
+    <tr><td><b>Admin</b></td><td>Runs the university: people, faculties &amp; departments, grade scales, certificate templates and the registry, the publishing decision on any course, enrolment approvals, bulk import, forum moderation, and the full report centre.</td></tr>
+    <tr><td><b>Instructor</b></td><td>Builds and teaches <i>their own</i> courses: curriculum, question bank, assessments, assignments &amp; rubrics, grading, learner progress and per-course analytics, announcements, and the approval queue for courses they lead.</td></tr>
+    <tr><td><b>Student</b></td><td>Browses the catalogue, enrols, learns, takes assessments, submits assignments, discusses in forums, messages staff, sees grades, earns certificates.</td></tr>
+    <tr><td><b>Auditor</b></td><td>A read-only observer for governance. Sees people, courses, rosters, progress, grading, certificates and reports — and holds <i>no</i> ability to create, edit, approve or delete anything, by construction rather than by hiding buttons.</td></tr>
+  </table>
+
+  <h3>What was built, section by section</h3>
+  <table class="tight">
+    <tr><th style="width:8%">§</th><th style="width:30%">Section</th><th>What it gave you</th></tr>
+    <tr><td>0</td><td>Foundation &amp; brand</td><td>The design system: crimson/gold tokens, Fraunces + Inter, app shell, sidebar, toasts, skeleton loaders, the <code>/styleguide</code> page.</td></tr>
+    <tr><td>0.5</td><td>Shared foundations</td><td>One media service (public images → Cloudinary; sensitive files → private disk + signed URLs) and one rich-text editor (TinyMCE) with server-side HTML sanitising.</td></tr>
+    <tr><td>1</td><td>Identity &amp; access</td><td>Five roles, permissions, invitations with signed single-use links, deactivation-not-deletion, live admin tables.</td></tr>
+    <tr><td>2</td><td>Courses &amp; catalogue</td><td>Course builder, modules &amp; lessons of six types, drag-reorder, the draft → review → published → archived workflow, public catalogue with free previews.</td></tr>
+    <tr><td>3</td><td>Enrolment</td><td>Self-enrol, approval queues, capacity, FIFO waitlist with automatic promotion, invite-only courses, bulk CSV import, roster export.</td></tr>
+    <tr><td>4</td><td>Learning player</td><td>Resume-anywhere, curriculum sidebar, sequential locking enforced server-side, Complete &amp; Continue, completion celebration.</td></tr>
+    <tr><td>5</td><td>Assessments</td><td>Question bank across 7 types, fixed and randomly-pooled exams, server-authoritative timer, auto-grading, manual essay grading, pre/post knowledge gain.</td></tr>
+    <tr><td>6</td><td>Assignments</td><td>Briefs with attachments, versioned submissions, late policy, rubric grid grading, return-for-resubmission.</td></tr>
+    <tr><td>6.5</td><td>Grades</td><td>Configurable grade scales (NUC 5.0 default), per-course gradebook matrix, immutable grade snapshots at completion.</td></tr>
+    <tr><td>7</td><td>Certificates</td><td>Automatic issuance on completion, branded PDF with QR code, serial numbers, revoke/re-issue, and a public verification portal.</td></tr>
+    <tr><td>8</td><td>Notifications</td><td>In-app bell + e-mail across the whole catalogue of events, per-type preferences, daily digest, scheduled reminders, course announcements.</td></tr>
+    <tr><td>9</td><td>Communication</td><td>Per-course forums (pin/lock/accept-answer/report), direct &amp; group messaging with attachments, admin moderation queue.</td></tr>
+    <tr><td>10</td><td>Reporting</td><td>Role-aware dashboards with charts, per-course analytics, four filterable reports, exports to Excel/CSV/PDF, queued large exports.</td></tr>
+  </table>
+
+  <h3>Three architectural claims worth making out loud</h3>
+  <ul>
+    <li><b>Authorization is never inline.</b> Every permission decision lives in a Policy class. There is not a single <code>if (user is admin)</code> in a controller or a template. The auditor is read-only because it holds only view permissions — not because buttons were hidden.</li>
+    <li><b>Rules are enforced on the server, not in the browser.</b> Sequential lesson locking, the exam timer, capacity, and the answer key are all server-side. You will prove two of these live by pasting a URL that <i>should</i> work and watching it be refused.</li>
+    <li><b>History is immutable.</b> A submission version, a grade snapshot and an issued certificate are written once and never rewritten. Editing a rubric or a grade scale afterwards cannot retroactively change a student's record.</li>
+  </ul>
+</div>
+
+<!-- ============================= 3 DATA ============================= -->
+<div class="section">
+  <h2><span class="num">3</span>Accounts, courses &amp; seeded data</h2>
+  <p class="lead">Keep this page open. Every account's password is the same.</p>
+
+  <div class="paste"><b>Password for every single account:</b>
+password</div>
+
+  <h3>Accounts you will use tonight</h3>
+  <table>
+    <tr><th style="width:26%">E-mail (copy this)</th><th style="width:14%">Role</th><th>Use it to show</th></tr>
+    <tr><td><code>superadmin@uprl.test</code></td><td>Super-admin</td><td>Unrestricted access; cannot deactivate itself</td></tr>
+    <tr><td><code>admin1@uprl.test</code></td><td>Admin</td><td><b>Your main staff account.</b> People, structure, publishing, certificates, reports</td></tr>
+    <tr><td><code>instructor1@uprl.test</code></td><td>Instructor</td><td>Teaches PRL101 &amp; PRL220 — the richest course data, the grading queue</td></tr>
+    <tr><td><code>instructor2@uprl.test</code></td><td>Instructor</td><td><b>Has the approval queue</b> (3 pending on LDS201, 1 on LDS110)</td></tr>
+    <tr><td><code>student1@uprl.test</code></td><td>Student</td><td><b>Your hero learner.</b> Mid-course on two courses, active on the full course</td></tr>
+    <tr><td><code>student4@uprl.test</code></td><td>Student</td><td>Sitting at <b>waitlist position #1</b> on PRL305 — the one who gets promoted</td></tr>
+    <tr><td><code>student14@uprl.test</code></td><td>Student</td><td><b>Holds a valid certificate</b> — use for the certificate download</td></tr>
+    <tr><td><code>auditor@uprl.test</code></td><td>Auditor</td><td>Read-only observer</td></tr>
+    <tr><td><code>student25@uprl.test</code></td><td>Student</td><td><b>Deactivated on purpose</b> — use to demo the login gate</td></tr>
+  </table>
+
+  <h3>The seeded course catalogue</h3>
+  <table class="tight">
+    <tr><th style="width:11%">Code</th><th style="width:24%">Title</th><th style="width:15%">Enrolment</th><th style="width:12%">State</th><th>What it demonstrates</th></tr>
+    <tr><td><b>PRL101</b></td><td>Foundations of Public Relations</td><td>Open, uncapped</td><td><span class="pill green">Published</span></td><td><b>The flagship.</b> All assessments, assignments, forum, gradebook, certificates and analytics live here</td></tr>
+    <tr><td><b>PRL220</b></td><td>Strategic Campaign Planning</td><td>Open, cap 30</td><td><span class="pill green">Published</span></td><td><b>Sequential locking</b> + the completion celebration (student1 is 25% in)</td></tr>
+    <tr><td><b>PRL305</b></td><td>Crisis Communication Essentials</td><td>Open, <b>cap 3 — FULL</b></td><td><span class="pill green">Published</span></td><td><b>Waitlist + auto-promotion.</b> 3 active, 3 waiting</td></tr>
+    <tr><td><b>LDS201</b></td><td>Organisational Leadership</td><td><b>Approval</b></td><td><span class="pill green">Published</span></td><td>Approval queue — 3 pending requests</td></tr>
+    <tr><td><b>LDS110</b></td><td>Ethics &amp; Character in Leadership</td><td>Approval, cap 5</td><td><span class="pill green">Published</span></td><td>Approval combined with capacity — 1 pending, seats exactly full</td></tr>
+    <tr><td><b>JRN210</b></td><td>Media Writing &amp; Storytelling</td><td><b>Invite-only</b></td><td><span class="pill green">Published</span></td><td>Staff-only direct enrolment; no self-enrol button exists</td></tr>
+    <tr><td><b>SCM330</b></td><td>Digital &amp; Social Media Strategy</td><td>Open</td><td><span class="pill gold">In review</span></td><td>The publishing workflow — <b>you will publish this live</b></td></tr>
+    <tr><td><b>PAD120</b></td><td>Introduction to Public Administration</td><td>Open</td><td><span class="pill grey">Draft</span></td><td>Returned-with-feedback — carries a reviewer's note</td></tr>
+  </table>
+
+  <h3>Other seeded state worth knowing</h3>
+  <table class="tight">
+    <tr><th style="width:30%">Thing</th><th>State right after a fresh seed</th></tr>
+    <tr><td>Users</td><td>1 super-admin, 2 admins, 4 instructors, 25 students (one deactivated), 1 auditor</td></tr>
+    <tr><td>PRL305 waitlist</td><td><code>student1/2/3</code> active · <code>student4</code> #1, <code>student5</code> #2, <code>student6</code> #3 waiting</td></tr>
+    <tr><td>Pending approvals</td><td>LDS201: <code>student1</code>, <code>student2</code>, <code>student3</code> · LDS110: <code>student6</code></td></tr>
+    <tr><td>Question bank</td><td>~30 questions on PRL101 across all 7 types, 3 categories, 3 difficulty levels</td></tr>
+    <tr><td>Assessments (PRL101)</td><td>Module diagnostic (pre), Module check (post), Final exam (timed, 20 min), Practice pool (randomised), Reflection essay (manually graded)</td></tr>
+    <tr><td>Assignments (PRL101)</td><td>Crisis communication case study (rubric-graded, due 1 Aug) · Personal reflection brief (past due, late allowed)</td></tr>
+    <tr><td>Grading queue</td><td>1 essay attempt + 3 assignment submissions waiting, including one flagged <b>Late</b> and one resubmitted <b>v2</b></td></tr>
+    <tr><td>Certificates</td><td>3 issued on PRL101 — 2 valid, 1 deliberately revoked</td></tr>
+    <tr><td>Forum (PRL101)</td><td>3 threads: one <b>answered</b> with 2 replies, one <b>pinned</b>, one <b>locked</b></td></tr>
+    <tr><td>Grade scales</td><td><b>NUC Standard (5.0)</b> = default (A 70–100 → 5.0 … F 0–39 → 0.0) and <b>4.0 Scale</b></td></tr>
+  </table>
+
+  <div class="warn">
+    <b>Certificate serial numbers change on every seed</b>
+    Serials are generated fresh each time, so the ones in this guide will not match your
+    database. When you reach Act 7 you will <b>read the serial off the screen</b> — the guide
+    tells you exactly where. Do not try to use a serial printed here.
+  </div>
+</div>
+
+<!-- ============================= ACT 1 ============================= -->
+<div class="section">
+  <h2><span class="num">4</span>Act 1 — The front door<span class="timing">≈ 5 min</span></h2>
+  <p class="lead">Goal: establish the brand, show that the catalogue is genuinely public, and set up the access model.</p>
+  <p><b>Start signed out.</b> In <b>Window A</b>, if you are signed in, click your name (top right) → <b>Log out</b>.</p>
+
+  <ol class="steps">
+    <li>
+      <b>The landing page.</b> Go to <code>http://127.0.0.1:8000/</code><br>
+      Point at: the crimson hero, the slowly rotating sunburst motif (taken from the UPRL logo),
+      the motto, and the three values.
+      <p class="say"><b>Say:</b> This is a designed product, not an admin template. One colour system, one type system — a display serif for headings, Inter for interface text — applied across every screen you'll see tonight.</p>
+    </li>
+    <li>
+      <b>The public catalogue.</b> Click <span class="nav">Browse courses</span> in the hero.<br>
+      <i>Fallback URL:</i> <code>/courses</code>
+      <ul>
+        <li>Type <code>crisis</code> into the search box — results filter <b>without a page reload</b>.</li>
+        <li>Use the <b>Faculty</b>, <b>Department</b> and <b>Level</b> dropdowns, and the sort control.</li>
+        <li>Note that only <b>6 of the 8</b> courses appear. The draft and in-review courses are not published, so the public simply cannot see them.</li>
+      </ul>
+    </li>
+    <li>
+      <b>A course page.</b> Click <b>PRL101: Foundations of Public Relations</b>.<br>
+      <i>Fallback URL:</i> <code>/courses/prl101-foundations-of-public-relations</code>
+      <ul>
+        <li>Scroll through: the hero, "What you'll learn", and the collapsible curriculum accordion.</li>
+        <li>Find the first lesson, <b>Welcome &amp; course overview</b>, and click its <b>Preview</b> label — a free-preview video plays for a signed-out visitor.</li>
+        <li>Scroll to the bottom: a guest is told to create an account to enrol.</li>
+      </ul>
+      <p class="say"><b>Say:</b> Instructors choose per lesson which ones are free previews — that's the marketing surface of the course.</p>
+    </li>
+    <li>
+      <b>The deactivation gate.</b> Click <span class="nav">Log in</span> and try the deactivated account:
+      <div class="paste"><b>E-mail:</b>   student25@uprl.test
+<b>Password:</b> password</div>
+      You are refused with an account-deactivated message.
+      <p class="say"><b>Say:</b> We never delete a person — an account is deactivated. History, grades and certificates survive; access stops immediately, even mid-session if an admin flips the switch while they're signed in.</p>
+    </li>
+    <li>
+      <b>Sign in properly</b> as your hero learner. Stay in <b>Window A</b>.
+      <div class="paste"><b>E-mail:</b>   student1@uprl.test
+<b>Password:</b> password</div>
+      You land on the student dashboard. Leave it here — Act 4 comes back to it.
+    </li>
+  </ol>
+</div>
+
+<!-- ============================= ACT 2 ============================= -->
+<div class="section">
+  <h2><span class="num">5</span>Act 2 — The administrator<span class="timing">≈ 8 min</span></h2>
+  <p class="lead">Goal: show that a real institution can be run from here — people, structure, and governance of what goes live.</p>
+  <p><b>Switch to Window B</b> (the incognito one) and sign in:</p>
+  <div class="paste"><b>E-mail:</b>   admin1@uprl.test
+<b>Password:</b> password</div>
+
+  <ol class="steps">
+    <li>
+      <b>The admin dashboard.</b> You land on it automatically. <i>Fallback URL:</i> <code>/dashboard</code>
+      <ul>
+        <li>Four live figures across the top: <b>Active users (30d)</b>, <b>Active enrolments</b>, <b>Completion rate</b>, <b>Certificates issued</b>.</li>
+        <li>Three action cards: <b>Course reviews</b>, <b>Enrolment approvals</b>, <b>Grading queue</b> — each links straight to the queue.</li>
+        <li>An <b>Enrolment trend</b> bar chart over 12 months, a <b>Top courses</b> league table, and a live <b>Recent activity</b> feed.</li>
+      </ul>
+      <p class="say"><b>Say:</b> Every number here is a real query against real rows — nothing is hard-coded. The platform-wide aggregates are cached for five minutes; anything personal is read live so a learner never sees a stale progress bar.</p>
+    </li>
+    <li>
+      <b>People.</b> Click <span class="nav">People</span> in the left sidebar. <i>Fallback URL:</i> <code>/admin/users</code>
+      <ul>
+        <li>Type <code>instructor</code> in the search box. Watch the <b>skeleton shimmer</b> appear while it fetches — the table updates with no page reload, and the URL updates so the view is shareable.</li>
+        <li>Filter by <b>Role</b>. Click a column heading to sort. Page through.</li>
+        <li>Find your own row (<code>admin1@uprl.test</code>) — there is <b>no Deactivate button</b> on it. You cannot lock yourself out.</li>
+        <li>Pick any student row and click <b>Deactivate</b> → a branded confirmation dialog appears → confirm → a toast slides in top-right.</li>
+      </ul>
+      <p class="say"><b>Say:</b> One confirmation style and one feedback style across the entire application — never a browser <code>confirm()</code> box, never an inline banner.</p>
+    </li>
+    <li>
+      <b>Invitations.</b> Click <span class="nav">Invitations</span>. <i>Fallback URL:</i> <code>/admin/invitations</code><br>
+      Send one:
+      <div class="paste"><b>Name:</b>   Ngozi Chukwuma
+<b>E-mail:</b> ngozi.chukwuma@uprl.test
+<b>Role:</b>   Instructor</div>
+      <p class="say"><b>Say:</b> The invitee receives a signed, single-use link that expires in 7 days and sets their own password — we never e-mail anyone a password. Only a super-admin can invite another admin, so an admin cannot escalate its own privileges.</p>
+    </li>
+    <li>
+      <b>Academic structure.</b> Click <span class="nav">Academic structure</span>. <i>Fallback URL:</i> <code>/admin/faculties</code><br>
+      Faculties contain departments; every course belongs to a department. Add one to show it:
+      <div class="paste"><b>Faculty name:</b> Faculty of Digital Communication
+<b>Description:</b>   Emerging media, analytics and digital campaign practice.</div>
+    </li>
+    <li>
+      <b>Governance — publish a course live.</b> Click <span class="nav">Teaching</span> in the sidebar. As an admin you see <b>every</b> course, not just your own. Open <b>SCM330 · Digital &amp; Social Media Strategy</b> (marked <span class="pill gold">In review</span>).<br>
+      <i>Fallback URL:</i> <code>/manage/courses/digital-social-media-strategy/edit</code>
+      <ul>
+        <li>Note the <b>Publish checklist</b> panel: at least one module, at least one lesson, a summary, a cover image — all ticked.</li>
+        <li>Click <b>Publish</b>. The status badge flips to <span class="pill green">Published</span> and the instructor is notified.</li>
+        <li>Now open <code>/courses</code> in a new tab — <b>SCM330 has appeared in the public catalogue.</b></li>
+      </ul>
+    </li>
+    <li>
+      <b>The other side of the workflow.</b> Back in <span class="nav">Teaching</span>, open <b>PAD120 · Introduction to Public Administration</b> (<span class="pill grey">Draft</span>).<br>
+      <i>Fallback URL:</i> <code>/manage/courses/introduction-to-public-administration/edit</code><br>
+      It carries a <b>"Changes requested by the reviewer"</b> note. The instructor fixes and resubmits.
+      <p class="say"><b>Say:</b> Status is a state machine — draft, review, published, archived — and only one service is allowed to write it. An empty course can never be published, even if you craft the request by hand.</p>
+    </li>
+  </ol>
+</div>
+
+<!-- ============================= ACT 3 ============================= -->
+<div class="section">
+  <h2><span class="num">6</span>Act 3 — The instructor builds a course<span class="timing">≈ 8 min</span></h2>
+  <p class="lead">Goal: show the authoring experience, and that an instructor is walled into their own courses.</p>
+  <p><b>In Window B</b>, log out of admin and sign in as the instructor:</p>
+  <div class="paste"><b>E-mail:</b>   instructor1@uprl.test
+<b>Password:</b> password</div>
+
+  <ol class="steps">
+    <li>
+      <b>Teaching.</b> Click <span class="nav">Teaching</span>. <i>Fallback URL:</i> <code>/manage/courses</code><br>
+      This instructor sees only <b>PRL101</b> and <b>PRL220</b> — the two they lead. The admin a minute ago saw all eight.
+      <p class="say"><b>Say:</b> Same page, same code. The difference is one Policy method.</p>
+    </li>
+    <li>
+      <b>Open the builder.</b> Click <b>PRL101: Foundations of Public Relations</b>.<br>
+      <i>Fallback URL:</i> <code>/manage/courses/prl101-foundations-of-public-relations/edit</code><br>
+      There are three tabs: <b>Settings</b>, <b>Curriculum</b>, <b>Announcements</b>.
+    </li>
+    <li>
+      <b>Settings tab</b> — walk the controls without saving:
+      <ul>
+        <li><b>Cover image</b> with live preview.</li>
+        <li><b>Visibility</b> — published but hidden from the public catalogue is a valid combination.</li>
+        <li><b>Enrolment mode</b> — open / approval / invite-only — and <b>capacity</b>.</li>
+        <li><b>Lesson progression</b> — Free or <b>Sequential</b>. This is the switch behind Act 4's locking.</li>
+        <li>The <b>rich text editor</b> for the description. Type into it, apply bold and a bullet list.</li>
+      </ul>
+      <p class="say"><b>Say:</b> This is the only rich-text editor in the entire application, and every rich field is sanitised on the server when it saves. If someone pastes a <code>&lt;script&gt;</code> tag into a forum post or a message, it is stripped before it ever reaches the database — and there are tests asserting exactly that.</p>
+    </li>
+    <li>
+      <b>Curriculum tab.</b> Click <span class="nav">Curriculum</span>.
+      <ul>
+        <li><b>Drag a lesson</b> by its handle to reorder it — it saves instantly, with no Save button.</li>
+        <li>Click <b>Add lesson</b> and open the type dropdown: <b>video, text, PDF, document, audio, external link</b>.</li>
+        <li>Choose <b>Video</b> and paste this URL to see the embed preview appear live:
+          <div class="paste">https://www.youtube.com/watch?v=aqz-KE-bpKQ</div>
+        </li>
+        <li>Point out the gold clipboard chips sitting between lessons — those are the assessments, positioned before or after their module.</li>
+      </ul>
+      <p class="say"><b>Say:</b> Video is embed-first — YouTube and Vimeo URLs are parsed into privacy-friendly embeds. Uploaded files go to a private disk and are only ever served through short-lived signed links, never a public CDN URL.</p>
+    </li>
+    <li>
+      <b>The question bank.</b> Change the address bar to:
+      <div class="paste">/manage/courses/prl101-foundations-of-public-relations/questions</div>
+      ~30 real questions across seven types. Filter by <b>category</b> and <b>difficulty</b>. Open one to show the editor, and note the <b>Duplicate</b> and <b>Import</b> actions.
+    </li>
+    <li>
+      <b>Learner progress.</b> In the builder header, click <b>Progress</b>.<br>
+      <i>Fallback URL:</i> <code>/manage/courses/prl101-foundations-of-public-relations/progress</code><br>
+      Per-student percentage, last activity, and a per-lesson completion heat-strip.
+      <p class="say"><b>Say:</b> This is the "who is stuck, and exactly where" view. The whole sidebar loads in a single query regardless of how many students are enrolled.</p>
+    </li>
+  </ol>
+</div>
+
+<!-- ============================= ACT 4 ============================= -->
+<div class="section">
+  <h2><span class="num">7</span>Act 4 — The learner ★<span class="timing">≈ 10 min</span></h2>
+  <p class="lead">This is the centrepiece. If you only have ten minutes, do this act and Act 6.</p>
+  <p><b>Switch to Window A</b>, where you are already <code>student1@uprl.test</code>.</p>
+
+  <ol class="steps">
+    <li>
+      <b>My Learning.</b> Click <span class="nav">My Learning</span> in the sidebar. <i>Fallback URL:</i> <code>/my-learning</code><br>
+      Status-aware cards with live progress bars: active courses with <b>Continue learning</b>, one <b>Pending approval</b>, and any waitlisted or completed courses.
+    </li>
+    <li>
+      <b>Resume anywhere.</b> Find the <b>PRL220 · Strategic Campaign Planning</b> card and click <b>Continue learning</b>.<br>
+      <i>Fallback URL:</i> <code>/learn/strategic-campaign-planning</code><br>
+      It deep-links straight to the <b>first lesson you haven't finished</b> — not lesson one.
+      <p class="say"><b>Say:</b> There's exactly one definition of "where was I?" in the codebase, and every Continue button in the app routes through it.</p>
+    </li>
+    <li>
+      <b>Walk the player.</b>
+      <ul>
+        <li>The whole app chrome is gone — the curriculum sidebar and the lesson get the full screen.</li>
+        <li>Left sidebar: overall progress bar and percentage, modules, and per-lesson icons — a <b>green tick</b> for done, a <b>crimson ring</b> for the current one, a <b>padlock</b> for locked.</li>
+        <li>Click the panel icon in the top-left to <b>collapse the sidebar</b> into focus mode. Click again to restore.</li>
+        <li>Press <code>←</code> and <code>→</code> to move between lessons with the keyboard.</li>
+      </ul>
+    </li>
+    <li>
+      <b>Sequential locking — the UI.</b> In the sidebar, expand the second module, <b>Execution &amp; Evaluation</b>. Its lessons show a padlock and "Complete the previous lesson to unlock".
+    </li>
+    <li class="avoid">
+      <b>Sequential locking — prove it's real.</b> Paste this locked lesson's URL directly into the address bar:
+      <div class="paste">http://127.0.0.1:8000/learn/strategic-campaign-planning/23</div>
+      You are <b>bounced straight back</b> to your resume point.
+      <p class="say"><b>Say:</b> The padlock is a courtesy. The rule is enforced on the server — the URL is not a loophole.</p>
+    </li>
+    <li>
+      <b>Complete &amp; Continue ★.</b> Click the crimson <b>Complete &amp; Continue</b> button. Watch all of this happen at once:
+      <ul>
+        <li>The progress bar jumps <b>25% → 50%</b> live.</li>
+        <li>The finished lesson gets a green tick.</li>
+        <li>A <b>module-complete celebration</b> appears (dismiss it with the close button, <code>Esc</code>, or by clicking the backdrop).</li>
+        <li>The next module <b>unlocks</b> and you advance into it.</li>
+      </ul>
+      <p class="say"><b>Say:</b> Completion is a single unique row per student per lesson, not a counter — so a double-click, a retry or a flaky connection can never inflate anyone's progress.</p>
+    </li>
+    <li>
+      <b>Finish the course.</b> Keep clicking <b>Complete &amp; Continue</b> through the remaining two lessons. On the last one you get the full-screen <b>Congratulations</b> page — summary stats, completion date, and a link to the certificate.
+    </li>
+    <li class="avoid">
+      <b>The honest "not finished yet" state.</b> Now try the same thing on the flagship course, which has required assessments outstanding. Paste:
+      <div class="paste">http://127.0.0.1:8000/learn/prl101-foundations-of-public-relations/congratulations</div>
+      Instead of a celebration you get a <b>checklist</b> naming every outstanding required item, each with a reason — <i>Not started yet</i>, <i>Awaiting grading</i>, <i>Not passed · 44% · no attempts left</i> — and a direct link to it.
+      <p class="say"><b>Say:</b> Finishing every video isn't finishing the course. This screen tells the learner precisely what's left, rather than silently bouncing them back to lesson one.</p>
+    </li>
+    <li>
+      <b>Grades and history.</b>
+      <ul>
+        <li>In the player sidebar click <b>Grades</b> — the student's own gradebook for that course.</li>
+        <li>Then go to <code>/history</code> — every course they've taken, with enrolment date, progress, time spent and completion date.</li>
+      </ul>
+    </li>
+  </ol>
+
+  <div class="note">
+    <b>This act consumes demo state</b>
+    Finishing PRL220 cannot be undone in the UI. If you are presenting twice tonight, either
+    re-run <code>php artisan migrate:fresh --seed</code> between runs, or use
+    <code>student2@uprl.test</code> for the second pass.
+  </div>
+</div>
+
+<!-- ============================= ACT 5 ============================= -->
+<div class="section">
+  <h2><span class="num">8</span>Act 5 — Assessment &amp; grading<span class="timing">≈ 9 min</span></h2>
+  <p class="lead">Goal: show a real exam engine and a real marking workflow — including the parts a student must never be able to cheat.</p>
+  <p>Stay as <code>student1@uprl.test</code> in <b>Window A</b>.</p>
+
+  <ol class="steps">
+    <li>
+      <b>Open the exam.</b> Paste:
+      <div class="paste">http://127.0.0.1:8000/learn/prl101-foundations-of-public-relations/assessment/final-exam</div>
+      The start screen states the rules up front: <b>6 questions · 20 min · pass mark 60% · 2 attempts left</b>.
+    </li>
+    <li>
+      <b>Start it.</b> Click <b>Start attempt</b>. The runner is one question per screen, with a question navigator across the top, a <b>Flag</b> control, and a live countdown.
+    </li>
+    <li>
+      <b>Answer three or four questions</b>, moving with the numbered navigator. Point out the variety as you go — true/false, single-answer, multi-select, a drag-free matching grid with dropdowns, a fill-in-the-blank. The counter at the top updates to <b>"4 of 6 answered"</b> as you go: every answer is saved to the server the instant you pick it.
+    </li>
+    <li class="avoid">
+      <b>Prove the timer is server-side.</b> Press <code>F5</code> to reload the page mid-exam.
+      <ul>
+        <li>Your answers are still there.</li>
+        <li>The questions are in the <b>same order</b> with the <b>same shuffled options</b>.</li>
+        <li>The clock has <b>kept running</b> — it did not reset.</li>
+      </ul>
+      <p class="say"><b>Say:</b> The deadline is a timestamp on the server. Refreshing, closing the laptop or editing the page cannot buy a single extra second. And the correct answers are never sent to the browser before you submit — you can open developer tools and they simply aren't there.</p>
+    </li>
+    <li>
+      <b>Submit.</b> Answer the rest, click <b>Submit</b>, confirm. You land on the result screen immediately:
+      <ul>
+        <li>A percentage, a <b>Passed</b> / <b>Not passed</b> verdict, and points scored.</li>
+        <li>A full <b>review</b>: every question, your answer, whether it was right, and the explanation.</li>
+        <li>On the matching question, note <b>partial credit</b> — for example <b>1/4</b> — rather than all-or-nothing.</li>
+      </ul>
+      <p class="say"><b>Say:</b> Whether a student may see the answers at all is a per-assessment setting: immediately, only after the assessment closes, or never.</p>
+    </li>
+    <li>
+      <b>The instructor's side.</b> <b>Switch to Window B</b> as <code>instructor1@uprl.test</code> and click <span class="nav">Grading</span>.<br>
+      <i>Fallback URL:</i> <code>/manage/grading</code><br>
+      There are two tabs. On <b>Assessments</b> you'll find the essay attempt awaiting a human. Click <b>Grade</b>: the student's answer sits beside the marking panel, with the author's guidance notes for the marker. Award points and add feedback.
+    </li>
+    <li>
+      <b>Assignment grading.</b> Click the <b>Assignments</b> tab. <i>Fallback URL:</i> <code>/manage/grading/assignments</code><br>
+      Note the queue: one submission flagged <b>Late</b>, one that is <b>v2</b> — a resubmission after being sent back. Filter by course, assignment and status.
+    </li>
+    <li>
+      <b>Grade against a rubric.</b> Click <b>Grade</b> on the <b>Crisis communication case study</b> submission.
+      <ul>
+        <li>Left: the student's work, with PDFs and images previewed inline.</li>
+        <li>Right: the <b>rubric grid</b>. Click a performance level on each criterion — the total recalculates as you go.</li>
+        <li>Add feedback and click <b>Grade &amp; next</b>, or use <b>Return for resubmission</b> with a note.</li>
+      </ul>
+      <div class="paste"><b>Feedback you can paste:</b>
+Strong situation analysis and a well-judged holding statement. Tighten the
+evaluation section — name the specific measures you would report to the
+Vice-Chancellor, and say when you would report them.</div>
+      <p class="say"><b>Say:</b> The grade stores a snapshot of the rubric exactly as it was when marked. Editing or deleting that rubric later can never rewrite a student's breakdown. And the server is the only scorer — the browser never computes a mark.</p>
+    </li>
+    <li>
+      <b>The gradebook.</b> Go to:
+      <div class="paste">/manage/courses/prl101-foundations-of-public-relations/gradebook</div>
+      A students × items matrix. Items still awaiting a mark show <b>Pending</b> and are excluded from the percentage. The <b>Export</b> button offers CSV, Excel and PDF.
+    </li>
+    <li>
+      <b>Grade scales.</b> As an admin, <span class="nav">Grade scales</span> (<i>fallback:</i> <code>/admin/grade-scales</code>) holds <b>NUC Standard (5.0)</b> as the default and a <b>4.0 Scale</b> alternative. Open the NUC scale to show the bands (A 70–100% → 5.0, down to F).
+      <p class="say"><b>Say:</b> A course can override which scale it uses. But a grade already recorded freezes the whole scale into itself — so changing a band next semester cannot retroactively regrade last semester's students.</p>
+    </li>
+  </ol>
+</div>
+
+<!-- ============================= ACT 6 ============================= -->
+<div class="section">
+  <h2><span class="num">9</span>Act 6 — Enrolment operations ★<span class="timing">≈ 7 min</span></h2>
+  <p class="lead">The most satisfying act. Use both windows — this is where two-sided live action pays off.</p>
+
+  <h3>a) The approval queue</h3>
+  <ol class="steps">
+    <li>
+      <b>Window B — sign in as the instructor who owns the queue:</b>
+      <div class="paste"><b>E-mail:</b>   instructor2@uprl.test
+<b>Password:</b> password</div>
+      Click <span class="nav">Approvals</span>. <i>Fallback URL:</i> <code>/manage/approvals</code><br>
+      Three pending requests on LDS201 and one on LDS110.
+    </li>
+    <li>
+      <b>Approve one</b> — the request disappears and the student is notified. Then <b>Decline</b> another; you are asked to confirm. <b>Bulk approve</b> handles the rest at once.
+    </li>
+    <li>
+      <b>Show the boundary.</b> Sign in as <code>instructor1@uprl.test</code> and open <span class="nav">Approvals</span> — <b>it is empty</b>.
+      <p class="say"><b>Say:</b> That's correct, not a bug. Their courses are open-enrolment, so there is nothing to approve. Only admins and the <i>lead</i> instructor of a course can decide its enrolments — co-instructors cannot.</p>
+    </li>
+  </ol>
+
+  <h3>b) Waitlist auto-promotion ★ — the money shot</h3>
+  <ol class="steps">
+    <li>
+      <b>Window B — as <code>admin1@uprl.test</code>, open the PRL305 roster:</b>
+      <div class="paste">http://127.0.0.1:8000/manage/courses/crisis-communication-essentials/roster</div>
+      Read the capacity meter aloud: <b>"Places filled 3 / 3 — Course full · 3 on the waitlist."</b><br>
+      Click the <b>Waitlisted</b> tab and note who is <b>#1</b>: <code>student4@uprl.test</code>.
+    </li>
+    <li>
+      <b>Window A — become the student who is leaving.</b> Sign in as:
+      <div class="paste"><b>E-mail:</b>   student1@uprl.test
+<b>Password:</b> password</div>
+      Go to <span class="nav">My Learning</span>, find the <b>PRL305 · Crisis Communication Essentials</b> card, and click <b>Withdraw</b> at the bottom of it. Confirm in the dialog.
+    </li>
+    <li>
+      <b>Window B — refresh the roster page.</b> Without anyone doing anything else:
+      <ul>
+        <li>The meter still reads <b>3 / 3</b> — the freed seat was immediately taken.</li>
+        <li><code>student4@uprl.test</code> has moved from the waitlist to <b>Active</b>.</li>
+        <li><code>student5</code> and <code>student6</code> have renumbered to <b>#1</b> and <b>#2</b>.</li>
+      </ul>
+      <p class="say"><b>Say:</b> First in, first out, and it's transactional — the course row is locked and seats are recounted before anyone is promoted, so two people withdrawing at the same instant can never over-fill the course.</p>
+    </li>
+  </ol>
+
+  <h3>c) Invite-only, direct enrolment and bulk import</h3>
+  <ol class="steps">
+    <li>
+      <b>Invite-only.</b> As a student, open <code>/courses/media-writing-storytelling</code> — there is <b>no enrol button at all</b>, just "Enrolment by invitation".
+    </li>
+    <li>
+      <b>Staff add them directly.</b> As <code>admin1@uprl.test</code>, open:
+      <div class="paste">http://127.0.0.1:8000/manage/courses/media-writing-storytelling/roster</div>
+      Click <b>Add a student</b>, search for <code>student20@uprl.test</code>, and enrol them.
+    </li>
+    <li>
+      <b>Bulk import.</b> Click <b>Bulk import</b> on any roster. <i>Fallback URL:</i> <code>/manage/enrollments/import</code>
+      <ul>
+        <li>Click <b>Download the CSV template</b> — it comes pre-filled with real examples.</li>
+        <li>Upload it back. You get a <b>preview, not an import</b> — every row is checked and flagged: unknown e-mail, unknown course code, duplicate within the file, already enrolled.</li>
+        <li>Only then does <b>Confirm import</b> commit the valid rows. Files over 100 rows are handed to a background queue.</li>
+      </ul>
+      <p>If you'd rather paste your own file, this content is valid and mixes good rows with deliberate errors so the validation actually shows something:</p>
+      <div class="paste">email,course_code
+student20@uprl.test,PRL101
+student21@uprl.test,LDS201
+student22@uprl.test,PRL220
+nobody@uprl.test,PRL101
+student23@uprl.test,ZZZ999
+student20@uprl.test,PRL101</div>
+      <p style="font-size:8.6pt;color:#57534E">Row 4 is an unknown person, row 5 an unknown course, row 6 a duplicate of row 2 — all three will be flagged and skipped.</p>
+    </li>
+    <li>
+      <b>Export.</b> Back on any roster, click <b>Export CSV</b> to download the current roster.
+    </li>
+  </ol>
+</div>
+
+<!-- ============================= ACT 7 ============================= -->
+<div class="section">
+  <h2><span class="num">10</span>Act 7 — Certificates &amp; public verification ★<span class="timing">≈ 5 min</span></h2>
+  <p class="lead">Goal: a real, printable, independently verifiable credential. This lands well with non-technical audiences.</p>
+
+  <ol class="steps">
+    <li>
+      <b>Window A — sign in as a student who holds one:</b>
+      <div class="paste"><b>E-mail:</b>   student14@uprl.test
+<b>Password:</b> password</div>
+      Click <span class="nav">My Certificates</span>. <i>Fallback URL:</i> <code>/certificates</code>
+    </li>
+    <li class="avoid">
+      <b>Download it.</b> Click <b>Download</b> and open the PDF. Point at:
+      <ul>
+        <li>The UPRL crest, the gold border and the sunburst watermark.</li>
+        <li>The student's name, the course, the completion date and the grade.</li>
+        <li>The <b>serial number</b> — printed on the certificate, in the form <code>UPRL-2026-XXXXXX</code>.</li>
+        <li>A <b>QR code</b> that links to the public verification page.</li>
+      </ul>
+      <div class="warn">
+        <b>Write the serial down now</b>
+        Read the serial off this PDF and keep it to hand — you need it in step 4, and serials are
+        regenerated on every re-seed so no printed value would be correct.
+      </div>
+    </li>
+    <li>
+      <b>Note the diacritics.</b> If the student's name carries Yoruba or Igbo marks (Ọ, ẹ, ị), they render correctly — the PDF embeds proper Unicode fonts rather than falling back to the ASCII base fonts that would print question marks.
+    </li>
+    <li>
+      <b>Public verification — the point of the whole feature.</b> Open a <b>third, signed-out</b> window (or just use the incognito one after logging out) and go to:
+      <div class="paste">http://127.0.0.1:8000/verify</div>
+      Type in the serial you noted. You get a <b>Valid certificate</b> result showing the holder, the course and the issue date.
+      <p class="say"><b>Say:</b> No account, no login. An employer in Lagos can verify a UPRL credential in ten seconds — or just point a phone camera at the QR code on the printed certificate.</p>
+    </li>
+    <li>
+      <b>Show a failed lookup.</b> Enter an obviously fake serial:
+      <div class="paste">UPRL-2026-ZZZZZZ</div>
+      You get a polite "we couldn't find that certificate".
+      <p class="say"><b>Say:</b> The wording is identical for every kind of miss, and the endpoint is rate-limited — so nobody can probe it to work out the serial format or guess their way to a hit.</p>
+    </li>
+    <li>
+      <b>Revocation.</b> <b>Window B</b> as <code>admin1@uprl.test</code> → <span class="nav">Certificates</span>. <i>Fallback URL:</i> <code>/admin/certificates</code>
+      <ul>
+        <li>The full registry, searchable by student, course or serial. One row is already <b>Revoked</b> — copy that serial and check it on <code>/verify</code>: it reports the certificate is <b>no longer valid</b>, and deliberately does <b>not</b> say why.</li>
+        <li>Note the <b>"Completed, not yet issued"</b> panel at the top, which catches anyone who finished a course without a certificate, with a one-click <b>Issue certificate</b> button. Click it on one row to issue a certificate live.</li>
+        <li><b>Re-issue</b> re-renders the PDF but keeps the same serial and URL — so a certificate already printed and handed out never stops working.</li>
+      </ul>
+    </li>
+    <li>
+      <b>Templates.</b> Click <span class="nav">Certificate templates</span> — two designs (Classic and Modern), with the signatory name, title and signature image configurable, and a live <b>Preview</b>.
+      <p class="say"><b>Say:</b> An issued certificate freezes its template and its grade at the moment of issue. Redesigning the template next year changes nothing that's already in someone's hands.</p>
+    </li>
+  </ol>
+</div>
+
+<!-- ============================= ACT 8 ============================= -->
+<div class="section">
+  <h2><span class="num">11</span>Act 8 — Communication, notifications &amp; moderation<span class="timing">≈ 5 min</span></h2>
+
+  <ol class="steps">
+    <li>
+      <b>The course forum.</b> <b>Window A</b> as <code>student1@uprl.test</code>:
+      <div class="paste">http://127.0.0.1:8000/courses/prl101-foundations-of-public-relations/forum</div>
+      Three threads showing three distinct states: one <b>Pinned</b> to the top, one marked <b>Answered</b>, one <b>Locked</b>.
+    </li>
+    <li>
+      <b>Open the answered thread</b> ("How is framing different from priming?"). The accepted answer is highlighted and lifted to the top of the replies.
+    </li>
+    <li>
+      <b>Post a reply.</b> Use the rich editor at the bottom:
+      <div class="paste">Thank you — the distinction finally landed for me. Framing decides which
+angle a story is told from; priming decides which yardstick the audience
+then judges it by. Would a Nigerian election campaign be a fair example
+of both working together?</div>
+    </li>
+    <li>
+      <b>Try the locked thread.</b> Open "Week 1 reading — now closed" — the reply box is gone entirely, with a clear explanation.
+    </li>
+    <li>
+      <b>Moderation, live.</b> On any reply, click <b>Report</b> and confirm. Then <b>Window B</b> as <code>admin1@uprl.test</code> → <span class="nav">Reported posts</span> (<i>fallback:</i> <code>/admin/forum-reports</code>). Your report is waiting. Choose <b>Dismiss</b> or <b>Remove post</b>.
+      <p class="say"><b>Say:</b> Any member can flag; only an admin can act. There's no automated profanity filter by design — the report queue plus HTML sanitising is the moderation surface, and posting is rate-limited so nobody can flood a thread.</p>
+    </li>
+    <li>
+      <b>Messaging.</b> Click <span class="nav">Messages</span>. <i>Fallback URL:</i> <code>/messages</code><br>
+      An inbox with unread counts. Open the direct conversation with the instructor and send:
+      <div class="paste">Good afternoon Prof. Could I ask a question about the case study brief
+before Friday's deadline? I want to make sure I've understood the scope
+of the evaluation section.</div>
+      <p class="say"><b>Say:</b> Unread state is derived from a per-person read line, never stored as a counter that can drift. And a burst of ten messages produces one notification, not ten.</p>
+    </li>
+    <li>
+      <b>Message a whole class.</b> As <code>instructor1@uprl.test</code>, open the PRL101 roster and use <b>Message all enrolled</b>. It reuses one durable group conversation per course rather than spraying separate threads.
+    </li>
+    <li>
+      <b>Announcements.</b> As the instructor, open the PRL101 builder → <span class="nav">Announcements</span> tab and post:
+      <div class="paste"><b>Title:</b> Case study deadline extended to Monday
+<b>Body:</b>  Following your feedback in the forum, the Crisis Communication
+        case study deadline moves to Monday 3 August at 23:59. Use the
+        extra weekend on your evaluation section.</div>
+      Every active student is notified according to their own preferences.
+    </li>
+    <li>
+      <b>The notification bell.</b> Back in <b>Window A</b> as the student, click the <b>bell</b> in the top-right. Your announcement is there. Click it to jump straight to the source. Then open <code>/notifications</code> for the full history, grouped into Today / Yesterday / earlier.
+    </li>
+    <li>
+      <b>Notification preferences.</b> Go to <code>/profile</code> and scroll to the notifications matrix — a per-type grid of in-app and e-mail toggles, plus a daily digest option.
+      <p class="say"><b>Say:</b> Note that a few rows are locked on. Enrolment decisions and certificate issuance are too important to miss, so they can't be switched off — and that's enforced on the server, not just disabled in the browser.</p>
+    </li>
+  </ol>
+</div>
+
+<!-- ============================= ACT 9 ============================= -->
+<div class="section">
+  <h2><span class="num">12</span>Act 9 — Reporting, analytics &amp; exports<span class="timing">≈ 6 min</span></h2>
+  <p class="lead">Goal: show that leadership can answer its own questions without asking anyone for a spreadsheet.</p>
+  <p><b>Window B</b> as <code>admin1@uprl.test</code>.</p>
+
+  <ol class="steps">
+    <li>
+      <b>Per-course analytics.</b> Open:
+      <div class="paste">http://127.0.0.1:8000/manage/courses/prl101-foundations-of-public-relations/analytics</div>
+      <ul>
+        <li><b>Knowledge gain</b> across the top: pre-module average, post-module average, and the difference — measured learning, not just attendance.</li>
+        <li><b>Progress distribution</b> and <b>Grade distribution</b> charts.</li>
+        <li><b>Assessment performance</b>: attempts, average and pass rate per assessment.</li>
+        <li><b>Hardest questions</b>, ranked by how often they're answered wrongly.</li>
+      </ul>
+      <p class="say"><b>Say:</b> That last table is the one instructors actually change their teaching from — it tells you which concept didn't land.</p>
+    </li>
+    <li>
+      <b>The report centre.</b> Click <span class="nav">Reports</span>. <i>Fallback URL:</i> <code>/admin/reports</code><br>
+      Four reports: <b>Learner</b>, <b>Instructor</b>, <b>Compliance</b> and <b>Certification</b>.
+    </li>
+    <li>
+      <b>Learner report.</b> Open it. Filter by course, status and date range, then click <b>Apply</b>. Columns run from enrolment and progress through to final grade and certificate status.
+      <p class="say"><b>Say:</b> The grade columns come from the frozen snapshot taken at completion — the same numbers that are printed on the certificate. A learner who hasn't completed anything shows a blank cell, never a misleading zero.</p>
+    </li>
+    <li>
+      <b>Compliance report.</b> This is the one to linger on — it answers a question a Registrar actually asks. Open it and set:
+      <div class="paste"><b>Target course(s):</b> LDS110 — Ethics &amp; Character in Leadership
+<b>Cohort:</b>          By department
+<b>Department:</b>      Department of Organisational Leadership</div>
+      Click <b>Apply</b>. Every person in the cohort is classified <b>Completed</b>, <b>In progress</b> or <b>Never started</b>, with headline percentages.
+    </li>
+    <li>
+      <b>Compliance by e-mail list.</b> Switch <b>Cohort</b> to <b>By e-mail list</b> and paste this in:
+      <div class="paste">student1@uprl.test
+student2@uprl.test
+student3@uprl.test
+student4@uprl.test
+notarealperson@uprl.test</div>
+      Click <b>Apply</b>. The report covers the four real people and explicitly tells you the fifth address matched nobody.
+      <p class="say"><b>Say:</b> That's the mandatory-training question: "has this exact list of named people done this course?" — and it never silently drops an address it couldn't match.</p>
+    </li>
+    <li>
+      <b>Certification report.</b> Open it and set <b>Status</b> to <b>All</b>. Issued and revoked certificates side by side, with the grade exactly as it was printed.
+    </li>
+    <li>
+      <b>Export — all three formats.</b> On any report, use the export control:
+      <ul>
+        <li><b>CSV</b> and <b>Excel</b> download immediately.</li>
+        <li><b>PDF</b> produces a branded, print-ready document. Open it — it carries the UPRL header, the report title, and the filters you applied printed at the top so the reader knows exactly what they're looking at.</li>
+      </ul>
+      <p class="say"><b>Say:</b> The screen, the spreadsheet and the PDF are all built from one shared definition of the report, so what the Vice-Chancellor prints is exactly what the admin saw. There is no second code path to drift.</p>
+    </li>
+    <li>
+      <b>Queued large exports</b> <span class="pill gold">optional — needs the pre-flight tweak</span><br>
+      If you added <code>REPORTS_QUEUE_THRESHOLD=50</code> in the pre-flight, export the <b>Learner report</b> as Excel now. Instead of downloading, you get a message that the report is being prepared. Within a second or two the <b>bell</b> shows a <b>"report ready"</b> notification — click it to download.
+      <p class="say"><b>Say:</b> Above a threshold we don't hold the request open. The file is built in the background on a private disk and delivered by notification, and the download link is ownership-checked — nobody else can use your link.</p>
+    </li>
+    <li>
+      <b>The other dashboards.</b> Sign in as <code>instructor1@uprl.test</code> to show the instructor dashboard (their courses, their learners, their grading queue), then as <code>student1@uprl.test</code> for the student one (continue learning, upcoming deadlines, recent grades).
+      <p class="say"><b>Say:</b> Same route, same page — three completely different answers depending on who's asking.</p>
+    </li>
+  </ol>
+</div>
+
+<!-- ============================= ACT 10 ============================= -->
+<div class="section">
+  <h2><span class="num">13</span>Act 10 — The auditor &amp; the wrap<span class="timing">≈ 3 min</span></h2>
+
+  <ol class="steps">
+    <li>
+      <b>Sign in as the auditor</b> in <b>Window B</b>:
+      <div class="paste"><b>E-mail:</b>   auditor@uprl.test
+<b>Password:</b> password</div>
+    </li>
+    <li>
+      <b>Show what it can see.</b> Walk <span class="nav">People</span>, <span class="nav">Teaching</span>, a course roster, <span class="nav">Grading</span>, <span class="nav">Certificates</span> and <span class="nav">Reports</span>. Everything is readable.
+    </li>
+    <li>
+      <b>Show what it cannot do.</b> Every create, edit, delete, approve and grade control is <b>absent</b> — not greyed out, absent. There is no <span class="nav">Messages</span> item in the sidebar either: a read-only observer never starts conversations.
+    </li>
+    <li class="avoid">
+      <b>Prove it isn't just hidden buttons.</b> Paste an admin-only URL into the address bar:
+      <div class="paste">http://127.0.0.1:8000/admin/grade-scales</div>
+      You get a <b>403 Forbidden</b>.
+      <p class="say"><b>Say:</b> The auditor holds only view permissions. It isn't a UI that hides things from a powerful account — the account itself has no power to hide.</p>
+    </li>
+    <li>
+      <b>Close on the design system.</b> Open:
+      <div class="paste">http://127.0.0.1:8000/styleguide</div>
+      The living design reference: brand colours, typography, buttons, badges, cards, skeleton loaders, the rich editor. This is why every screen tonight looked like the same product.
+      <p class="say"><b>Say:</b> This page is registered only in local and testing environments — in production the route doesn't exist at all.</p>
+    </li>
+  </ol>
+
+  <div class="win">
+    <b>The four moments to make sure you land</b>
+    1. <b>Complete &amp; Continue</b> — the live unlock and celebration (Act 4, step 6).<br>
+    2. <b>Withdraw → auto-promotion</b> — a seat freeing and instantly refilling across two windows (Act 6b).<br>
+    3. <b>Public certificate verification</b> — no login, ten seconds, QR code (Act 7, step 4).<br>
+    4. <b>A locked URL being refused</b> — proof the rules are real (Act 4 step 5, Act 10 step 4).
+  </div>
+</div>
+
+<!-- ============================= USER STORIES ============================= -->
+<div class="section">
+  <h2><span class="num">14</span>User stories — the acceptance checklist</h2>
+  <p class="lead">Tick these off if you are testing rather than presenting. Each maps to something you can verify in the running app.</p>
+
+  <h4>As a prospective student</h4>
+  <table class="tight">
+    <tr><th style="width:62%">I want to…</th><th>Verify</th></tr>
+    <tr><td>browse courses without an account</td><td><code>/courses</code> signed out</td></tr>
+    <tr><td>search and filter by faculty, department and level</td><td>Catalogue controls, no page reload</td></tr>
+    <tr><td>preview a lesson before committing</td><td>Free-preview lesson on PRL101</td></tr>
+    <tr><td>register and verify my e-mail</td><td><code>/register</code></td></tr>
+    <tr><td>not see courses that aren't published</td><td>SCM330 &amp; PAD120 absent from <code>/courses</code></td></tr>
+  </table>
+
+  <h4>As a student</h4>
+  <table class="tight">
+    <tr><th style="width:62%">I want to…</th><th>Verify</th></tr>
+    <tr><td>enrol instantly on an open course</td><td>PRL101 → Enrol</td></tr>
+    <tr><td>request a place where approval is required</td><td>LDS201 → Request enrolment → Pending</td></tr>
+    <tr><td>join a waitlist when a course is full, and see my position</td><td>PRL305 → "You're #N on the waitlist"</td></tr>
+    <tr><td>be promoted automatically when a seat frees</td><td>Act 6b</td></tr>
+    <tr><td>resume exactly where I left off</td><td>Continue learning → first incomplete lesson</td></tr>
+    <tr><td>see my progress update the moment I finish a lesson</td><td>Complete &amp; Continue</td></tr>
+    <tr><td>be stopped from skipping ahead on a sequential course</td><td>Locked lesson URL bounces back</td></tr>
+    <tr><td>take a timed exam that survives a refresh</td><td>F5 mid-exam: answers, order and clock all persist</td></tr>
+    <tr><td>see my result and review the correct answers</td><td>Result screen after submitting</td></tr>
+    <tr><td>submit an assignment, and resubmit if it's returned</td><td>v2 submission on PRL101</td></tr>
+    <tr><td>know why my course isn't complete yet</td><td><code>/learn/…/congratulations</code> checklist</td></tr>
+    <tr><td>see my grades on a recognised Nigerian scale</td><td>Player sidebar → Grades</td></tr>
+    <tr><td>receive a certificate automatically when I finish</td><td><code>/certificates</code></td></tr>
+    <tr><td>ask a question in the course forum and get an accepted answer</td><td>PRL101 forum</td></tr>
+    <tr><td>message my instructor privately</td><td><code>/messages</code></td></tr>
+    <tr><td>control which notifications reach me</td><td><code>/profile</code> matrix</td></tr>
+  </table>
+
+  <h4>As an instructor</h4>
+  <table class="tight">
+    <tr><th style="width:62%">I want to…</th><th>Verify</th></tr>
+    <tr><td>build a course with modules and mixed lesson types</td><td>Builder → Curriculum</td></tr>
+    <tr><td>reorder curriculum by dragging, with no Save button</td><td>Drag a lesson</td></tr>
+    <tr><td>embed a YouTube or Vimeo video by pasting a URL</td><td>Add lesson → Video</td></tr>
+    <tr><td>submit a course for review and be told if it's returned</td><td>Submit for review; PAD120's reviewer note</td></tr>
+    <tr><td>build a question bank across every question type</td><td><code>/manage/courses/…/questions</code></td></tr>
+    <tr><td>set a time limit, pass mark, attempt cap and review policy</td><td>Assessment builder</td></tr>
+    <tr><td>randomise an exam from a pool so no two students match</td><td>Practice pool assessment</td></tr>
+    <tr><td>grade essays and assignments against a rubric</td><td><code>/manage/grading</code></td></tr>
+    <tr><td>return work for resubmission with a note</td><td>Grading workspace</td></tr>
+    <tr><td>see who is stuck and where</td><td>Progress heat-strip</td></tr>
+    <tr><td>see which questions my class finds hardest</td><td>Analytics → Hardest questions</td></tr>
+    <tr><td>measure what my class actually learned</td><td>Analytics → Knowledge gain</td></tr>
+    <tr><td>approve enrolments only on courses I lead</td><td>instructor2 has a queue; instructor1 does not</td></tr>
+    <tr><td>announce something to everyone enrolled</td><td>Builder → Announcements</td></tr>
+    <tr><td>never see another instructor's course</td><td>Teaching lists only own courses</td></tr>
+  </table>
+
+  <h4>As an administrator</h4>
+  <table class="tight">
+    <tr><th style="width:62%">I want to…</th><th>Verify</th></tr>
+    <tr><td>invite staff without e-mailing anyone a password</td><td><code>/admin/invitations</code></td></tr>
+    <tr><td>deactivate someone without destroying their record</td><td>People → Deactivate</td></tr>
+    <tr><td>be unable to lock myself out</td><td>No Deactivate on own row</td></tr>
+    <tr><td>organise the university into faculties and departments</td><td><code>/admin/faculties</code></td></tr>
+    <tr><td>decide what goes live</td><td>Publish SCM330</td></tr>
+    <tr><td>be prevented from publishing an incomplete course</td><td>Publish checklist</td></tr>
+    <tr><td>enrol many students at once, safely</td><td>Bulk import preview-then-confirm</td></tr>
+    <tr><td>define the institution's grading scale</td><td><code>/admin/grade-scales</code></td></tr>
+    <tr><td>design the certificate</td><td><code>/admin/certificate-templates</code></td></tr>
+    <tr><td>revoke a certificate and have verification reflect it</td><td>Registry → Revoke → <code>/verify</code></td></tr>
+    <tr><td>catch completions that never got a certificate</td><td>Registry → "Completed, not yet issued"</td></tr>
+    <tr><td>review reported forum posts</td><td><code>/admin/forum-reports</code></td></tr>
+    <tr><td>answer "has this named list done this course?"</td><td>Compliance report → By e-mail list</td></tr>
+    <tr><td>export any report to Excel, CSV or PDF</td><td>Export control</td></tr>
+  </table>
+
+  <h4>As an auditor</h4>
+  <table class="tight">
+    <tr><th style="width:62%">I want to…</th><th>Verify</th></tr>
+    <tr><td>observe everything relevant to governance</td><td>People, courses, rosters, grading, certificates, reports</td></tr>
+    <tr><td>be structurally incapable of changing anything</td><td>Controls absent; <code>/admin/grade-scales</code> returns 403</td></tr>
+  </table>
+</div>
+
+<!-- ============================= TROUBLESHOOTING ============================= -->
+<div class="section">
+  <h2><span class="num">15</span>If something goes wrong</h2>
+  <p class="lead">Everything in this guide was executed against the running application, so none of it should surprise you. But if it does:</p>
+
+  <table>
+    <tr><th style="width:34%">Symptom</th><th>Do this</th></tr>
+    <tr>
+      <td><b>Anything at all looks wrong and you have 2 minutes</b></td>
+      <td>Re-run <code>php artisan migrate:fresh --seed</code>. It restores every state described in this guide, and takes ~90 seconds. This is the universal fix — do it between runs if you present twice.</td>
+    </tr>
+    <tr>
+      <td><b>A page looks unstyled, or a button does nothing</b></td>
+      <td>The compiled assets are stale. Stop the server, run <code>npm run build</code>, restart with <code>php artisan serve</code>, then hard-reload the browser with <code>Ctrl</code>+<code>Shift</code>+<code>R</code>.</td>
+    </tr>
+    <tr>
+      <td><b>"Page Expired" after submitting a form</b></td>
+      <td>The page sat open too long and the security token expired. Reload the page and submit again. If it persists, sign out and back in.</td>
+    </tr>
+    <tr>
+      <td><b>You are unexpectedly signed out</b></td>
+      <td>Sessions last 2 hours. Just sign in again — nothing is lost.</td>
+    </tr>
+    <tr>
+      <td><b>The waitlist doesn't promote anyone</b></td>
+      <td>The course must be genuinely at capacity first. Check the roster meter reads <b>3 / 3</b> before withdrawing. If it doesn't, re-seed.</td>
+    </tr>
+    <tr>
+      <td><b>A certificate serial from this guide doesn't work</b></td>
+      <td>Expected — serials regenerate on every seed. Read the current one off the certificate PDF or the registry at <code>/admin/certificates</code>.</td>
+    </tr>
+    <tr>
+      <td><b>A student's name doesn't match this guide</b></td>
+      <td>Expected — names are randomised per seed. Always go by e-mail address.</td>
+    </tr>
+    <tr>
+      <td><b>The queued-export demo downloads instead of queueing</b></td>
+      <td>You skipped the optional pre-flight step. Add <code>REPORTS_QUEUE_THRESHOLD=50</code> to <code>.env</code> and run <code>php artisan config:clear</code>.</td>
+    </tr>
+    <tr>
+      <td><b>Port 8000 is already in use</b></td>
+      <td>Run <code>php artisan serve --port=8001</code> and use <code>http://127.0.0.1:8001</code> throughout.</td>
+    </tr>
+    <tr>
+      <td><b>You need to see an e-mail the system "sent"</b></td>
+      <td>Mail is in log mode. Open <code>storage/logs/laravel.log</code> and scroll to the bottom — the full rendered message is there.</td>
+    </tr>
+  </table>
+
+  <div class="note">
+    <b>Two things in the interface that are intentional, in case someone asks</b>
+    <b>1.</b> The <b>Settings</b> item at the bottom of the admin sidebar is greyed out and marked
+    <b>Soon</b>. It is a deliberate placeholder for a future section, not a broken link.<br>
+    <b>2.</b> On the admin dashboard, the enrolment trend's final bar is much taller than the rest.
+    That's because all the "live" demo enrolments are dated today while the historical ones are
+    spread across the previous eleven months. It reads as growth, which is fine — just don't claim
+    it as a real trend.
+  </div>
+</div>
+
+<!-- ============================= SCOPE + URLS ============================= -->
+<div class="section">
+  <h2><span class="num">16</span>Scope, roadmap &amp; quick reference</h2>
+
+  <h3>What is deliberately not built yet</h3>
+  <p>Naming these yourself is far better than being asked. They are roadmap, not gaps:</p>
+  <ul>
+    <li><b>A settings/configuration area</b> for institution-wide preferences — the placeholder is visible in the sidebar.</li>
+    <li><b>Live notifications over websockets.</b> The bell polls every 60 seconds today, which is sufficient; real-time push is a deliberate later upgrade.</li>
+    <li><b>Self-hosted video with access control.</b> Video is embed-first (YouTube/Vimeo). If protected video is ever needed, it should go to a dedicated video host, not general file storage.</li>
+    <li><b>Payments and fees.</b> Never in scope for this build.</li>
+    <li><b>Mobile applications.</b> The interface is fully responsive from 375px upward, but there is no native app.</li>
+    <li><b>Automated profanity filtering</b> in forums — explicitly out of scope; moderation is the report queue plus server-side HTML sanitising.</li>
+  </ul>
+
+  <h3>Quick reference — every URL you might need</h3>
+  <table class="tight">
+    <tr><th style="width:38%">Screen</th><th>URL (append to <code>http://127.0.0.1:8000</code>)</th></tr>
+    <tr><td>Landing page</td><td><code>/</code></td></tr>
+    <tr><td>Public catalogue</td><td><code>/courses</code></td></tr>
+    <tr><td>Public certificate verification</td><td><code>/verify</code></td></tr>
+    <tr><td>Dashboard (role-aware)</td><td><code>/dashboard</code></td></tr>
+    <tr><td>My Learning · Learning history</td><td><code>/my-learning</code> · <code>/history</code></td></tr>
+    <tr><td>My Certificates</td><td><code>/certificates</code></td></tr>
+    <tr><td>Notifications · Profile &amp; preferences</td><td><code>/notifications</code> · <code>/profile</code></td></tr>
+    <tr><td>Messages</td><td><code>/messages</code></td></tr>
+    <tr><td>Player — sequential course (PRL220)</td><td><code>/learn/strategic-campaign-planning</code></td></tr>
+    <tr><td>Player — flagship course (PRL101)</td><td><code>/learn/prl101-foundations-of-public-relations</code></td></tr>
+    <tr><td>Completion checklist (PRL101)</td><td><code>/learn/prl101-foundations-of-public-relations/congratulations</code></td></tr>
+    <tr><td>Final exam (PRL101)</td><td><code>/learn/prl101-foundations-of-public-relations/assessment/final-exam</code></td></tr>
+    <tr><td>Course forum (PRL101)</td><td><code>/courses/prl101-foundations-of-public-relations/forum</code></td></tr>
+    <tr><td>Teaching (course list)</td><td><code>/manage/courses</code></td></tr>
+    <tr><td>Course builder (PRL101)</td><td><code>/manage/courses/prl101-foundations-of-public-relations/edit</code></td></tr>
+    <tr><td>Question bank (PRL101)</td><td><code>/manage/courses/prl101-foundations-of-public-relations/questions</code></td></tr>
+    <tr><td>Learner progress (PRL101)</td><td><code>/manage/courses/prl101-foundations-of-public-relations/progress</code></td></tr>
+    <tr><td>Gradebook (PRL101)</td><td><code>/manage/courses/prl101-foundations-of-public-relations/gradebook</code></td></tr>
+    <tr><td>Course analytics (PRL101)</td><td><code>/manage/courses/prl101-foundations-of-public-relations/analytics</code></td></tr>
+    <tr><td>Roster — waitlist demo (PRL305)</td><td><code>/manage/courses/crisis-communication-essentials/roster</code></td></tr>
+    <tr><td>Roster — invite-only (JRN210)</td><td><code>/manage/courses/media-writing-storytelling/roster</code></td></tr>
+    <tr><td>Enrolment approvals</td><td><code>/manage/approvals</code></td></tr>
+    <tr><td>Bulk enrolment import</td><td><code>/manage/enrollments/import</code></td></tr>
+    <tr><td>Grading — assessments · assignments</td><td><code>/manage/grading</code> · <code>/manage/grading/assignments</code></td></tr>
+    <tr><td>Rubric library</td><td><code>/manage/rubrics</code></td></tr>
+    <tr><td>People · Invitations</td><td><code>/admin/users</code> · <code>/admin/invitations</code></td></tr>
+    <tr><td>Academic structure</td><td><code>/admin/faculties</code></td></tr>
+    <tr><td>Grade scales</td><td><code>/admin/grade-scales</code></td></tr>
+    <tr><td>Certificate registry · templates</td><td><code>/admin/certificates</code> · <code>/admin/certificate-templates</code></td></tr>
+    <tr><td>Reported posts (moderation)</td><td><code>/admin/forum-reports</code></td></tr>
+    <tr><td>Report centre</td><td><code>/admin/reports</code></td></tr>
+    <tr><td>&nbsp;&nbsp;→ Learner · Instructor</td><td><code>/admin/reports/learner</code> · <code>/admin/reports/instructor</code></td></tr>
+    <tr><td>&nbsp;&nbsp;→ Compliance · Certification</td><td><code>/admin/reports/compliance</code> · <code>/admin/reports/certification</code></td></tr>
+    <tr><td>Style guide (local only)</td><td><code>/styleguide</code></td></tr>
+    <tr><td>E-mail template previews (local only)</td><td><code>/mail-preview/invitation</code> · <code>/verify</code> · <code>/reset</code></td></tr>
+  </table>
+
+  <h3>The one-sentence close</h3>
+  <div class="win" style="font-size:10pt">
+    <b>If you say nothing else, say this</b>
+    "Ten sections, four hundred and forty-seven passing tests, and every rule that matters —
+    who may see what, what unlocks when, how long an exam lasts, whether a certificate is
+    genuine — enforced on the server, where a student can't reach it."
+  </div>
+</div>
+
+</body>
+</html>
