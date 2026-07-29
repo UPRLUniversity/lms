@@ -160,6 +160,21 @@ class ProgrammePlacementTest extends TestCase
         $this->assertCount(1, $course->fresh()->programmeParts);
     }
 
+    public function test_the_builder_renders_programme_options_server_side(): void
+    {
+        // Guards a browser-only defect: when these options were built by Alpine's x-for,
+        // x-model was applied before they existed, so both selects fell back to their
+        // first option and a saved placement was silently lost on load. The list is
+        // static, so it is rendered by Blade. Anyone moving it back to x-for fails here.
+        [$instructor, $course] = $this->instructorWithCourse();
+        $programme = Programme::factory()->create(['code' => 'CPR', 'name' => 'Certificate in PR']);
+
+        $this->actingAs($instructor)
+            ->get(route('courses.edit', $course))
+            ->assertOk()
+            ->assertSee('<option value="'.$programme->id.'">CPR — Certificate in PR</option>', false);
+    }
+
     public function test_a_part_reconciles_its_counted_credits_against_the_stated_target(): void
     {
         // CPR Part I in miniature: the stated total excludes pure electives but includes

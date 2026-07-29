@@ -293,16 +293,25 @@
                                 <div class="rounded-xl border border-line bg-card p-3">
                                     {{-- Stacks on mobile, 12-col grid from sm up. --}}
                                     <div class="grid grid-cols-1 gap-3 sm:grid-cols-12">
+                                        {{-- Both selects re-assert their value on the next tick. Alpine applies
+                                             x-model BEFORE x-for has rendered the options, so on first paint the
+                                             select has no matching option yet and the browser silently falls back
+                                             to its first one — which loses the saved placement. Reading
+                                             row.programme_id/row.programme_part_id inside x-effect registers the
+                                             dependency, and $nextTick defers the assignment until the options exist. --}}
                                         <div class="sm:col-span-4">
                                             <label class="block text-xs font-medium text-ink/70" :for="'placement-programme-' + row.key">Programme</label>
                                             <select :id="'placement-programme-' + row.key"
                                                     :name="'placements[' + index + '][programme_id]'"
                                                     x-model="row.programme_id"
+                                                    x-effect="row.programme_id; $nextTick(() => $el.value = row.programme_id)"
                                                     @change="onProgrammeChange(row)"
                                                     class="mt-1 block w-full rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
-                                                <template x-for="programme in programmes" :key="programme.id">
-                                                    <option :value="String(programme.id)" x-text="programme.code + ' — ' + programme.name"></option>
-                                                </template>
+                                                {{-- Rendered server-side: the programme list is static, so there is no
+                                                     reason to make Alpine build it (and every reason not to). --}}
+                                                @foreach ($programmes as $p)
+                                                    <option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>
+                                                @endforeach
                                             </select>
                                         </div>
 
@@ -311,6 +320,7 @@
                                             <select :id="'placement-part-' + row.key"
                                                     :name="'placements[' + index + '][programme_part_id]'"
                                                     x-model="row.programme_part_id"
+                                                    x-effect="row.programme_id; row.programme_part_id; $nextTick(() => $el.value = row.programme_part_id)"
                                                     class="mt-1 block w-full rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                                 <option value="">Choose…</option>
                                                 <template x-for="part in partsFor(row)" :key="part.id">

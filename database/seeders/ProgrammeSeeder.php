@@ -164,7 +164,7 @@ class ProgrammeSeeder extends Seeder
     {
         return "The {$name} is awarded by the Nigerian Institute of Public Relations and delivered at "
             .config('brand.university').'. Candidates work through each part in turn, sitting the '
-            .'papers listed for that stage, and are examined against the Institute&rsquo;s published standards.';
+            .'papers listed for that stage, and are examined against the Institute’s published standards.';
     }
 
     /*
@@ -397,13 +397,13 @@ class ProgrammeSeeder extends Seeder
             'GNS101' => ['Basic Communication Skills', $jm, $cert, 'Read, write, listen and speak with the precision professional communication demands.'],
             'GNS102' => ['Nigerian History & Citizenship Education', $ds, $cert, 'The making of modern Nigeria and the duties of citizenship that shape public life.'],
             'CPR111' => ['Communication Theories', $sc, $cert, 'The models that explain how messages move, persuade and sometimes fail.'],
-            'CPR112' => ['Principles of Public Relations', $pr, $cert, 'The foundations of the discipline: publics, reputation, mutual understanding and the practitioner&rsquo;s role.'],
+            'CPR112' => ['Principles of Public Relations', $pr, $cert, 'The foundations of the discipline: publics, reputation, mutual understanding and the practitioner’s role.'],
             'CPR113' => ['Principles of Psychology', $ol, $cert, 'How people perceive, decide and behave — the ground every persuasion strategy stands on.'],
             'CPR114' => ['Writing for the Media', $jm, $cert, 'News writing, press releases and features that editors actually run.'],
             'CPR115' => ['PR Media and Methods', $pr, $cert, 'Choosing and combining the channels and techniques a campaign runs on.'],
             'CPR116' => ['Business Management and Entrepreneurship Skills for PR', $ol, $cert, 'Run a practice as a business: planning, finance, clients and growth.'],
             'CPR117' => ['Quantitative Methods for Communication Practice', $sc, $cert, 'Sampling, surveys and statistics for practitioners who must prove what worked.'],
-            'CPR118' => ['Nigerian Cultural Studies & Intercultural Communication', $ds, $cert, 'Communicating credibly across Nigeria&rsquo;s languages, faiths and cultures.'],
+            'CPR118' => ['Nigerian Cultural Studies & Intercultural Communication', $ds, $cert, 'Communicating credibly across Nigeria’s languages, faiths and cultures.'],
             'CPR119' => ['ICTs for Public Relations', $sc, $cert, 'The digital tools of contemporary practice, from monitoring to publishing.'],
 
             // ── CPR Part II ───────────────────────────────────────────────────
