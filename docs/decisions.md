@@ -825,3 +825,75 @@ shape. All are fixed on this branch.
    presenter runbook, covering Sections 0–10. It supersedes `docs/demo-script.md`, which only
    covers Sections 0–4 and is now stale — kept for now rather than deleted, since removing a
    file is the human's call.
+
+## Section 11 — Programmes & Parts (2026-07-29)
+
+The NIPR curriculum classifies courses as **Programme → Part → Course** (CPR Part I/II,
+DPR Part I/II, Professional Variant Parts 1–3). The repo already classified them as
+Faculty → Department → Course.
+
+1. **Both hierarchies are kept; they are orthogonal.** Faculty/Department answers *who
+   owns and teaches this course*; Programme/Part answers *what qualification it counts
+   toward and what it costs*. Replacing one with the other would have thrown away real
+   information either way. Programme is a second axis, filterable independently on the
+   catalogue.
+2. **Course ↔ Part is many-to-many, and had to be.** The published schedule lists CPR 112,
+   CPR 115, CPR 216, CPR 219 and DPR 411 under **two** programmes each. A `courses.part_id`
+   column cannot express that. `credit_load` and `requirement` live on the
+   `course_programme_part` pivot for the same reason — they are properties of the
+   *placement*, not the course: the same paper carries 3 credits and "Compulsory" in CPR
+   Part I, and no stated credit at all in Variant Part 1.
+3. **`is_primary` on the pivot exists to resolve price.** A dual-placed paper sits in
+   programmes with different per-paper fees (CPR ₦7,000, Variant ₦15,000) and Section 12
+   needs one answer. Exactly one placement per course is primary; dual-placed papers keep
+   their *home* programme, so CPR 112 prices at ₦7,000. The invariant is enforced in
+   `Course::syncProgrammePlacements()` rather than by a partial unique index, because
+   partial indexes are not portable to the sqlite the test suite runs on. The service
+   normalises: first claimant wins, and if nothing claims it the first row is promoted, so
+   `primaryProgramme()` is never null for a placed course.
+4. **Fee columns landed on `programmes` now, in Section 11.** They are Section 12's
+   concern, but the published schedule prices by programme tier and the admin screen would
+   have been dishonest without them. Nothing reads them yet beyond display.
+5. **`credit_target` records what the prospectus *states*, which is not the sum of the
+   listed credits.** CPR Part I lists 28 credits but prints "Total 24". The 4-credit gap is
+   exactly CPR 118 (2) + CPR 119 (2) — its only two *pure* electives. GNS is inside the
+   stated 24, and DPR Part I (18 compulsory + 3 required elective = 21) confirms required
+   electives count. Hence `CourseRequirement::countsTowardTarget()` excludes **only**
+   `Elective`. The admin screen shows counted, listed and target side by side rather than
+   silently picking one and looking wrong against the printed prospectus.
+6. **Programme slugs come from the code, not the name.** `/courses?programme=cpr` is what
+   the prospectus, the staff and the reference site all call it;
+   `professional-certificate-in-public-relations` is unusable in a filter URL. Codes are
+   already unique and validated `alpha_num`, so they are URL-safe.
+7. **Part slugs are unique per programme, not globally.** Every programme has a "Part I".
+   Consequently `ProgrammePart` is *not* route-keyed by slug, and the catalogue ignores a
+   `part` filter that arrives without a `programme` — a bare `part-i` would otherwise match
+   three different programmes at once.
+8. **Only the three programmes the fee schedule prices were seeded from it** (CPR, DPR,
+   NPV), plus a **Master Class (NMC)** with all fees at 0. The reference site shows a
+   Master Class but the schedule states no courses or fees for it, so nothing was invented;
+   an admin adds real ones from the Programmes screen.
+9. **The eight hand-written demo courses go in the Master Class, not in CPR/DPR.** Placing
+   them in the examined parts pushed CPR Part I from 24 counted credits to 29 and DPR Part I
+   from 21 to 24, so the admin screen flagged a mismatch on a curriculum that is in fact
+   transcribed correctly — the *seed data* was lying about the prospectus. NMC's zero fees
+   also keep those eight courses free, so every pre-Section-11 demo flow is unchanged.
+10. **CPR 115's blank status column is read as Compulsory.** The source leaves it empty. It
+    is consistent with every other 3-credit CPR Part I paper, and the stated 24-credit total
+    only reconciles if 115 is inside it. The Professional Variant publishes neither credits
+    nor status, so its placements carry a null credit load and are marked compulsory — the
+    Variant is a fixed syllabus, there is nothing to choose.
+11. **Instructors hold `programmes.view`, not `programmes.manage`.** An instructor files
+    their own course into an existing part from the course builder; the structure itself
+    decides what a qualification means and what it costs, so it stays an admin concern.
+
+### Fixed along the way
+
+12. **The catalogue had two pre-existing N+1s**, both on the list page this section extends,
+    and the Definition of Done forbids them. `HasMedia::firstMediaFor()`/`mediaFor()` always
+    ran a fresh query, so the controller's eager-loaded `media` was fetched and then thrown
+    away — one query per cover image. The card's `total_duration` alias was never populated,
+    so it fell back to a per-course `SUM`. Instructor avatars were a third (`instructors`
+    was loaded, `instructors.media` was not). Fixed by reading the loaded relation in the
+    trait and aggregating with `withSum` in the controller: **42 queries → 16**, and now
+    flat regardless of filter or page size.
