@@ -18,6 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Boot out any session whose account was deactivated after login.
         $middleware->appendToGroup('web', EnsureUserIsActive::class);
 
+        // Payment gateways post server-to-server and cannot carry a CSRF token. The
+        // endpoint is protected instead by a per-driver signature check (HMAC over the
+        // raw body) plus a throttle — see PaymentWebhookController and PaystackGateway.
+        $middleware->validateCsrfTokens(except: [
+            'webhooks/payments/*',
+        ]);
+
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
             'role' => RoleMiddleware::class,

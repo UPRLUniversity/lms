@@ -35,4 +35,13 @@ class EnrollmentException extends RuntimeException
     {
         return new self('You are already enrolled in this course.');
     }
+
+    /**
+     * A paid course cannot be self-enrolled onto without a paid order. Raised by
+     * EnrollmentService::selfEnroll — the single paywall in the application.
+     */
+    public static function paymentRequired(): self
+    {
+        return new self('This course must be purchased before you can enrol.');
+    }
 }

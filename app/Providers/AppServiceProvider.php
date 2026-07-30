@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\Role;
+use App\Listeners\MergeGuestCart;
 use App\Models\User;
 use App\Policies\CourseAnnouncementPolicy;
 use App\Policies\EnrollmentPolicy;
@@ -10,9 +11,11 @@ use App\Policies\ForumPolicy;
 use App\Policies\GradebookPolicy;
 use App\Policies\MessagingPolicy;
 use App\Policies\UserPolicy;
+use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -50,6 +53,10 @@ class AppServiceProvider extends ServiceProvider
 
             return true;
         });
+
+        // A signed-out visitor's cart follows them into their account on login, so the
+        // "add to cart, sign in at checkout" journey does not lose their basket.
+        Event::listen(Login::class, MergeGuestCart::class);
 
         // Ability for "may this user grant the named role?" — backed by the policy
         // so the privilege-escalation rule lives in one place.

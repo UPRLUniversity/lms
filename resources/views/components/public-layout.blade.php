@@ -42,6 +42,24 @@
                         Catalogue
                     </a>
 
+                    {{-- Cart, with a live count. Shown to guests too — the whole point of
+                         the guest cart is that it visibly exists before you sign in. --}}
+                    @php $cartCount = app(\App\Services\Commerce\CartService::class)->itemCount(auth()->user()); @endphp
+                    <a href="{{ route('cart.index') }}"
+                       @class([
+                           'relative rounded-lg p-2 focus-ring',
+                           'text-crimson' => request()->routeIs('cart.*'),
+                           'text-ink/70 hover:text-ink' => ! request()->routeIs('cart.*'),
+                       ])
+                       aria-label="{{ $cartCount === 1 ? 'Cart, 1 item' : 'Cart, '.$cartCount.' items' }}">
+                        <x-ui.icon name="shopping-cart" class="h-5 w-5" />
+                        @if ($cartCount > 0)
+                            <span class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-crimson px-1 text-[10px] font-bold text-white">
+                                {{ $cartCount > 9 ? '9+' : $cartCount }}
+                            </span>
+                        @endif
+                    </a>
+
                     @auth
                         <x-ui.button size="sm" :href="route('dashboard')">Dashboard</x-ui.button>
                     @else

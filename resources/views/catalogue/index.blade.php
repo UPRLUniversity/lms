@@ -117,6 +117,8 @@
                         <option value="newest" @selected($filters['sort'] === 'newest')>Newest</option>
                         <option value="oldest" @selected($filters['sort'] === 'oldest')>Oldest</option>
                         <option value="title" @selected($filters['sort'] === 'title')>Title A–Z</option>
+                        <option value="price-low" @selected($filters['sort'] === 'price-low')>Price: low to high</option>
+                        <option value="price-high" @selected($filters['sort'] === 'price-high')>Price: high to low</option>
                     </select>
                 </div>
                 <noscript><button type="submit" class="rounded-xl border border-line bg-card px-4 py-2.5 text-sm">Go</button></noscript>

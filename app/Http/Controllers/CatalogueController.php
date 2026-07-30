@@ -6,6 +6,9 @@ use App\Enums\CourseLevel;
 use App\Models\Course;
 use App\Models\Faculty;
 use App\Models\Programme;
+use App\Models\ProgrammePart;
+use App\Services\Commerce\CartService;
+use App\Services\Commerce\PricingService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -18,7 +21,12 @@ use Illuminate\View\View;
 class CatalogueController extends Controller
 {
     /** Sort options offered on the catalogue → ordering applied to the query. */
-    private const SORTS = ['newest', 'oldest', 'title'];
+    private const SORTS = ['newest', 'oldest', 'title', 'price-low', 'price-high'];
+
+    public function __construct(
+        private readonly PricingService $pricing,
+        private readonly CartService $carts,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -66,6 +74,25 @@ class CatalogueController extends Controller
                 fn ($p) => $p->where('programme_parts.slug', $part)
                     ->whereHas('programme', fn ($pr) => $pr->where('programmes.slug', $programme)),
             ))
+            // Price is DERIVED (free → override → primary programme's per-paper fee), so
+            // sorting by it needs the same rule expressed in SQL. The subquery pulls the
+            // primary placement's fee; the CASE below reproduces PricingService's
+            // precedence. Kept in one place here rather than spread across the query so
+            // it stays comparable with PricingService::priceFor().
+            ->when(str_starts_with($sort, 'price-'), fn ($q) => $q
+                ->addSelect(['primary_per_paper_fee' => ProgrammePart::query()
+                    ->join('course_programme_part as cpp', 'cpp.programme_part_id', '=', 'programme_parts.id')
+                    ->join('programmes', 'programmes.id', '=', 'programme_parts.programme_id')
+                    ->whereColumn('cpp.course_id', 'courses.id')
+                    ->orderByDesc('cpp.is_primary')
+                    ->orderBy('cpp.position')
+                    ->limit(1)
+                    ->select('programmes.per_paper_fee'),
+                ])
+                ->orderByRaw(
+                    '(CASE WHEN courses.is_free THEN 0 ELSE COALESCE(courses.price_override, primary_per_paper_fee, 0) END) '
+                    .($sort === 'price-high' ? 'desc' : 'asc'),
+                ))
             ->when($sort === 'title', fn ($q) => $q->orderBy('title'))
             ->when($sort === 'oldest', fn ($q) => $q->oldest('published_at'))
             ->when($sort === 'newest', fn ($q) => $q->latest('published_at'))
@@ -101,6 +128,7 @@ class CatalogueController extends Controller
         $course->load([
             'department.faculty',
             'instructors.media',
+            'programmeParts.programme',
             'modules.lessons' => fn ($q) => $q->orderBy('position'),
         ]);
 
@@ -111,6 +139,11 @@ class CatalogueController extends Controller
             'course' => $course,
             'enrollment' => $user ? $course->enrollmentFor($user) : null,
             'canManageCourse' => $user ? $user->can('viewRoster', $course) : false,
+            // Pricing state for the enrol card. Resolved here rather than in Blade so
+            // the view has no reason to reach for a service.
+            'price' => $this->pricing->priceFor($course),
+            'hasPurchased' => $user ? $this->pricing->hasPurchased($user, $course) : false,
+            'inCart' => (bool) $this->carts->existing($user)?->has($course),
         ]);
     }
 }

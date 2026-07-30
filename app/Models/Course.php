@@ -31,6 +31,8 @@ class Course extends Model
         'code',
         'department_id',
         'level',
+        'price_override',
+        'is_free',
         'summary',
         'description',
         'learning_objectives',
@@ -49,6 +51,18 @@ class Course extends Model
         'published_at',
     ];
 
+    /**
+     * Mirrors the database default so a newly created (un-refreshed) instance already
+     * knows it is free. Without this, is_free reads null in memory until the model is
+     * reloaded, and PricingService would price a brand-new course from its programme's
+     * fee when the stored row says otherwise.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'is_free' => true,
+    ];
+
     protected function casts(): array
     {
         return [
@@ -57,6 +71,8 @@ class Course extends Model
             'visibility' => CourseVisibility::class,
             'enrollment_mode' => EnrollmentMode::class,
             'progression_mode' => ProgressionMode::class,
+            'price_override' => 'decimal:2',
+            'is_free' => 'boolean',
             'capacity' => 'integer',
             'enrollment_opens_at' => 'datetime',
             'enrollment_closes_at' => 'datetime',
