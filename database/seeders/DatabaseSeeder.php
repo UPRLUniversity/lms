@@ -60,6 +60,11 @@ class DatabaseSeeder extends Seeder
         // places the eight hand-written demo courses into parts.
         $this->call(ProgrammeSeeder::class);
 
+        // Prices the NIPR papers, installs the payment methods, and places real demo
+        // orders through CheckoutService. Runs after ProgrammeSeeder because a course's
+        // price is inherited from its primary programme's per-paper fee.
+        $this->call(CommerceSeeder::class);
+
         // A realistic spread of enrolments across every mode and status.
         $this->call(EnrollmentSeeder::class);
 

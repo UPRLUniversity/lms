@@ -897,3 +897,113 @@ Faculty → Department → Course.
     was loaded, `instructors.media` was not). Fixed by reading the loaded relation in the
     trait and aggregating with `withSum` in the controller: **42 queries → 16**, and now
     flat regardless of filter or page size.
+
+## Section 12 — Commerce: pricing, cart, checkout, coupons, payments (2026-07-30)
+
+The LMS had no commerce at all — every course was free and
+`catalogue/_enrol.blade.php` hardcoded "Free for UPRL learners". This section adds
+paid courses, a cart, checkout, discount codes and admin-managed payment gateways.
+
+### Money
+
+1. **Price is DERIVED, not stored per course.** Resolution order:
+   `is_free` → `price_override` → primary programme's `per_paper_fee` → 0. The published
+   NIPR schedule prices by TIER (CPR ₦7,000, DPR ₦10,000, Variant ₦15,000), so copying a
+   price onto ~40 courses would be 40 numbers to keep in step with 3. Section 11's
+   `is_primary` placement is what makes this unambiguous for a paper listed in two
+   programmes.
+2. **`courses.is_free` defaults to TRUE.** Every course that already existed, and every
+   course any existing factory or test creates, keeps behaving exactly as before.
+   Charging is opt-in — the safe direction for a default. The model also declares
+   `$attributes = ['is_free' => true]`, because without it a freshly created
+   (un-refreshed) instance reads `null` and would be priced from its programme's fee
+   when the stored row says otherwise.
+3. **Programme entry fees are CART-level, charged once ever.** Registration and
+   administration are the Institute's charge for entering a programme, not a course
+   price, so they are computed per cart from what the buyer has already paid
+   (`PricingService::entryFeeLinesFor`). A second CPR paper costs ₦7,000, not ₦52,000.
+   Free courses never trigger them — nobody should be asked for ₦45,000 to start a free
+   taster.
+4. **Coupons never discount entry fees.** A "100% off" code makes the *paper* free and
+   leaves registration and administration standing. `CouponType::Full` is its own case
+   rather than "100 percent" so a free-access code cannot be defeated by rounding.
+5. **A fixed coupon never exceeds the eligible amount** — a ₦50,000 code against a
+   ₦10,000 cart discounts ₦10,000. A total can never go negative and the institution can
+   never end up owing a student money.
+
+### Security
+
+6. **The paywall is one line in one place.** `EnrollmentService::selfEnroll` refuses a
+   paid course without a paid order. Every button, badge and cart page is presentation
+   on top of that; a student who POSTs straight at the enrol endpoint is refused there.
+   Purchases enter through `adminEnroll` (called by `OrderFulfilmentService`), which
+   deliberately does not run the check.
+7. **Money never comes from the request.** `CheckoutService::place()` re-resolves every
+   price from `PricingService` inside the order transaction. Posted totals, subtotals
+   and line prices are not validated — they are ignored. Cart rows snapshot a price
+   only so the cart reads consistently between page loads; a stale or tampered snapshot
+   cannot change what someone is charged.
+8. **Webhooks are signature-verified and re-verified.** The endpoint is public and
+   unauthenticated, so `PaystackGateway` checks an HMAC-SHA512 of the raw body with
+   `hash_equals`, and the body is only ever trusted to say WHICH order to look at.
+   Whether it was paid, and for how much, is re-read from Paystack's own API and
+   compared against our order total — a settled amount that does not match refuses to
+   settle. CSRF is exempted for `webhooks/payments/*` in `bootstrap/app.php`.
+9. **Fulfilment is idempotent by construction.** `markPaid()` re-reads the order under
+   `lockForUpdate` and short-circuits if already paid, so two concurrent webhooks cannot
+   both transition it. `coupon_redemptions` is unique on `(coupon_id, order_id)`, so a
+   replay cannot burn a second use of a code at the database level rather than relying
+   on application care.
+10. **Gateway credentials are `encrypted:array` on the model.** Secrets are never at
+    rest in plaintext, never in a database dump, and are never rendered back to the
+    admin form. A blank submitted secret therefore means "unchanged", not "clear it" —
+    otherwise changing a label would silently break a working gateway. Only keys the
+    driver declares in `config/commerce.php` are accepted, so a crafted post cannot
+    stuff arbitrary data into the encrypted column.
+11. **Payment methods are admin-only and NOT extended to the auditor.** "Read-only
+    observer" should not include reading payment secrets.
+
+### Design
+
+12. **Credentials live in the database, not env.** Staff rotate keys, not deploys: an
+    admin pastes a new secret and switches Test → Live from the Payment methods screen.
+    The env values are seed defaults for a fresh install only.
+13. **Three drivers behind one interface.** Sandbox (instant success — what makes the
+    whole flow demonstrable and testable with no merchant account, and what the suite
+    exercises so the tests drive the real CheckoutService rather than mocks), Paystack
+    (real HTTP, no package — three endpoints do not justify a dependency, and the
+    Laravel 12 package landscape is unsettled), and Bank transfer (never returns `paid`;
+    only a human looking at a statement can know a transfer landed).
+14. **A zero-total order still becomes a real paid order** so the receipt, the enrolment
+    and the history all exist — it just skips the gateway.
+15. **The guest cart is keyed on the session AND a long-lived cookie.** The session is
+    primary; the cookie is a mirror so a visitor returning next week still finds their
+    basket after a 120-minute session has expired. `MergeGuestCart` folds it into the
+    account on login, synchronously — the very next request is usually the cart, so a
+    queued listener would race the redirect and show an empty one.
+16. **Refunds are recorded, not executed.** `markRefunded` writes our books; the money is
+    returned by a human in the provider's dashboard or the bank. The enrolment is
+    deliberately left in place — a student's completed work and grades are not ours to
+    delete as a side effect of a bookkeeping entry.
+17. **Instructors may issue course-scoped codes only.** Scope is the authorization
+    boundary: an instructor grows their own enrolment, while global and programme-wide
+    codes cost the institution money across a catalogue and stay admin-only. Instructors
+    need no `coupons.manage` permission — their authority comes from teaching the course.
+18. **A code's `code` and `scope` are immutable once created.** Somebody may already be
+    holding the code, and re-scoping a live code silently rewrites what past redemptions
+    meant. Either change is a new coupon. A code that has been redeemed is deactivated
+    rather than deleted, so the ledger keeps pointing at something real.
+
+### Found while building
+
+19. **`POST /cart/coupon` matched the `/cart/{course}` wildcard.** Literal segments must
+    be declared before the wildcard or the coupon endpoint resolves a course whose slug
+    is "coupon". Caught before it shipped; the route file now says so.
+20. **`used@if (...)` is not a Blade directive.** Blade requires a non-word character
+    before `@`, so `used@if` parsed as literal text and left an orphaned `@endif`,
+    500-ing the coupons index and edit screens. It reached a browser because the admin
+    tests asserted redirects and database rows without ever RENDERING those views —
+    render assertions have been added for both.
+21. **Reaching `/checkout` with an emptied cart said "Your cart is empty."** When the
+    cart had just been pruned because the buyer already owned everything in it, that
+    reads like the site lost the basket. It now says so.

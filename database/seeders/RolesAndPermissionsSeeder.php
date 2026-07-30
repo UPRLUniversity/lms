@@ -67,6 +67,10 @@ class RolesAndPermissionsSeeder extends Seeder
             Perm::CertificatesView->value,
             Perm::CertificatesManage->value,
             Perm::ReportsView->value,
+            Perm::OrdersView->value,
+            Perm::OrdersManage->value,
+            Perm::CouponsManage->value,
+            Perm::PaymentMethodsManage->value,
         ];
 
         $instructor = [
