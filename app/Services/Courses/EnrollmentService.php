@@ -12,6 +12,7 @@ use App\Notifications\EnrollmentApprovedNotification;
 use App\Notifications\EnrollmentConfirmedNotification;
 use App\Notifications\EnrollmentRejectedNotification;
 use App\Notifications\WaitlistPromotedNotification;
+use App\Services\Commerce\PricingService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -47,6 +48,18 @@ class EnrollmentService
             }
             if ($course->enrollmentHasClosed()) {
                 throw EnrollmentException::windowClosed();
+            }
+
+            // THE PAYWALL. This is the only place a paid course is protected, and
+            // everything else — the enrol button, the cart, the catalogue copy — is
+            // presentation on top of it. A student who posts straight to the enrol
+            // endpoint for a ₦7,000 paper gets refused here, not somewhere in a Blade
+            // conditional. Purchases reach the course through adminEnroll (called by
+            // OrderFulfilmentService once an order is paid), which deliberately does not
+            // run this check.
+            if (app(PricingService::class)->isPaid($course)
+                && ! app(PricingService::class)->hasPurchased($student, $course)) {
+                throw EnrollmentException::paymentRequired();
             }
 
             $existing = $this->lockedEnrollment($student, $course);

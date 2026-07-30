@@ -37,6 +37,9 @@ enum NotificationType: string
     case BulkImportCompleted = 'bulk_import_completed';
     case ReportReady = 'report_ready';
 
+    // Commerce (Section 12).
+    case OrderPaid = 'order_paid';
+
     public function label(): string
     {
         return match ($this) {
@@ -59,6 +62,7 @@ enum NotificationType: string
             self::CourseSubmittedForReview => 'Course submitted for review',
             self::BulkImportCompleted => 'Bulk import completed',
             self::ReportReady => 'Report ready to download',
+            self::OrderPaid => 'Payment received',
         };
     }
 
@@ -84,6 +88,7 @@ enum NotificationType: string
             self::CourseSubmittedForReview => 'flag',
             self::BulkImportCompleted => 'users',
             self::ReportReady => 'download',
+            self::OrderPaid => 'receipt',
         };
     }
 
@@ -103,6 +108,7 @@ enum NotificationType: string
             self::CourseAnnouncement, self::NewMessage, self::ForumReply, self::NewSubmission,
             self::NewPendingEnrollment, self::CourseSubmittedForReview, self::BulkImportCompleted,
             self::ReportReady => 'gold',
+            self::OrderPaid => 'success',
         };
     }
 
@@ -120,6 +126,7 @@ enum NotificationType: string
             self::CourseApproved, self::CourseReturned, self::CourseSubmittedForReview => 'Course workflow',
             self::NewSubmission, self::NewPendingEnrollment => 'Teaching',
             self::BulkImportCompleted, self::ReportReady => 'Administration',
+            self::OrderPaid => 'Payments',
         };
     }
 
@@ -130,7 +137,8 @@ enum NotificationType: string
     public function isCritical(): bool
     {
         return match ($this) {
-            self::EnrollmentApproved, self::EnrollmentRejected, self::WaitlistPromoted, self::CertificateIssued => true,
+            self::EnrollmentApproved, self::EnrollmentRejected, self::WaitlistPromoted, self::CertificateIssued,
+            self::OrderPaid => true,
             default => false,
         };
     }
