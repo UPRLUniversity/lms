@@ -55,6 +55,8 @@ use App\Http\Controllers\Courses\ModuleController;
 use App\Http\Controllers\Courses\MyLearningController;
 use App\Http\Controllers\Courses\RosterController;
 use App\Http\Controllers\EditorUploadController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Public\ProgrammeController as PublicProgrammeController;
 use App\Http\Controllers\Admin\GradeScaleController;
 use App\Http\Controllers\Grades\GradebookController;
 use App\Http\Controllers\MediaController;
@@ -68,9 +70,20 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+/*
+|--------------------------------------------------------------------------
+| Public marketing site (Section 13) — homepage & programme landing pages
+|--------------------------------------------------------------------------
+| The whole guest journey starts here and stays open to strangers: homepage →
+| programme → course → cart. The only door that asks for an account is checkout,
+| and that one shows a sign-in panel rather than bouncing (CheckoutController).
+|
+| An inactive programme 404s, so switching one off in admin removes it from the
+| public site the same second.
+*/
+Route::get('/', HomeController::class)->name('home');
+Route::get('/programmes', [PublicProgrammeController::class, 'index'])->name('programmes.index');
+Route::get('/programmes/{programme}', [PublicProgrammeController::class, 'show'])->name('programmes.show');
 
 /*
 |--------------------------------------------------------------------------
@@ -121,9 +134,15 @@ Route::post('/webhooks/payments/{method}', PaymentWebhookController::class)
 | account. Note there is no 'verified' middleware: making someone confirm an e-mail
 | before they can pay would lose the sale, and payment itself proves rather more about
 | them than a mail click does.
+|
+| GET /checkout is deliberately OUTSIDE the auth group (Section 13): a signed-out
+| buyer sees their order summary with an inline "log in to continue" panel instead of
+| being thrown at a bare login form having lost all context. Everything that actually
+| writes an order still requires an account.
 */
+Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
+
 Route::middleware('auth')->group(function () {
-    Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
     Route::get('/checkout/{order}/callback', [CheckoutController::class, 'callback'])->name('checkout.callback');
 
