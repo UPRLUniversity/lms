@@ -1,0 +1,148 @@
+<?php
+
+namespace App\Http\Controllers\Commerce;
+
+use App\Http\Controllers\Controller;
+use App\Models\CartItem;
+use App\Models\Course;
+use App\Services\Commerce\CartService;
+use App\Services\Commerce\CheckoutService;
+use App\Services\Commerce\CouponService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\View\View;
+
+/**
+ * The cart, deliberately open to guests.
+ *
+ * A signed-out visitor can browse the catalogue and fill a cart; login is required
+ * only at checkout, and CartService::merge() carries the basket across on login. The
+ * alternative — demanding an account before anything can be added — is the thing the
+ * public catalogue exists to avoid.
+ *
+ * The applied coupon code lives in the session rather than on the cart row: it is a
+ * transient intent, it must not survive into someone else's session, and it is
+ * re-validated on every render and again at checkout.
+ */
+class CartController extends Controller
+{
+    private const COUPON_SESSION_KEY = 'cart.coupon';
+
+    public function __construct(
+        private readonly CartService $carts,
+        private readonly CheckoutService $checkout,
+        private readonly CouponService $coupons,
+    ) {}
+
+    public function index(Request $request): View
+    {
+        $cart = $this->carts->current($request->user());
+
+        // Anything they have since bought or been enrolled on is dropped, so the cart
+        // never offers to sell access somebody already has.
+        $pruned = $request->user() ? $this->carts->pruneUnbuyable($cart, $request->user()) : 0;
+        if ($pruned > 0) {
+            $cart->refresh()->load('items.course.programmeParts.programme', 'items.course.media');
+        }
+
+        $totals = $this->checkout->quote($cart, $request->user(), $this->couponCode($request));
+
+        // A code that has stopped being valid (expired, or now inapplicable because the
+        // cart changed) is cleared rather than left showing an error forever.
+        if ($totals->couponError !== null) {
+            $request->session()->forget(self::COUPON_SESSION_KEY);
+        }
+
+        return view('commerce.cart', [
+            'cart' => $cart,
+            'totals' => $totals,
+            'pruned' => $pruned,
+        ]);
+    }
+
+    public function store(Request $request, Course $course): RedirectResponse
+    {
+        // Only a course a stranger could legitimately see may be added — otherwise the
+        // cart becomes a way to discover unpublished courses.
+        abort_unless($course->isPublished() && $course->visibility->isPublic(), 404);
+
+        $cart = $this->carts->current($request->user());
+
+        if (! $this->carts->add($cart, $course)) {
+            return back()->with('error', 'Your cart is full. Check out or remove something first.');
+        }
+
+        // "Buy now" adds and goes straight on, so a single-course purchase is two clicks
+        // rather than four. A guest is sent to the cart instead — bouncing them to a
+        // login wall the instant they show interest is exactly the friction the public
+        // catalogue exists to remove.
+        if ($request->input('then') === 'checkout') {
+            return $request->user()
+                ? redirect()->route('checkout.show')
+                : redirect()->route('cart.index');
+        }
+
+        return back()->with('status', "“{$course->title}” was added to your cart.");
+    }
+
+    public function destroy(Request $request, CartItem $item): RedirectResponse
+    {
+        $cart = $this->carts->current($request->user());
+
+        // CartService checks ownership; this is the belt to its braces.
+        abort_unless($item->cart_id === $cart->id, 403);
+
+        $title = $item->course?->title;
+        $this->carts->remove($cart, $item);
+
+        return back()->with('status', $title ? "“{$title}” was removed." : 'Item removed.');
+    }
+
+    public function clear(Request $request): RedirectResponse
+    {
+        $this->carts->clear($this->carts->current($request->user()));
+        $request->session()->forget(self::COUPON_SESSION_KEY);
+
+        return back()->with('status', 'Your cart is empty.');
+    }
+
+    /**
+     * Apply a coupon. Validated here so the buyer gets the reason immediately rather
+     * than discovering it at checkout.
+     */
+    public function applyCoupon(Request $request): RedirectResponse
+    {
+        $data = $request->validate(['code' => ['required', 'string', 'max:60']]);
+
+        $cart = $this->carts->current($request->user());
+        $totals = $this->checkout->quote($cart, $request->user(), $data['code']);
+
+        if ($totals->couponError !== null) {
+            return back()->with('error', $totals->couponError);
+        }
+
+        $request->session()->put(self::COUPON_SESSION_KEY, $this->coupons->normalise($data['code']));
+
+        return back()->with('status', 'Code applied — '.$totals->coupon->describe().'.');
+    }
+
+    public function removeCoupon(Request $request): RedirectResponse
+    {
+        $request->session()->forget(self::COUPON_SESSION_KEY);
+
+        return back()->with('status', 'Code removed.');
+    }
+
+    /**
+     * The code currently applied, if any. Shared with CheckoutController.
+     */
+    public static function couponCode(Request $request): ?string
+    {
+        return $request->session()->get(self::COUPON_SESSION_KEY);
+    }
+
+    public static function forgetCoupon(Request $request): void
+    {
+        $request->session()->forget(self::COUPON_SESSION_KEY);
+    }
+}

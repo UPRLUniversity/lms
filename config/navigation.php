@@ -73,6 +73,30 @@ return [
         'roles' => ['admin', 'super-admin'],
     ],
     [
+        // The store (Section 12). Orders and payment methods are admin-only; discount
+        // codes are visible to instructors too, who may issue them for their own
+        // courses (CouponPolicy decides, not this list).
+        'label' => 'Orders',
+        'icon' => 'receipt',
+        'route' => 'admin.orders.index',
+        'match' => 'admin.orders.*',
+        'roles' => ['admin', 'super-admin'],
+    ],
+    [
+        'label' => 'Discount codes',
+        'icon' => 'tag',
+        'route' => 'admin.coupons.index',
+        'match' => 'admin.coupons.*',
+        'roles' => ['admin', 'super-admin', 'instructor'],
+    ],
+    [
+        'label' => 'Payment methods',
+        'icon' => 'credit-card',
+        'route' => 'admin.payment-methods.index',
+        'match' => 'admin.payment-methods.*',
+        'roles' => ['admin', 'super-admin'],
+    ],
+    [
         'label' => 'My Learning',
         'icon' => 'graduation',
         'route' => 'learning.index',

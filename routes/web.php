@@ -7,6 +7,9 @@ use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\ForumReportController;
 use App\Http\Controllers\Admin\InvitationController;
+use App\Http\Controllers\Admin\CouponController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProgrammeController;
 use App\Http\Controllers\Admin\ProgrammePartController;
 use App\Http\Controllers\Admin\UserController;
@@ -29,6 +32,10 @@ use App\Http\Controllers\Assignments\RubricController;
 use App\Http\Controllers\Assignments\SubmissionController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\Commerce\CartController;
+use App\Http\Controllers\Commerce\CheckoutController;
+use App\Http\Controllers\Commerce\OrderController;
+use App\Http\Controllers\Commerce\PaymentWebhookController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InstructorAnalyticsController;
 use App\Http\Controllers\Reports\ReportController;
@@ -74,6 +81,55 @@ Route::get('/', function () {
 */
 Route::get('/courses', [CatalogueController::class, 'index'])->name('catalogue.index');
 Route::get('/courses/{course}', [CatalogueController::class, 'show'])->name('catalogue.show');
+
+/*
+|--------------------------------------------------------------------------
+| Cart (guest-visible) & payment webhooks (Section 12)
+|--------------------------------------------------------------------------
+| The cart is deliberately open to signed-out visitors: they browse the public
+| catalogue, fill a basket, and only need an account at checkout, at which point
+| MergeGuestCart carries the basket into their profile. Requiring an account before
+| anything can be added is the friction the public catalogue exists to remove.
+|
+| The webhook is public by necessity — gateways cannot authenticate as a user. It is
+| CSRF-exempt (bootstrap/app.php), throttled, and every driver verifies a signature
+| before trusting a single field of the body.
+*/
+Route::controller(CartController::class)->group(function () {
+    Route::get('/cart', 'index')->name('cart.index');
+    Route::delete('/cart', 'clear')->name('cart.clear');
+
+    // ORDER MATTERS. These literal segments must be declared before the
+    // /cart/{course} wildcard below, or "POST /cart/coupon" matches the wildcard
+    // first and tries to resolve a course whose slug is "coupon".
+    Route::post('/cart/coupon', 'applyCoupon')->name('cart.coupon.apply');
+    Route::delete('/cart/coupon', 'removeCoupon')->name('cart.coupon.remove');
+    Route::delete('/cart/items/{item}', 'destroy')->name('cart.destroy');
+
+    Route::post('/cart/{course}', 'store')->name('cart.store');
+});
+
+Route::post('/webhooks/payments/{method}', PaymentWebhookController::class)
+    ->middleware('throttle:120,1')
+    ->name('payments.webhook');
+
+/*
+|--------------------------------------------------------------------------
+| Checkout & orders (auth)
+|--------------------------------------------------------------------------
+| An order has to belong to somebody, so this is where the guest journey asks for an
+| account. Note there is no 'verified' middleware: making someone confirm an e-mail
+| before they can pay would lose the sale, and payment itself proves rather more about
+| them than a mail click does.
+*/
+Route::middleware('auth')->group(function () {
+    Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
+    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::get('/checkout/{order}/callback', [CheckoutController::class, 'callback'])->name('checkout.callback');
+
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -293,6 +349,41 @@ Route::middleware(['auth', 'verified', 'permission:programmes.view'])
         Route::get('programme-parts/{part}/edit', [ProgrammePartController::class, 'edit'])->name('programme-parts.edit');
         Route::put('programme-parts/{part}', [ProgrammePartController::class, 'update'])->name('programme-parts.update');
         Route::delete('programme-parts/{part}', [ProgrammePartController::class, 'destroy'])->name('programme-parts.destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin — the store (Section 12)
+|--------------------------------------------------------------------------
+| Payment methods hold live gateway credentials, so they are admin-only and are
+| deliberately NOT extended to the auditor — "read-only observer" should not include
+| reading payment secrets. Orders and coupons carry their own permissions.
+|
+| Discount codes are the exception to the admin-only pattern: an instructor may issue
+| course-scoped codes for a course they teach, so this group is gated by policy inside
+| the controller rather than by permission middleware.
+*/
+Route::middleware(['auth', 'verified'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('payment-methods', [PaymentMethodController::class, 'index'])->name('payment-methods.index');
+        Route::post('payment-methods', [PaymentMethodController::class, 'store'])->name('payment-methods.store');
+        Route::put('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'update'])->name('payment-methods.update');
+        Route::post('payment-methods/{paymentMethod}/toggle', [PaymentMethodController::class, 'toggle'])->name('payment-methods.toggle');
+        Route::delete('payment-methods/{paymentMethod}', [PaymentMethodController::class, 'destroy'])->name('payment-methods.destroy');
+
+        Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+        Route::post('orders/{order}/mark-paid', [AdminOrderController::class, 'markPaid'])->name('orders.mark-paid');
+        Route::post('orders/{order}/refund', [AdminOrderController::class, 'refund'])->name('orders.refund');
+
+        Route::get('coupons', [CouponController::class, 'index'])->name('coupons.index');
+        Route::get('coupons/create', [CouponController::class, 'create'])->name('coupons.create');
+        Route::post('coupons', [CouponController::class, 'store'])->name('coupons.store');
+        Route::get('coupons/{coupon}/edit', [CouponController::class, 'edit'])->name('coupons.edit');
+        Route::put('coupons/{coupon}', [CouponController::class, 'update'])->name('coupons.update');
+        Route::delete('coupons/{coupon}', [CouponController::class, 'destroy'])->name('coupons.destroy');
     });
 
 /*

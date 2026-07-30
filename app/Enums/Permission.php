@@ -48,6 +48,12 @@ enum Permission: string
     // Reporting.
     case ReportsView = 'reports.view';
 
+    // Commerce (Section 12) — the store: orders, discount codes and gateways.
+    case OrdersView = 'orders.view';
+    case OrdersManage = 'orders.manage';
+    case CouponsManage = 'coupons.manage';
+    case PaymentMethodsManage = 'payment-methods.manage';
+
     /**
      * @return array<int, string>
      */
