@@ -144,11 +144,31 @@
                                    value="{{ old('time_limit_minutes', $assessment->time_limit_minutes) }}"
                                    class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                         </div>
-                        <div class="flex items-center gap-2 pt-7">
+                    </div>
+
+                    {{-- Two independent questions: must they do it, and does the score
+                         count? A practice quiz can be compulsory and still stay out of
+                         the transcript. --}}
+                    <div class="mt-5 space-y-3 border-t border-line pt-5">
+                        <label class="flex items-start gap-2.5">
+                            <input type="hidden" name="is_required" value="0">
                             <input id="is_required" name="is_required" type="checkbox" value="1" @checked(old('is_required', $assessment->is_required))
-                                   class="rounded border-line text-crimson focus:ring-crimson">
-                            <label for="is_required" class="text-sm text-ink/80">Required — counts toward course progress</label>
-                        </div>
+                                   class="mt-0.5 rounded border-line text-crimson focus:ring-crimson">
+                            <span class="text-sm">
+                                <span class="font-medium text-ink">Required</span>
+                                <span class="block text-ink/60">Students must complete this to finish the course.</span>
+                            </span>
+                        </label>
+                        <label class="flex items-start gap-2.5">
+                            <input type="hidden" name="counts_toward_grade" value="0">
+                            <input id="counts_toward_grade" name="counts_toward_grade" type="checkbox" value="1"
+                                   @checked(old('counts_toward_grade', $assessment->counts_toward_grade))
+                                   class="mt-0.5 rounded border-line text-crimson focus:ring-crimson">
+                            <span class="text-sm">
+                                <span class="font-medium text-ink">Include this score in the course grade</span>
+                                <span class="block text-ink/60">Untick for a practice quiz — it still gates progress, but stays out of the gradebook.</span>
+                            </span>
+                        </label>
                     </div>
                 </x-ui.card>
 

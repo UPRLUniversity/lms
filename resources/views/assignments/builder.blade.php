@@ -139,11 +139,27 @@
                                    class="rounded border-line text-crimson focus:ring-crimson">
                             Accept late submissions <span class="text-ink/45">(badged LATE)</span>
                         </label>
-                        <label class="inline-flex items-center gap-2.5 text-sm text-ink">
+                        {{-- Two independent questions: must they hand it in, and does the
+                             score count? A formative draft can be compulsory and still
+                             stay out of the transcript. --}}
+                        <label class="inline-flex items-start gap-2.5 text-sm text-ink">
                             <input type="hidden" name="is_required" value="0">
                             <input type="checkbox" name="is_required" value="1" @checked(old('is_required', $assignment->is_required)) @disabled(! $canManage)
-                                   class="rounded border-line text-crimson focus:ring-crimson">
-                            Required — counts toward course completion
+                                   class="mt-0.5 rounded border-line text-crimson focus:ring-crimson">
+                            <span>
+                                Required
+                                <span class="block text-ink/55">Students must complete this to finish the course.</span>
+                            </span>
+                        </label>
+                        <label class="inline-flex items-start gap-2.5 text-sm text-ink">
+                            <input type="hidden" name="counts_toward_grade" value="0">
+                            <input type="checkbox" name="counts_toward_grade" value="1"
+                                   @checked(old('counts_toward_grade', $assignment->counts_toward_grade)) @disabled(! $canManage)
+                                   class="mt-0.5 rounded border-line text-crimson focus:ring-crimson">
+                            <span>
+                                Include this score in the course grade
+                                <span class="block text-ink/55">Untick for practice work — it still gates progress, but stays out of the gradebook.</span>
+                            </span>
                         </label>
                     </div>
 
