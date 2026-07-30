@@ -12,6 +12,11 @@
     // Qualifications this course counts toward. Guarded with relationLoaded so a card
     // rendered outside the catalogue (which eager-loads it) can't trigger an N+1.
     $placements = $course->relationLoaded('programmeParts') ? $course->programmeParts : collect();
+
+    // Price resolution needs the primary placement, which the guard above already
+    // ensures is loaded on the catalogue. app() here rather than a passed-in value so
+    // every existing call site of this component keeps working unchanged.
+    $price = app(\App\Services\Commerce\PricingService::class)->priceFor($course);
 @endphp
 
 <a href="{{ route('catalogue.show', $course) }}"
@@ -26,6 +31,9 @@
         @endif
         <span class="absolute left-3 top-3">
             <x-ui.badge variant="gold" solid>{{ $course->level->label() }}</x-ui.badge>
+        </span>
+        <span class="absolute right-3 top-3 rounded-lg bg-ink/75 px-2.5 py-1 text-sm font-semibold text-white backdrop-blur-sm">
+            {{ \App\Support\Money::formatOrFree($price) }}
         </span>
     </div>
 

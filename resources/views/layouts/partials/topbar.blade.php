@@ -28,6 +28,21 @@
     </h1>
 
     <div class="ml-auto flex items-center gap-1 sm:gap-2">
+        {{-- Cart. Hidden when empty inside the app shell: a signed-in learner mid-lesson
+             does not need a permanent shopping reminder, but must not lose a basket
+             they have started. --}}
+        @php $cartCount = app(\App\Services\Commerce\CartService::class)->itemCount(auth()->user()); @endphp
+        @if ($cartCount > 0)
+            <a href="{{ route('cart.index') }}"
+               class="relative rounded-lg p-2 text-ink/70 hover:bg-ink/5 hover:text-ink focus-ring"
+               aria-label="{{ $cartCount === 1 ? 'Cart, 1 item' : 'Cart, '.$cartCount.' items' }}">
+                <x-ui.icon name="shopping-cart" class="h-5 w-5" />
+                <span class="absolute right-1 top-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-crimson px-1 text-[10px] font-bold text-white">
+                    {{ $cartCount > 9 ? '9+' : $cartCount }}
+                </span>
+            </a>
+        @endif
+
         {{-- Notification bell --}}
         <div class="relative"
              x-data="notificationBell({ recentUrl: @js(route('notifications.recent')), markAllUrl: @js(route('notifications.mark-all-read')) })"

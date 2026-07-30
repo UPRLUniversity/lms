@@ -1,6 +1,7 @@
 @php
     use App\Enums\EnrollmentMode;
     use App\Enums\EnrollmentStatus;
+    use App\Support\Money;
 
     /** @var \App\Models\Course $course */
     /** @var \App\Models\Enrollment|null $enrollment */
@@ -10,7 +11,28 @@
     $windowFuture = $course->enrollmentOpensInFuture();
     $windowClosed = $course->enrollmentHasClosed();
     $status = $enrollment?->status;
+
+    // Pricing state, resolved in CatalogueController. A paid course is bought, not
+    // enrolled on — the paywall itself lives in EnrollmentService::selfEnroll, and
+    // everything below is presentation over that single rule.
+    $isPaid = ($price ?? 0) > 0;
+    $hasPurchased = $hasPurchased ?? false;
+    $inCart = $inCart ?? false;
+    $enrolled = $status === EnrollmentStatus::Active || $status === EnrollmentStatus::Completed;
 @endphp
+
+{{-- Price header (paid courses only) --}}
+@if ($isPaid && ! $enrolled)
+    <div class="mb-5 border-b border-line pb-5">
+        <p class="font-display text-3xl font-bold text-ink">{{ Money::format($price) }}</p>
+        <p class="mt-0.5 text-xs text-ink/55">
+            One-off payment · lifetime access
+            @if ($programme = $course->primaryProgramme())
+                <span class="mt-1 block">Part of {{ $programme->name }}</span>
+            @endif
+        </p>
+    </div>
+@endif
 
 {{-- Capacity meter (only when the course caps places) --}}
 @if ($course->hasCapacityLimit())
@@ -26,17 +48,12 @@
     <x-ui.button class="w-full" :href="route('courses.roster', $course)">
         <x-ui.icon name="users" class="h-5 w-5" /> Manage roster
     </x-ui.button>
-    <p class="mt-2 text-center text-xs text-ink/50">{{ $mode->label() }}</p>
-
-@elseif (! auth()->check())
-    {{-- Guest --}}
-    <x-ui.button class="w-full" :href="route('register')">Create an account to enrol</x-ui.button>
     <p class="mt-2 text-center text-xs text-ink/50">
-        Already a member? <a href="{{ route('login') }}" class="text-crimson hover:underline focus-ring rounded">Log in</a>
+        {{ $mode->label() }}@if ($isPaid) · {{ Money::format($price) }}@endif
     </p>
 
-@elseif ($status === EnrollmentStatus::Active || $status === EnrollmentStatus::Completed)
-    {{-- Already enrolled --}}
+@elseif ($enrolled)
+    {{-- Already has access, however they got it --}}
     <div class="mb-3 flex items-center justify-center gap-2 rounded-xl bg-success/10 px-4 py-2.5 text-sm font-medium text-success">
         <x-ui.icon name="check" class="h-4 w-4" stroke-width="2.5" />
         {{ $status === EnrollmentStatus::Completed ? 'You completed this course' : "You're enrolled" }}
@@ -45,9 +62,57 @@
         {{ $status === EnrollmentStatus::Completed ? 'Revisit the course' : 'Continue learning' }}
     </x-ui.button>
 
+@elseif ($isPaid && $hasPurchased)
+    {{-- Paid for, but the enrolment did not land (a rare fulfilment failure). Say so
+         plainly rather than offering to sell it again. --}}
+    <div class="rounded-xl bg-gold/15 px-4 py-3 text-center text-sm font-medium text-gold-ink">
+        You have paid for this course
+    </div>
+    <p class="mt-2 text-center text-xs text-ink/60">
+        Your access is being set up. <a href="{{ route('orders.index') }}" class="text-crimson hover:underline focus-ring rounded">See your orders</a>.
+    </p>
+
+@elseif ($isPaid)
+    {{-- The buy path. Open to guests: they fill a cart, then sign in at checkout. --}}
+    @if ($inCart)
+        <x-ui.button class="w-full" :href="route('cart.index')">
+            <x-ui.icon name="shopping-cart" class="h-5 w-5" /> In your cart — view cart
+        </x-ui.button>
+    @else
+        <form method="POST" action="{{ route('cart.store', $course) }}">
+            @csrf
+            <x-ui.button type="submit" class="w-full">
+                <x-ui.icon name="shopping-cart" class="h-5 w-5" /> Add to cart
+            </x-ui.button>
+        </form>
+    @endif
+
+    {{-- Buy now = add + go straight to checkout, so a single-course purchase is two
+         clicks rather than four. CartController honours `then=checkout`. --}}
+    <form method="POST" action="{{ route('cart.store', $course) }}" class="mt-2">
+        @csrf
+        <input type="hidden" name="then" value="checkout">
+        <x-ui.button type="submit" variant="secondary" class="w-full">Buy now</x-ui.button>
+    </form>
+
+    <p class="mt-3 text-center text-xs text-ink/60">
+        @guest
+            You can add this to your cart now and sign in when you check out.
+        @else
+            Secure checkout · {{ Money::currency() }}
+        @endguest
+    </p>
+
+@elseif (! auth()->check())
+    {{-- Free course, signed out --}}
+    <x-ui.button class="w-full" :href="route('register')">Create an account to enrol</x-ui.button>
+    <p class="mt-2 text-center text-xs text-ink/50">
+        Already a member? <a href="{{ route('login') }}" class="text-crimson hover:underline focus-ring rounded">Log in</a>
+    </p>
+
 @elseif ($status === EnrollmentStatus::Pending)
     {{-- Awaiting approval --}}
-    <div class="flex items-center justify-center gap-2 rounded-xl bg-gold/15 px-4 py-3 text-sm font-medium text-gold">
+    <div class="flex items-center justify-center gap-2 rounded-xl bg-gold/15 px-4 py-3 text-sm font-medium text-gold-ink">
         <x-ui.icon name="clock" class="h-4 w-4" /> Awaiting approval
     </div>
     <p class="mt-2 text-center text-xs text-ink/60">We'll email you once a staff member reviews your request.</p>
@@ -94,7 +159,7 @@
     <p class="mt-2 text-center text-xs text-ink/60">This course is full — join the waitlist and we'll promote you automatically when a place frees up.</p>
 
 @else
-    {{-- Open self-enrol --}}
+    {{-- Open self-enrol, free --}}
     <form method="POST" action="{{ route('enrollment.store', $course) }}">
         @csrf
         <x-ui.button type="submit" class="w-full">
@@ -104,6 +169,6 @@
     <p class="mt-2 text-center text-xs text-ink/60">
         {{ $mode === EnrollmentMode::Approval
             ? 'A staff member will review your request.'
-            : "Free for ".config('brand.short')." learners." }}
+            : 'Free for '.config('brand.short').' learners.' }}
     </p>
 @endif
