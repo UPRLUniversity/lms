@@ -84,7 +84,7 @@
                             <p class="px-4 pt-3 text-sm text-ink/60">{{ $module->description }}</p>
                         @endif
 
-                        <ul data-item-list data-module-id="{{ $module->id }}" class="group/list divide-y divide-line">
+                        <ul data-item-list data-module-id="{{ $module->id }}" class="group/list {{ $canManage ? '' : 'divide-y divide-line' }}">
                             @forelse ($items as $item)
                                 @if ($canManage)
                                     @include('courses.partials._curriculum_insert')
@@ -127,7 +127,7 @@
                 </span>
             </div>
 
-            <ul data-item-list data-module-id="" class="group/list divide-y divide-line">
+            <ul data-item-list data-module-id="" class="group/list {{ $canManage ? '' : 'divide-y divide-line' }}">
                 @forelse ($courseLevel as $item)
                     @if ($canManage)
                         @include('courses.partials._curriculum_insert')
