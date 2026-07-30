@@ -1007,3 +1007,68 @@ paid courses, a cart, checkout, discount codes and admin-managed payment gateway
 21. **Reaching `/checkout` with an emptied cart said "Your cart is empty."** When the
     cart had just been pruned because the buyer already owned everything in it, that
     reads like the site lost the basket. It now says so.
+
+## Section 13 — Public homepage & guest journey (2026-07-30)
+
+1. **`/` becomes a controller, and the page becomes real data.** The route closure
+   returning a static `welcome.blade.php` (which carried its own duplicate `<html>`
+   shell) is replaced by `HomeController` on `<x-public-layout>`. Every figure, card and
+   link on the page now comes from the database — a marketing page that lies about the
+   catalogue is worse than no marketing page.
+2. **One read-only `PublicSiteService`, not four controllers doing queries.** The
+   homepage, `/programmes` and `/programmes/{programme}` all read through it. Nothing in
+   it writes, so a stranger browsing the public site never mutates a row.
+3. **The stats band is one query and is cached for five minutes.** The four figures are
+   correlated subqueries in a single `SELECT`, so the band costs one round trip rather
+   than four full table sweeps per anonymous hit. A learner count that is five minutes
+   stale is fine; the price on a course card is not, which is why the featured rail is
+   deliberately **not** cached.
+4. **"Learners" counts distinct people who took a seat.** `count(distinct user_id)` over
+   `active` + `completed` enrolments: one student on six papers is one learner, and a
+   pending or rejected application is not a learner at all.
+5. **Round the band down, don't print a precise figure.** "40+ courses" reads as a claim;
+   "43 courses" reads as a number that will be wrong tomorrow. Figures under ten stay
+   exact, because "0+ learners" is absurd.
+6. **The programme page shows only catalogue-visible courses, and sums the credits from
+   those same rows.** A programme page must not become a way to enumerate drafts. The
+   consequence is deliberate: if a paper in the published curriculum is still a draft, it
+   is absent from the list AND from the total, so the two always reconcile with each
+   other. `ProgrammePart::creditsCounted()` already accepted a collection for exactly
+   this. An inactive programme 404s, so switching one off in admin removes it from the
+   public site the same second.
+7. **`GET /checkout` left the `auth` group.** A signed-out buyer now sees their priced
+   order with an inline "Log in to continue" panel (`commerce/checkout-guest.blade.php`)
+   instead of being redirected to a bare login form having lost all context. The
+   intended URL is recorded there, so logging in returns them to the checkout with the
+   cart merged. Everything that WRITES — `POST /checkout`, the callback — is still
+   auth-gated, and `Commerce\CheckoutTest` was updated from "a guest cannot reach
+   checkout" to "a guest cannot place an order", which is the rule that actually matters.
+8. **"Buy now" now takes a guest to the checkout too.** Section 12 sent them to the cart
+   to avoid a login wall; with the wall gone, "buy now" can mean buy now.
+9. **A second focus-ring token, `focus-ring-inverse`.** The shared `.focus-ring` is
+   crimson with a surface offset — invisible on the crimson marketing heroes, where a
+   keyboard user would have had no focus indicator at all. Hero controls use the
+   inverted (white ring, crimson offset) variant. One token, defined beside the other in
+   `resources/css/app.css`.
+10. **No new migration, no new seeder.** The section adds no schema and no data of its
+    own: it surfaces what Sections 11 and 12 already seed. `migrate:fresh --seed` yields
+    a homepage with four real programmes, 46 priced papers and real enrolment counts.
+
+### Found while building
+
+11. **The public header crushed the logo to a sliver at 375px.** The lockup had no
+    `shrink-0`, so flex took the space the right-hand nav wanted and "Log in" wrapped
+    onto two lines. Pre-existing on every `<x-public-layout>` page, surfaced by this
+    section's 375px pass: the mark now steps down a size on small screens instead of
+    being squeezed, and the nav labels are `whitespace-nowrap`.
+12. **`User::role()` throws when the role does not exist.** Spatie's scope raises
+    `RoleDoesNotExist` rather than matching nothing, which 500-ed the homepage on any
+    install whose roles were not seeded. The instructor count is a plain
+    `whereHas('roles', …)` instead. A public homepage must not depend on seed order.
+13. **Desktop column widths leaked into the mobile stack.** The programme curriculum rows
+    are a table from `sm` and stacked cards below it; an unprefixed `w-14` on the credits
+    cell wrapped "2 credits" onto two lines at 375px. Every fixed width is now
+    `sm:`-prefixed, and the three metadata cells collapse to one line via `sm:contents`.
+14. **`tests/Feature/ExampleTest`'s `GET /` needed a database.** The scaffolding smoke
+    test ran without `RefreshDatabase` because the old homepage queried nothing. It now
+    uses it; the homepage's real behaviour is covered in `Tests\Feature\Public`.
