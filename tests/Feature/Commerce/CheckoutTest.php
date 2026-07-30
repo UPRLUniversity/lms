@@ -165,9 +165,14 @@ class CheckoutTest extends TestCase
             ->assertRedirect()->assertSessionHas('error');
     }
 
-    public function test_a_guest_cannot_reach_checkout(): void
+    public function test_a_guest_cannot_place_an_order(): void
     {
-        $this->get(route('checkout.show'))->assertRedirect(route('login'));
+        // Section 13 opened the checkout SCREEN to guests (they see their order and an
+        // inline sign-in panel — Public\GuestJourneyTest covers that). Writing an order
+        // still requires an account, because an order has to belong to somebody.
+        $this->post(route('checkout.store'), $this->payload())->assertRedirect(route('login'));
+
+        $this->assertSame(0, Order::count());
     }
 
     public function test_a_fully_discounted_order_still_becomes_a_real_paid_order(): void

@@ -16,8 +16,14 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Checkout. Auth-gated — this is the point the guest journey requires an account,
- * because an order has to belong to somebody.
+ * Checkout — the point the guest journey requires an account, because an order has to
+ * belong to somebody.
+ *
+ * Reading the checkout is open to a signed-out buyer: they see the order summary and
+ * an inline sign-in panel (Section 13), which is a far better place to ask for an
+ * account than a bare login form reached by a redirect that threw away the context.
+ * Everything that WRITES — placing the order, the gateway callback — is auth-gated in
+ * routes/web.php.
  */
 class CheckoutController extends Controller
 {
@@ -30,8 +36,10 @@ class CheckoutController extends Controller
 
     public function show(Request $request): View|RedirectResponse
     {
-        $cart = $this->carts->current($request->user());
-        $pruned = $this->carts->pruneUnbuyable($cart, $request->user());
+        $user = $request->user();
+
+        $cart = $this->carts->current($user);
+        $pruned = $user ? $this->carts->pruneUnbuyable($cart, $user) : 0;
         $cart->refresh()->load('items.course.programmeParts.programme', 'items.course.media');
 
         if ($cart->items->isEmpty()) {
@@ -45,11 +53,26 @@ class CheckoutController extends Controller
             );
         }
 
+        $totals = $this->checkout->quote($cart, $user, CartController::couponCode($request));
+
+        if ($user === null) {
+            // Show the buyer what they are about to pay for and ask them to sign in on
+            // the same screen. Remembering the intended URL means "log in" lands them
+            // back here rather than on the dashboard, and MergeGuestCart carries the
+            // basket across on the way.
+            $request->session()->put('url.intended', route('checkout.show'));
+
+            return view('commerce.checkout-guest', [
+                'cart' => $cart,
+                'totals' => $totals,
+            ]);
+        }
+
         return view('commerce.checkout', [
             'cart' => $cart,
-            'totals' => $this->checkout->quote($cart, $request->user(), CartController::couponCode($request)),
+            'totals' => $totals,
             'methods' => $this->gateways->available(),
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 

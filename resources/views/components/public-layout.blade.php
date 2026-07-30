@@ -27,15 +27,32 @@
 
         {{-- Public top bar --}}
         <header class="sticky top-0 z-30 border-b border-line bg-card/90 backdrop-blur">
-            <nav class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-8" aria-label="Primary">
-                <a href="{{ url('/') }}" class="inline-flex rounded-lg focus-ring" aria-label="{{ config('brand.name') }} home">
-                    <x-brand.logo variant="color" alt="{{ config('brand.short') }}" class="h-14 w-auto sm:h-16" />
+            <nav class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6 lg:px-8" aria-label="Primary">
+                {{-- shrink-0 is load-bearing: without it flex crushes the lockup to a
+                     sliver at 375px, where the nav on the right wants more room than
+                     the row has. The mark steps down a size on the smallest screens
+                     rather than being squeezed. --}}
+                <a href="{{ url('/') }}" class="inline-flex shrink-0 rounded-lg focus-ring" aria-label="{{ config('brand.name') }} home">
+                    <x-brand.logo variant="color" alt="{{ config('brand.short') }}" class="h-11 w-auto sm:h-14 lg:h-16" />
                 </a>
 
-                <div class="flex items-center gap-1 sm:gap-2">
+                <div class="flex shrink-0 items-center gap-0.5 sm:gap-2">
+                    {{-- Two entry points into the public site: the qualification ladder and
+                         the flat course list. "Programmes" is hidden on the narrowest
+                         screens so the logo, cart and CTA never wrap at 375px — the
+                         homepage grid and the footer both still reach it. --}}
+                    <a href="{{ route('programmes.index') }}"
+                       @class([
+                           'hidden rounded-lg px-3 py-2 text-sm font-medium focus-ring sm:inline-block',
+                           'text-crimson' => request()->routeIs('programmes.*'),
+                           'text-ink/70 hover:text-ink' => ! request()->routeIs('programmes.*'),
+                       ])>
+                        Programmes
+                    </a>
+
                     <a href="{{ route('catalogue.index') }}"
                        @class([
-                           'rounded-lg px-3 py-2 text-sm font-medium focus-ring',
+                           'whitespace-nowrap rounded-lg px-2 py-2 text-sm font-medium focus-ring sm:px-3',
                            'text-crimson' => request()->routeIs('catalogue.*'),
                            'text-ink/70 hover:text-ink' => ! request()->routeIs('catalogue.*'),
                        ])>
@@ -63,7 +80,8 @@
                     @auth
                         <x-ui.button size="sm" :href="route('dashboard')">Dashboard</x-ui.button>
                     @else
-                        <a href="{{ route('login') }}" class="rounded-lg px-3 py-2 text-sm font-medium text-ink/70 hover:text-ink focus-ring">Log in</a>
+                        <a href="{{ route('login') }}"
+                           class="whitespace-nowrap rounded-lg px-2 py-2 text-sm font-medium text-ink/70 hover:text-ink focus-ring sm:px-3">Log in</a>
                         <x-ui.button size="sm" :href="route('register')">Get started</x-ui.button>
                     @endauth
                 </div>
@@ -75,12 +93,28 @@
         </main>
 
         <footer class="mt-16 border-t border-line bg-card">
-            <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-10 text-center sm:flex-row sm:text-left lg:px-8">
-                <div class="flex items-center gap-3">
-                    <x-brand.logo variant="color" alt="" class="h-9 w-auto" />
-                    <span class="font-display text-sm italic text-gold">{{ config('brand.motto') }}</span>
+            <div class="mx-auto max-w-7xl px-6 py-10 lg:px-8">
+                <div class="flex flex-col items-center justify-between gap-6 text-center sm:flex-row sm:text-left">
+                    <div class="flex items-center gap-3">
+                        <x-brand.logo variant="color" alt="" class="h-9 w-auto" />
+                        <span class="font-display text-sm italic text-gold-ink">{{ config('brand.motto') }}</span>
+                    </div>
+
+                    {{-- The full set of public destinations, so every page can reach every
+                         other one — including at 375px, where the header trims itself. --}}
+                    <nav class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm" aria-label="Footer">
+                        <a href="{{ route('programmes.index') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">Programmes</a>
+                        <a href="{{ route('catalogue.index') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">Catalogue</a>
+                        <a href="{{ route('verify.index') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">Verify a certificate</a>
+                        @guest
+                            <a href="{{ route('login') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">Log in</a>
+                        @endguest
+                    </nav>
                 </div>
-                <p class="text-xs text-ink/50">&copy; {{ date('Y') }} {{ config('brand.university') }}. All rights reserved.</p>
+
+                <p class="mt-8 border-t border-line pt-6 text-center text-xs text-ink/50">
+                    &copy; {{ date('Y') }} {{ config('brand.university') }}. All rights reserved.
+                </p>
             </div>
         </footer>
 

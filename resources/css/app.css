@@ -43,6 +43,15 @@
     }
 
     /*
+     * The same ring, inverted, for controls sitting ON a crimson surface — the
+     * marketing heroes. A crimson ring on a crimson background is no ring at all,
+     * so anything interactive inside a hero uses this instead.
+     */
+    .focus-ring-inverse {
+        @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-crimson;
+    }
+
+    /*
      * Rendered rich-text content (via <x-ui.prose>). Brand typography, ~72ch
      * reading width for lesson content. Output is already sanitized on save.
      */
