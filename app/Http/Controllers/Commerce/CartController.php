@@ -73,13 +73,12 @@ class CartController extends Controller
         }
 
         // "Buy now" adds and goes straight on, so a single-course purchase is two clicks
-        // rather than four. A guest is sent to the cart instead — bouncing them to a
-        // login wall the instant they show interest is exactly the friction the public
-        // catalogue exists to remove.
+        // rather than four. Guests included: since Section 13 the checkout entry shows
+        // the order summary with an inline sign-in panel, so "buy now" no longer means
+        // "meet a login wall" — which is the friction the public catalogue exists to
+        // remove.
         if ($request->input('then') === 'checkout') {
-            return $request->user()
-                ? redirect()->route('checkout.show')
-                : redirect()->route('cart.index');
+            return redirect()->route('checkout.show');
         }
 
         return back()->with('status', "“{$course->title}” was added to your cart.");
