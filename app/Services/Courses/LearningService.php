@@ -37,6 +37,8 @@ use Illuminate\Support\Collection;
  */
 class LearningService
 {
+    public function __construct(private readonly CurriculumOrderService $order) {}
+
     /**
      * A query-free snapshot of $user's progress through $course: the ordered lesson
      * sequence + a single progress query. Reuses already-loaded curriculum relations.
@@ -79,9 +81,11 @@ class LearningService
     }
 
     /**
-     * The unified learning outline (lessons + published assessments interleaved by
-     * placement) with per-item completion and sequential lock state — what the player
-     * sidebar renders and the gate consults.
+     * The unified learning outline — lessons, published assessments and published
+     * assignments interleaved in the ONE merged order the builder wrote (Section 14),
+     * with per-item completion and sequential lock state. This is what the player
+     * sidebar renders and the gate consults, so a learner always sees exactly the
+     * sequence the instructor dragged into place.
      */
     public function outline(User $user, Course $course, ?CourseProgress $snapshot = null): CurriculumOutline
     {
@@ -104,53 +108,50 @@ class LearningService
         // Build the flat ordered rows first, then a single pass computes the lock frontier.
         $rows = new Collection;
 
-        $pushAssessment = function (Assessment $a) use ($rows, $passedIds, $assessmentStatuses) {
-            $rows->push([
-                'kind' => 'assessment',
-                'model' => $a,
-                'completed' => $passedIds->contains($a->id),
-                'required' => (bool) $a->is_required,
-                'module_id' => $a->module_id,
-                'placement' => $a->placement->value,
-                'status' => $assessmentStatuses->get($a->id),
-            ]);
-        };
-
-        $pushAssignment = function (Assignment $a) use ($rows, $gradedIds, $assignmentStatuses) {
-            $rows->push([
-                'kind' => 'assignment',
-                'model' => $a,
-                'completed' => $gradedIds->contains($a->id),
-                'required' => (bool) $a->is_required,
-                'module_id' => $a->module_id,
+        $toRow = fn (array $item, ?int $moduleId): array => match ($item['type']) {
+            'lesson' => [
+                'kind' => 'lesson',
+                'model' => $item['model'],
+                'completed' => $snapshot->isComplete($item['model']),
+                'required' => true,
+                'module_id' => $moduleId,
                 'placement' => null,
-                'status' => $assignmentStatuses->get($a->id),
-            ]);
+            ],
+            'assessment' => [
+                'kind' => 'assessment',
+                'model' => $item['model'],
+                'completed' => $passedIds->contains($item['model']->id),
+                'required' => (bool) $item['model']->is_required,
+                'module_id' => $moduleId,
+                'placement' => $item['model']->placement->value,
+                'status' => $assessmentStatuses->get($item['model']->id),
+            ],
+            'assignment' => [
+                'kind' => 'assignment',
+                'model' => $item['model'],
+                'completed' => $gradedIds->contains($item['model']->id),
+                'required' => (bool) $item['model']->is_required,
+                'module_id' => $moduleId,
+                'placement' => null,
+                'status' => $assignmentStatuses->get($item['model']->id),
+            ],
         };
 
+        // One merged ladder per bucket — the same merge the builder outline renders.
         foreach ($course->modules as $module) {
-            $byPlacement = $assessments->where('module_id', $module->id);
-            $byPlacement->where('placement', 'pre_module')->sortBy('position')->each($pushAssessment);
-
-            foreach ($module->lessons as $lesson) {
-                $rows->push([
-                    'kind' => 'lesson',
-                    'model' => $lesson,
-                    'completed' => $snapshot->isComplete($lesson),
-                    'required' => true,
-                    'module_id' => $module->id,
-                    'placement' => null,
-                ]);
-            }
-
-            $byPlacement->where('placement', 'post_module')->sortBy('position')->each($pushAssessment);
-
-            // Module assignments come after the module's lessons + post-assessments.
-            $assignments->where('module_id', $module->id)->sortBy('position')->each($pushAssignment);
+            $this->order->merge(
+                $module->lessons,
+                $assessments->where('module_id', $module->id),
+                $assignments->where('module_id', $module->id),
+            )->each(fn (array $item) => $rows->push($toRow($item, $module->id)));
         }
 
-        $assessments->whereNull('module_id')->sortBy('position')->each($pushAssessment);
-        $assignments->whereNull('module_id')->sortBy('position')->each($pushAssignment);
+        // The course-level bucket closes the outline.
+        $this->order->merge(
+            [],
+            $assessments->whereNull('module_id'),
+            $assignments->whereNull('module_id'),
+        )->each(fn (array $item) => $rows->push($toRow($item, null)));
 
         $blocked = false;
         $items = $rows->map(function (array $row) use (&$blocked, $sequential) {

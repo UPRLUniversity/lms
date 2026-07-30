@@ -38,6 +38,9 @@ class AssignmentController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'module_id' => ['nullable', 'integer'],
+            // 0-based slot in the target bucket's merged ladder, sent by the outline's
+            // "insert here" affordance. Absent means append.
+            'insert_at' => ['nullable', 'integer', 'min:0', 'max:1000'],
         ]);
 
         if (! empty($data['module_id'])) {

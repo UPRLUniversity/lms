@@ -1,15 +1,8 @@
 @php
-    use App\Enums\LessonProgressStatus;
-
     /** @var \App\Models\Course $course */
     /** @var \App\Support\Learning\CourseProgress $snapshot */
+    /** @var \App\Support\Learning\CurriculumOutline $outline */
     /** @var \App\Models\Lesson $lesson current */
-
-    $fmtDur = function (?int $minutes): ?string {
-        if (! $minutes || $minutes <= 0) return null;
-        $h = intdiv($minutes, 60); $m = $minutes % 60;
-        return $h > 0 ? $h.'h'.($m ? ' '.$m.'m' : '') : $m.'m';
-    };
 @endphp
 
 {{-- Curriculum sidebar: fixed on desktop, slide-in drawer on mobile. --}}
@@ -100,97 +93,26 @@
                     @endif
                 </button>
 
+                {{-- One merged ladder per module — lessons, quizzes and assignments in
+                     exactly the order the instructor dragged them into (Section 14). --}}
                 <ul x-show="open" x-collapse class="mt-0.5 space-y-0.5 pl-2">
-                    {{-- Pre-module assessments sit before the module's lessons. --}}
-                    @isset($outline)
-                        @foreach ($outline->forModule($module->id)->where('kind', 'assessment')->filter(fn ($i) => $i->placement === 'pre_module') as $assessmentItem)
-                            @include('learn.partials._sidebar_assessment', ['item' => $assessmentItem])
-                        @endforeach
-                    @endisset
-
-                    @foreach ($module->lessons as $item)
-                        @php
-                            $isCurrent = $item->id === $lesson->id;
-                            $locked = $snapshot->isLocked($item);
-                            $done = $snapshot->isComplete($item);
-                            $dur = $fmtDur($item->duration_minutes);
-                        @endphp
-                        <li>
-                            @if ($locked)
-                                {{-- Sequential-locked: not a link --}}
-                                <div class="group flex cursor-not-allowed items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-ink/35"
-                                     title="Complete the previous lesson to unlock">
-                                    <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center">
-                                        <x-ui.icon name="lock" class="h-4 w-4" />
-                                    </span>
-                                    <span class="min-w-0 flex-1 truncate">{{ $item->title }}</span>
-                                    @if ($dur)<span class="shrink-0 text-[11px]">{{ $dur }}</span>@endif
-                                </div>
-                            @else
-                                <a href="{{ route('learn.show', [$course, $item]) }}"
-                                   @class([
-                                       'group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors focus-ring',
-                                       'bg-crimson/10 font-medium text-crimson' => $isCurrent,
-                                       'text-ink/75 hover:bg-ink/5' => ! $isCurrent,
-                                   ])
-                                   @if ($isCurrent) aria-current="true" @endif>
-                                    {{-- State icon (reactive to live completion) --}}
-                                    <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center">
-                                        {{-- Completed tick --}}
-                                        <span x-show="isDone({{ $item->id }})" @if (! $done) x-cloak @endif
-                                              class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-success text-white">
-                                            <x-ui.icon name="check" class="h-3 w-3" stroke-width="3" />
-                                        </span>
-                                        {{-- Not complete: current ring / type icon --}}
-                                        <span x-show="! isDone({{ $item->id }})" @if ($done) x-cloak @endif>
-                                            @if ($isCurrent)
-                                                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full border-2 border-crimson">
-                                                    <span class="h-1.5 w-1.5 rounded-full bg-crimson"></span>
-                                                </span>
-                                            @else
-                                                <span class="text-ink/35"><x-ui.icon :name="$item->type->icon()" class="h-4 w-4" /></span>
-                                            @endif
-                                        </span>
-                                    </span>
-
-                                    <span class="min-w-0 flex-1 truncate">{{ $item->title }}</span>
-                                    @if ($dur)<span class="shrink-0 text-[11px] text-ink/40">{{ $dur }}</span>@endif
-                                </a>
-                            @endif
-                        </li>
+                    @foreach ($outline->forModule($module->id) as $item)
+                        @include('learn.partials._sidebar_'.$item->kind, ['item' => $item])
                     @endforeach
-
-                    {{-- Post-module assessments sit after the module's lessons. --}}
-                    @isset($outline)
-                        @foreach ($outline->forModule($module->id)->where('kind', 'assessment')->filter(fn ($i) => $i->placement === 'post_module') as $assessmentItem)
-                            @include('learn.partials._sidebar_assessment', ['item' => $assessmentItem])
-                        @endforeach
-
-                        {{-- Module assignments come last in the module. --}}
-                        @foreach ($outline->forModule($module->id)->where('kind', 'assignment') as $assignmentItem)
-                            @include('learn.partials._sidebar_assignment', ['item' => $assignmentItem])
-                        @endforeach
-                    @endisset
                 </ul>
             </div>
         @endforeach
 
-        {{-- Standalone, course-level assessments + assignments at the end of the outline. --}}
-        @isset($outline)
-            @if ($outline->standalone()->isNotEmpty())
-                <div class="mt-1">
-                    <p class="px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-ink/40">Assessments &amp; assignments</p>
-                    <ul class="space-y-0.5 pl-2">
-                        @foreach ($outline->standalone() as $standaloneItem)
-                            @if ($standaloneItem->isAssignment())
-                                @include('learn.partials._sidebar_assignment', ['item' => $standaloneItem])
-                            @else
-                                @include('learn.partials._sidebar_assessment', ['item' => $standaloneItem])
-                            @endif
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-        @endisset
+        {{-- The course-level bucket closes the outline. --}}
+        @if ($outline->standalone()->isNotEmpty())
+            <div class="mt-1">
+                <p class="px-2.5 py-2 text-xs font-semibold uppercase tracking-wide text-ink/40">Assessments &amp; assignments</p>
+                <ul class="space-y-0.5 pl-2">
+                    @foreach ($outline->standalone() as $item)
+                        @include('learn.partials._sidebar_'.$item->kind, ['item' => $item])
+                    @endforeach
+                </ul>
+            </div>
+        @endif
     </nav>
 </aside>

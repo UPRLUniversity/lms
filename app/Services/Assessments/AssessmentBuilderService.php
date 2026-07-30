@@ -11,6 +11,7 @@ use App\Models\AssessmentPoolRule;
 use App\Models\Course;
 use App\Models\Question;
 use App\Models\User;
+use App\Services\Courses\CurriculumOrderService;
 use Illuminate\Support\Str;
 
 /**
@@ -20,8 +21,10 @@ use Illuminate\Support\Str;
  */
 class AssessmentBuilderService
 {
+    public function __construct(private readonly CurriculumOrderService $order) {}
+
     /**
-     * @param  array<string, mixed>  $data  title, placement, module_id, selection_mode, …
+     * @param  array<string, mixed>  $data  title, placement, module_id, selection_mode, insert_at
      */
     public function createAt(Course $course, array $data, User $author): Assessment
     {
@@ -31,7 +34,7 @@ class AssessmentBuilderService
 
         $moduleId = $placement->attachesToModule() ? ($data['module_id'] ?? null) : null;
 
-        return $course->assessments()->create([
+        $assessment = $course->assessments()->create([
             'module_id' => $moduleId,
             'created_by' => $author->id,
             'title' => $data['title'],
@@ -40,8 +43,17 @@ class AssessmentBuilderService
             'placement' => $placement->value,
             'status' => AssessmentStatus::Draft->value,
             'selection_mode' => $data['selection_mode'] ?? SelectionMode::Fixed->value,
-            'position' => $this->nextPosition($course, $moduleId, $placement),
+            'position' => $this->order->nextPosition($course, $moduleId),
         ]);
+
+        // Placement is derived from where an item sits in the merged ladder (Section 14),
+        // so an explicit "pre-module" choice has to become an actual slot before the
+        // module's first lesson. An index from the outline's "insert here" affordance
+        // wins over both — it's the author pointing at the exact spot.
+        $index = $data['insert_at'] ?? ($placement === AssessmentPlacement::PreModule ? 0 : null);
+        $this->order->insertAt($course, $moduleId, 'assessment', $assessment->id, $index);
+
+        return $assessment->refresh();
     }
 
     /**
@@ -65,7 +77,7 @@ class AssessmentBuilderService
         ], fn ($v) => $v !== null));
 
         // Booleans must be set explicitly (array_filter would drop a false).
-        foreach (['shuffle_questions', 'shuffle_options', 'show_explanations', 'is_required'] as $flag) {
+        foreach (['shuffle_questions', 'shuffle_options', 'show_explanations', 'is_required', 'counts_toward_grade'] as $flag) {
             if (array_key_exists($flag, $data)) {
                 $assessment->{$flag} = (bool) $data[$flag];
             }
@@ -240,11 +252,4 @@ class AssessmentBuilderService
         return $slug;
     }
 
-    private function nextPosition(Course $course, ?int $moduleId, AssessmentPlacement $placement): int
-    {
-        return (int) $course->assessments()
-            ->where('module_id', $moduleId)
-            ->where('placement', $placement->value)
-            ->max('position') + 1;
-    }
 }

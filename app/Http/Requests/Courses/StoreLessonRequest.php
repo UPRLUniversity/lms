@@ -19,6 +19,10 @@ class StoreLessonRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->lessonRules(fileAlreadyStored: false);
+        return $this->lessonRules(fileAlreadyStored: false) + [
+            // Where in the module's merged ladder to drop the new lesson (0-based), sent
+            // by the outline's "insert here" affordance. Absent means append.
+            'insert_at' => ['nullable', 'integer', 'min:0', 'max:1000'],
+        ];
     }
 }
