@@ -50,6 +50,13 @@ export function courseBuilder(config = {}) {
         sortables: [],
         collapsed: new Set(),
 
+        // Where the next created item should land: the bucket clicked and the 0-based
+        // slot within it. index === null means "append", which is what the toolbar
+        // buttons and the per-module "Add lesson" use.
+        insert: { moduleId: null, index: null },
+        newAssessment: { placement: 'standalone', moduleId: '' },
+        newAssignment: { moduleId: '' },
+
         // Lesson editor
         editorOpen: false,
         saving: false,
@@ -103,14 +110,172 @@ export function courseBuilder(config = {}) {
         /* ----- delegated clicks in the outline ----- */
         onCurriculumClick(event) {
             const el = event.target.closest('[data-action]');
+            const action = el?.dataset.action;
+
+            // Any click that isn't inside an open insert menu closes it.
+            if (action !== 'insert-here' && !event.target.closest('[data-insert-menu]')) {
+                this.closeInsertMenus();
+            }
+
             if (!el) return;
-            const action = el.dataset.action;
 
             if (action === 'toggle-module') return this.toggleModule(el);
-            if (action === 'add-lesson') return this.openLessonEditor(Number(el.dataset.moduleId));
+            if (action === 'add-lesson') {
+                this.insert = { moduleId: Number(el.dataset.moduleId), index: null };
+                return this.openLessonEditor(Number(el.dataset.moduleId));
+            }
             if (action === 'edit-lesson') return this.openLessonEditor(null, Number(el.dataset.lessonId));
             if (action === 'delete-lesson') return this.deleteLesson(Number(el.dataset.lessonId));
             if (action === 'delete-module') return this.deleteModule(Number(el.dataset.moduleId));
+
+            if (action === 'insert-here') return this.toggleInsertMenu(el);
+            if (action === 'insert-lesson') return this.insertItem(el, 'lesson');
+            if (action === 'insert-assessment') return this.insertItem(el, 'assessment');
+            if (action === 'insert-assignment') return this.insertItem(el, 'assignment');
+        },
+
+        /* ----- delegated keyboard in the outline ----- */
+        onCurriculumKeydown(event) {
+            if (event.key === 'Escape') return this.closeInsertMenus();
+
+            // Alt+↑/↓ on a row's handle is the keyboard equivalent of a drag — the whole
+            // reorder feature is unusable without it, so it hits the same endpoint.
+            if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+
+            const handle = event.target.closest('[data-drag-item]');
+            if (!handle) return;
+
+            event.preventDefault();
+            this.moveItem(handle, event.key === 'ArrowUp' ? -1 : 1);
+        },
+
+        /* ----- insert-here affordances ----- */
+        closeInsertMenus() {
+            this.$refs.outline.querySelectorAll('[data-insert-menu]').forEach((menu) => {
+                menu.setAttribute('hidden', '');
+                menu.closest('[data-insert-slot]')
+                    ?.querySelector('[data-action="insert-here"]')
+                    ?.setAttribute('aria-expanded', 'false');
+            });
+        },
+
+        toggleInsertMenu(button) {
+            const menu = button.closest('[data-insert-slot]')?.querySelector('[data-insert-menu]');
+            if (!menu) return;
+            const wasOpen = !menu.hasAttribute('hidden');
+            this.closeInsertMenus();
+            if (wasOpen) return;
+            menu.removeAttribute('hidden');
+            button.setAttribute('aria-expanded', 'true');
+            menu.querySelector('button')?.focus();
+        },
+
+        /**
+         * Resolve the clicked slot to a (bucket, index) pair and open the right creator.
+         * The index is counted from the DOM rather than baked into the slot, so it stays
+         * correct after a drag has moved rows around it.
+         */
+        insertItem(el, type) {
+            const slot = el.closest('[data-insert-slot]');
+            const list = slot?.closest('[data-item-list]');
+            if (!list) return;
+
+            const moduleId = list.dataset.moduleId === '' ? null : Number(list.dataset.moduleId);
+            const index = [...list.children]
+                .slice(0, [...list.children].indexOf(slot))
+                .filter((child) => child.matches('[data-curriculum-item]')).length;
+
+            this.insert = { moduleId, index };
+            this.closeInsertMenus();
+
+            if (type === 'lesson') {
+                // A lesson needs a module; the course-level bucket can't hold one.
+                if (moduleId === null) {
+                    this.insert = { moduleId: null, index: null };
+                    toast('Lessons live inside a module — add one to a module instead.', 'error');
+                    return;
+                }
+                return this.openLessonEditor(moduleId);
+            }
+
+            if (type === 'assessment') {
+                this.newAssessment = {
+                    placement: moduleId === null ? 'standalone' : 'post_module',
+                    moduleId: moduleId === null ? '' : String(moduleId),
+                };
+                return this.$dispatch('open-modal', 'add-assessment');
+            }
+
+            this.newAssignment = { moduleId: moduleId === null ? '' : String(moduleId) };
+            this.$dispatch('open-modal', 'add-assignment');
+        },
+
+        /** The toolbar buttons create at the end, with the pickers shown. */
+        openAssessmentModal() {
+            this.insert = { moduleId: null, index: null };
+            this.newAssessment = { placement: 'standalone', moduleId: '' };
+            this.$dispatch('open-modal', 'add-assessment');
+        },
+
+        openAssignmentModal() {
+            this.insert = { moduleId: null, index: null };
+            this.newAssignment = { moduleId: '' };
+            this.$dispatch('open-modal', 'add-assignment');
+        },
+
+        /* ----- keyboard reordering ----- */
+        moveItem(handle, direction) {
+            const row = handle.closest('[data-curriculum-item]');
+            const list = row?.closest('[data-item-list]');
+            if (!list) return;
+
+            const rows = [...list.querySelectorAll('[data-curriculum-item]')];
+            const from = rows.indexOf(row);
+            const to = from + direction;
+
+            if (to >= 0 && to < rows.length) {
+                direction < 0 ? rows[to].before(row) : rows[to].after(row);
+                handle.focus();
+                this.persistOrder();
+                return this.announce(row, list, to + 1, rows.length);
+            }
+
+            // Off the end of this bucket — step into the neighbouring one, so a keyboard
+            // user can move an item between modules exactly as a drag can.
+            const target = this.adjacentList(list, direction, row.dataset.itemType);
+            if (!target) {
+                return this.say(`Already at the ${direction < 0 ? 'start' : 'end'} of the curriculum.`);
+            }
+
+            direction < 0 ? target.append(row) : target.prepend(row);
+            handle.focus();
+            this.persistOrder();
+
+            const count = target.querySelectorAll('[data-curriculum-item]').length;
+            this.announce(row, target, direction < 0 ? count : 1, count);
+        },
+
+        /** The next/previous bucket that may hold $type, in document order. */
+        adjacentList(list, direction, type) {
+            const lists = [...this.$refs.outline.querySelectorAll('[data-item-list]')]
+                .filter((el) => !(type === 'lesson' && el.dataset.moduleId === ''));
+
+            return lists[lists.indexOf(list) + direction] ?? null;
+        },
+
+        bucketName(list) {
+            if (list.dataset.moduleId === '') return 'Course level';
+            return list.closest('[data-module]')
+                ?.querySelector('[data-action="rename-module"]')?.textContent.trim() ?? 'this module';
+        },
+
+        announce(row, list, position, total) {
+            const title = row.querySelector('.font-medium')?.textContent.trim() ?? 'Item';
+            this.say(`Moved ${title} to position ${position} of ${total} in ${this.bucketName(list)}.`);
+        },
+
+        say(message) {
+            if (this.$refs.live) this.$refs.live.textContent = message;
         },
 
         toggleModule(button) {
@@ -213,6 +378,8 @@ export function courseBuilder(config = {}) {
             } else {
                 url = this.urlLessonsIn(this.lesson.module_id);
                 method = 'POST';
+                // Created from an "insert here" slot: land it in that exact slot.
+                if (this.insert.index !== null) data.append('insert_at', this.insert.index);
             }
 
             try {
@@ -312,26 +479,44 @@ export function courseBuilder(config = {}) {
                 }));
             }
 
-            this.$refs.outline.querySelectorAll('[data-lesson-list]').forEach((list) => {
+            // One list per bucket, all in the same group: lessons, quizzes and assignments
+            // are equal siblings that drag between modules and to/from course level.
+            this.$refs.outline.querySelectorAll('[data-item-list]').forEach((list) => {
                 this.sortables.push(new Sortable(list, {
                     ...SORTABLE_OPTS,
-                    group: 'lessons',
-                    handle: '[data-drag-lesson]',
-                    onEnd: () => this.persistOrder(),
+                    group: {
+                        name: 'curriculum',
+                        // A lesson has nowhere to live outside a module.
+                        put: (to, from, dragged) =>
+                            !(to.el.dataset.moduleId === '' && dragged.dataset.itemType === 'lesson'),
+                    },
+                    draggable: '[data-curriculum-item]',
+                    handle: '[data-drag-item]',
+                    // Touch: a scroll gesture must not start a drag.
+                    delay: 150,
+                    delayOnTouchOnly: true,
+                    onEnd: () => this.persistOrder({ refresh: true }),
                 }));
             });
         },
 
-        persistOrder() {
-            const order = [...this.$refs.outline.querySelectorAll('[data-module]')].map((module) => ({
-                module_id: Number(module.dataset.moduleId),
-                lessons: [...module.querySelectorAll('[data-lesson]')].map((l) => Number(l.dataset.lessonId)),
+        /**
+         * Post the whole outline: module order, and each bucket's merged item order.
+         * A pointer drop re-fetches the partial afterwards so the insert slots and any
+         * re-derived labels settle; a keyboard move doesn't, because re-rendering would
+         * throw away the focus the user is mid-move with.
+         */
+        persistOrder({ refresh = false } = {}) {
+            const order = [...this.$refs.outline.querySelectorAll('[data-item-list]')].map((list) => ({
+                module_id: list.dataset.moduleId === '' ? null : Number(list.dataset.moduleId),
+                items: [...list.querySelectorAll('[data-curriculum-item]')].map((el) => ({
+                    type: el.dataset.itemType,
+                    id: Number(el.dataset.itemId),
+                })),
             }));
 
-            const data = new FormData();
-            data.append('order', JSON.stringify(order));
-            // Send as JSON so nested arrays survive.
-            fetch(this.urlReorder(), {
+            // Send as JSON so the nested item objects survive.
+            return fetch(this.urlReorder(), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -341,7 +526,11 @@ export function courseBuilder(config = {}) {
                 },
                 body: JSON.stringify({ order }),
             })
-                .then((res) => { if (!res.ok) throw new Error(); toast('Order saved.'); })
+                .then((res) => {
+                    if (!res.ok) throw new Error();
+                    toast('Order saved.');
+                    if (refresh) return this.refresh();
+                })
                 .catch(() => toast('Could not save the new order.', 'error'));
         },
     };

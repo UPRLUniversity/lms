@@ -2,12 +2,34 @@
     <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
             <h3 class="font-display text-lg font-semibold text-ink">Curriculum</h3>
-            <p class="text-sm text-ink/60">Drag to reorder. Click a lesson to edit it. Changes save automatically.</p>
+            <p class="text-sm text-ink/60">
+                Lessons, quizzes and assignments share one order. Drag a row by its handle — or focus it and
+                press <kbd class="rounded border border-line bg-surface px-1 text-xs">Alt</kbd> +
+                <kbd class="rounded border border-line bg-surface px-1 text-xs">↑</kbd>/<kbd class="rounded border border-line bg-surface px-1 text-xs">↓</kbd>.
+                Changes save automatically.
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <x-ui.button variant="ghost" size="sm" :href="route('assessments.insights', $course)">
+                <x-ui.icon name="sparkles" class="h-4 w-4" /> Insights
+            </x-ui.button>
+            <x-ui.button variant="ghost" size="sm" :href="route('questions.index', $course)">
+                <x-ui.icon name="clipboard" class="h-4 w-4" /> Question bank
+            </x-ui.button>
+            <x-ui.button variant="ghost" size="sm" :href="route('rubrics.index')">
+                <x-ui.icon name="list" class="h-4 w-4" /> Rubrics
+            </x-ui.button>
         </div>
     </div>
 
+    {{-- Reorder announcements for screen readers: drag has no natural narration, and the
+         keyboard path needs to confirm the move landed. Lives outside x-ref="outline" so
+         a partial re-render can't swallow the message mid-announcement. --}}
+    <p x-ref="live" role="status" aria-live="polite" class="sr-only"></p>
+
     {{-- Outline region — delegated clicks survive partial re-renders. --}}
-    <div class="mt-4" id="curriculum-region" @click="onCurriculumClick($event)">
+    <div class="mt-4" id="curriculum-region" @click="onCurriculumClick($event)" @keydown="onCurriculumKeydown($event)">
         <div x-ref="outline">
             @include('courses.partials._curriculum')
         </div>
@@ -23,107 +45,15 @@
                     <x-ui.icon name="plus" class="h-5 w-5" /> Add module
                 </x-ui.button>
             </form>
-        @endif
-    </div>
 
-    {{-- Assessments — quizzes & exams attached to the curriculum --}}
-    <div class="mt-8 border-t border-line pt-6">
-        <div class="flex flex-wrap items-end justify-between gap-3">
-            <div>
-                <h3 class="font-display text-lg font-semibold text-ink">Standalone assessments</h3>
-                <p class="text-sm text-ink/60">Course-level quizzes and exams. Pre/post-module assessments appear inline in the outline above.</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <x-ui.button variant="ghost" size="sm" :href="route('assessments.insights', $course)">
-                    <x-ui.icon name="sparkles" class="h-4 w-4" /> Insights
+            <div class="mt-3 flex flex-wrap gap-2">
+                <x-ui.button variant="ghost" size="sm" @click="openAssessmentModal()">
+                    <x-ui.icon name="clipboard" class="h-4 w-4" /> Add quiz
                 </x-ui.button>
-                <x-ui.button variant="ghost" size="sm" :href="route('questions.index', $course)">
-                    <x-ui.icon name="clipboard" class="h-4 w-4" /> Question bank
+                <x-ui.button variant="ghost" size="sm" @click="openAssignmentModal()">
+                    <x-ui.icon name="document-text" class="h-4 w-4" /> Add assignment
                 </x-ui.button>
-                @if ($canManage)
-                    <x-ui.button size="sm" @click="$dispatch('open-modal', 'add-assessment')">
-                        <x-ui.icon name="plus" class="h-4 w-4" /> Add assessment
-                    </x-ui.button>
-                @endif
             </div>
-        </div>
-
-        @php $standalone = $course->assessments->where('placement', \App\Enums\AssessmentPlacement::Standalone); @endphp
-        @if ($standalone->isEmpty())
-            <div class="mt-4">
-                <x-ui.empty-state icon="clipboard" title="No standalone assessments"
-                    description="Add a course-level quiz or exam — or attach one to a module (pre/post) and it'll appear in the outline above." />
-            </div>
-        @else
-            <ul class="mt-4 space-y-2">
-                @foreach ($standalone as $assessment)
-                    <li>
-                        <a href="{{ route('assessments.edit', [$course, $assessment]) }}"
-                           class="flex items-center gap-3 rounded-xl border border-line bg-card p-3 transition hover:border-ink/20 focus-ring">
-                            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gold/10 text-gold-ink">
-                                <x-ui.icon name="clipboard" class="h-5 w-5" />
-                            </span>
-                            <span class="min-w-0 flex-1">
-                                <span class="block truncate text-sm font-medium text-ink">{{ $assessment->title }}</span>
-                                <span class="text-xs text-ink/50">
-                                    Standalone · {{ $assessment->questionCount() }} {{ \Illuminate\Support\Str::plural('question', $assessment->questionCount()) }}
-                                </span>
-                            </span>
-                            <x-ui.badge :variant="$assessment->status->badge()">{{ $assessment->status->label() }}</x-ui.badge>
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
-        @endif
-    </div>
-
-    {{-- Assignments — graded coursework attached to the curriculum --}}
-    <div class="mt-8 border-t border-line pt-6">
-        <div class="flex flex-wrap items-end justify-between gap-3">
-            <div>
-                <h3 class="font-display text-lg font-semibold text-ink">Assignments</h3>
-                <p class="text-sm text-ink/60">Graded coursework students hand in as text or files. Module-attached assignments appear inline in the outline above.</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <x-ui.button variant="ghost" size="sm" :href="route('rubrics.index')">
-                    <x-ui.icon name="list" class="h-4 w-4" /> Rubrics
-                </x-ui.button>
-                @if ($canManage)
-                    <x-ui.button size="sm" @click="$dispatch('open-modal', 'add-assignment')">
-                        <x-ui.icon name="plus" class="h-4 w-4" /> Add assignment
-                    </x-ui.button>
-                @endif
-            </div>
-        </div>
-
-        @php $standaloneAssignments = $course->assignments->whereNull('module_id'); @endphp
-        @if ($standaloneAssignments->isEmpty())
-            <div class="mt-4">
-                <x-ui.empty-state icon="document-text" title="No standalone assignments"
-                    description="Add course-level coursework here — or attach an assignment to a module and it'll appear in the outline above." />
-            </div>
-        @else
-            <ul class="mt-4 space-y-2">
-                @foreach ($standaloneAssignments as $assignment)
-                    <li>
-                        <a href="{{ route('assignments.edit', [$course, $assignment]) }}"
-                           class="flex items-center gap-3 rounded-xl border border-line bg-card p-3 transition hover:border-ink/20 focus-ring">
-                            <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-crimson/10 text-crimson">
-                                <x-ui.icon name="document-text" class="h-5 w-5" />
-                            </span>
-                            <span class="min-w-0 flex-1">
-                                <span class="block truncate text-sm font-medium text-ink">{{ $assignment->title }}</span>
-                                <span class="text-xs text-ink/50">
-                                    {{ $assignment->type->label() }}
-                                    @if ($assignment->due_at) · due {{ $assignment->due_at->isoFormat('D MMM YYYY, HH:mm') }} @endif
-                                    @if ($assignment->max_points) · {{ rtrim(rtrim(number_format((float) $assignment->max_points, 2), '0'), '.') }} pts @endif
-                                </span>
-                            </span>
-                            <x-ui.badge :variant="$assignment->status->badge()">{{ $assignment->status->label() }}</x-ui.badge>
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
         @endif
     </div>
 
@@ -132,22 +62,31 @@
         <x-ui.modal name="add-assignment" title="New assignment">
             <form method="POST" action="{{ route('assignments.store', $course) }}" class="space-y-4">
                 @csrf
+                <input type="hidden" name="insert_at" :value="insert.index ?? ''">
+
                 <div>
                     <label for="as_title" class="block text-sm font-medium text-ink">Title</label>
                     <input id="as_title" name="title" required maxlength="255"
                            class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson"
                            placeholder="e.g. Crisis communication case study">
                 </div>
-                <div>
+
+                {{-- Hidden, not removed, when the slot already decides the bucket: the
+                     select is still what carries module_id, bound to the same state. --}}
+                <div x-show="insert.index === null" x-cloak>
                     <label for="as_module" class="block text-sm font-medium text-ink">Placement</label>
-                    <select id="as_module" name="module_id"
+                    <select id="as_module" name="module_id" x-model="newAssignment.moduleId"
                             class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
-                        <option value="">Standalone (end of course)</option>
+                        <option value="">Course level (end of course)</option>
                         @foreach ($course->modules as $m)
-                            <option value="{{ $m->id }}">After “{{ $m->title }}”</option>
+                            <option value="{{ $m->id }}">In “{{ $m->title }}”</option>
                         @endforeach
                     </select>
                 </div>
+                <p x-show="insert.index !== null" x-cloak class="rounded-xl bg-surface px-3 py-2 text-sm text-ink/60">
+                    It'll be added exactly where you clicked in the outline.
+                </p>
+
                 <div class="flex justify-end gap-2 pt-2">
                     <x-ui.button type="button" variant="ghost" @click="$dispatch('close-modal', 'add-assignment')">Cancel</x-ui.button>
                     <x-ui.button type="submit">Create &amp; write the brief</x-ui.button>
@@ -158,37 +97,47 @@
 
     {{-- Add-assessment modal --}}
     @if ($canManage)
-        <x-ui.modal name="add-assessment" title="New assessment">
-            <form method="POST" action="{{ route('assessments.store', $course) }}" class="space-y-4"
-                  x-data="{ placement: 'standalone' }">
+        <x-ui.modal name="add-assessment" title="New quiz">
+            <form method="POST" action="{{ route('assessments.store', $course) }}" class="space-y-4">
                 @csrf
+                <input type="hidden" name="insert_at" :value="insert.index ?? ''">
+                <input type="hidden" name="placement" :value="newAssessment.placement">
+
                 <div>
                     <label for="a_title" class="block text-sm font-medium text-ink">Title</label>
                     <input id="a_title" name="title" required maxlength="255"
                            class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson"
                            placeholder="e.g. Module 1 check">
                 </div>
-                <div>
+
+                <div x-show="insert.index === null" x-cloak>
                     <label for="a_placement" class="block text-sm font-medium text-ink">Placement</label>
-                    <select id="a_placement" name="placement" x-model="placement"
+                    <select id="a_placement" x-model="newAssessment.placement"
                             class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
-                        <option value="standalone">Standalone (course-level)</option>
-                        <option value="pre_module">Pre-module (before lessons)</option>
-                        <option value="post_module">Post-module (after lessons)</option>
+                        <option value="standalone">Course level (end of course)</option>
+                        <option value="pre_module">Before a module's lessons</option>
+                        <option value="post_module">After a module's lessons</option>
                     </select>
                 </div>
-                <div x-show="placement !== 'standalone'" x-cloak>
+
+                <div x-show="insert.index === null && newAssessment.placement !== 'standalone'" x-cloak>
                     <label for="a_module" class="block text-sm font-medium text-ink">Module</label>
-                    <select id="a_module" name="module_id"
+                    <select id="a_module" x-model="newAssessment.moduleId"
                             class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                         @foreach ($course->modules as $m)
                             <option value="{{ $m->id }}">{{ $m->title }}</option>
                         @endforeach
                     </select>
                     @if ($course->modules->isEmpty())
-                        <p class="mt-1 text-xs text-crimson">Add a module first to attach a pre/post assessment.</p>
+                        <p class="mt-1 text-xs text-crimson">Add a module first to attach a quiz to one.</p>
                     @endif
                 </div>
+                <input type="hidden" name="module_id" :value="newAssessment.placement === 'standalone' ? '' : newAssessment.moduleId">
+
+                <p x-show="insert.index !== null" x-cloak class="rounded-xl bg-surface px-3 py-2 text-sm text-ink/60">
+                    It'll be added exactly where you clicked in the outline.
+                </p>
+
                 <div>
                     <label for="a_mode" class="block text-sm font-medium text-ink">Question selection</label>
                     <select id="a_mode" name="selection_mode"
@@ -197,6 +146,7 @@
                         <option value="pooled">Random pool</option>
                     </select>
                 </div>
+
                 <div class="flex justify-end gap-2 pt-2">
                     <x-ui.button type="button" variant="ghost" @click="$dispatch('close-modal', 'add-assessment')">Cancel</x-ui.button>
                     <x-ui.button type="submit">Create &amp; build</x-ui.button>
