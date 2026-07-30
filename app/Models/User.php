@@ -68,6 +68,14 @@ class User extends Authenticatable implements MustVerifyEmail
      *
      * @param  Builder<User>  $query
      */
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Order, $this>
+     */
+    public function orders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Order::class)->latest();
+    }
+
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
