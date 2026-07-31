@@ -34,6 +34,18 @@
     [x-cloak] {
         display: none !important;
     }
+
+    /*
+       The `hidden` ATTRIBUTE must always win. Preflight's `[hidden] { display: none }`
+       has the same specificity as a utility class, so any element carrying both `hidden`
+       and a display utility (`flex`, `grid`, …) stays visible — utilities are emitted
+       later and win on source order. That silently un-hid every collapsed menu in the
+       curriculum builder. Not the same thing as Tailwind's `hidden` UTILITY, which is
+       unaffected.
+    */
+    [hidden] {
+        display: none !important;
+    }
 }
 
 @layer components {

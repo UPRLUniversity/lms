@@ -11,6 +11,7 @@ use App\Models\Grade;
 use App\Models\Rubric;
 use App\Models\Submission;
 use App\Models\User;
+use App\Services\Courses\CurriculumOrderService;
 use App\Services\Courses\LearningService;
 use Illuminate\Database\Seeder;
 
@@ -88,6 +89,10 @@ class AssignmentSeeder extends Seeder
             'is_required' => false,
             'position' => 1,
         ]);
+
+        // Both assignments were numbered from 1 within their own bucket, as authoring used
+        // to work. Fold them into the merged ladder they share with lessons and quizzes.
+        app(CurriculumOrderService::class)->normalise($course);
 
         // ------------------------------------------------------------- student work
         $students = $course->enrollments()

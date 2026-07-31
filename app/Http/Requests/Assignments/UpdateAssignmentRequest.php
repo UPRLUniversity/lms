@@ -34,6 +34,7 @@ class UpdateAssignmentRequest extends FormRequest
             'allow_late' => ['sometimes', 'boolean'],
             'max_points' => ['nullable', 'numeric', 'min:0', 'max:100000'],
             'is_required' => ['sometimes', 'boolean'],
+            'counts_toward_grade' => ['sometimes', 'boolean'],
             'module_id' => [
                 'nullable',
                 'integer',

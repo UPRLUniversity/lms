@@ -48,6 +48,7 @@ class Assessment extends Model
         'review_policy',
         'show_explanations',
         'is_required',
+        'counts_toward_grade',
         'position',
     ];
 
@@ -68,6 +69,7 @@ class Assessment extends Model
             'shuffle_options' => 'boolean',
             'show_explanations' => 'boolean',
             'is_required' => 'boolean',
+            'counts_toward_grade' => 'boolean',
             'position' => 'integer',
         ];
     }

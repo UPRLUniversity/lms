@@ -114,6 +114,9 @@
         @case('arrows-up-down')
             <path d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
             @break
+        @case('grip-vertical')
+            <path d="M9 5.25h.008v.008H9V5.25Zm0 6.75h.008v.008H9V12Zm0 6.75h.008v.008H9v-.008Zm6-13.5h.008v.008H15V5.25Zm0 6.75h.008v.008H15V12Zm0 6.75h.008v.008H15v-.008Z" stroke-width="2.6" />
+            @break
         @case('clock')
             <path d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             @break

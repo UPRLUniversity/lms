@@ -1,7 +1,12 @@
 @php
+    use App\Services\Courses\CurriculumOrderService;
     use Illuminate\Support\Str;
 
     $canManage = $canManage ?? false;
+
+    // One merged ladder per bucket — the same merge LearningService feeds the player,
+    // so what an author drags is exactly what a learner walks through.
+    $order = app(CurriculumOrderService::class);
 
     $fmt = function (int $minutes): ?string {
         if ($minutes <= 0) return null;
@@ -12,6 +17,12 @@
 
     $courseMinutes = $course->modules->sum(fn ($m) => $m->lessons->sum('duration_minutes'));
     $courseLessons = $course->modules->sum(fn ($m) => $m->lessons->count());
+
+    $courseLevel = $order->merge(
+        [],
+        $course->assessments->whereNull('module_id'),
+        $course->assignments->whereNull('module_id'),
+    );
 @endphp
 
 <div data-curriculum>
@@ -23,15 +34,18 @@
         @endif
     </div>
 
-    @if ($course->modules->isEmpty())
+    @if ($course->modules->isEmpty() && $courseLevel->isEmpty())
         <x-ui.empty-state
             icon="book"
             title="No modules yet"
-            description="Modules group your lessons into sections. Add your first module below to get started." />
+            description="Modules group your lessons, quizzes and assignments into sections. Add your first module below to get started." />
     @else
         <ul data-module-list class="space-y-3">
             @foreach ($course->modules as $module)
-                @php $moduleMinutes = $module->lessons->sum('duration_minutes'); @endphp
+                @php
+                    $moduleMinutes = $module->lessons->sum('duration_minutes');
+                    $items = $order->merge($module->lessons, $module->assessments, $module->assignments);
+                @endphp
                 <li data-module data-module-id="{{ $module->id }}" class="overflow-hidden rounded-xl border border-line bg-card shadow-sm">
                     {{-- Module header --}}
                     <div class="flex items-center gap-2 border-b border-line bg-surface/40 px-3 py-3">
@@ -53,7 +67,7 @@
                         </span>
 
                         <span class="hidden shrink-0 text-xs text-ink/50 sm:inline">
-                            {{ $module->lessons->count() }} {{ Str::plural('lesson', $module->lessons->count()) }}@if ($d = $fmt($moduleMinutes)) · {{ $d }} @endif
+                            {{ $items->count() }} {{ Str::plural('item', $items->count()) }}@if ($d = $fmt($moduleMinutes)) · {{ $d }} @endif
                         </span>
 
                         @if ($canManage)
@@ -64,64 +78,45 @@
                         @endif
                     </div>
 
-                    {{-- Lessons --}}
-                    <div data-module-body>
+                    {{-- The module's items: lessons, quizzes and assignments in one order.
+                         `group/list` sits here as well as on the <ul> so the trailing
+                         insert slot — which renders outside the list — still reveals on
+                         hover like the ones between rows. --}}
+                    <div data-module-body class="group/list">
                         @if ($module->description)
                             <p class="px-4 pt-3 text-sm text-ink/60">{{ $module->description }}</p>
                         @endif
 
-                        {{-- Pre-module assessments sit before the lessons. --}}
-                        @foreach ($module->assessments->where('placement', \App\Enums\AssessmentPlacement::PreModule) as $assessment)
-                            @include('courses.partials._assessment_chip', ['assessment' => $assessment])
-                        @endforeach
-
-                        <ul data-lesson-list data-module-id="{{ $module->id }}" class="divide-y divide-line">
-                            @forelse ($module->lessons as $lesson)
-                                <li data-lesson data-lesson-id="{{ $lesson->id }}" class="flex items-center gap-2 px-3 py-2.5 hover:bg-surface/40">
-                                    @if ($canManage)
-                                        <button type="button" data-drag-lesson class="cursor-grab rounded-lg p-1.5 text-ink/30 hover:text-ink/60 focus-ring" aria-label="Drag to reorder lesson" title="Drag to reorder">
-                                            <x-ui.icon name="arrows-up-down" class="h-4 w-4" />
-                                        </button>
-                                    @endif
-
-                                    <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink/5 text-ink/60">
-                                        <x-ui.icon :name="$lesson->type->icon()" class="h-4 w-4" />
-                                    </span>
-
-                                    <button type="button" @if ($canManage) data-action="edit-lesson" data-lesson-id="{{ $lesson->id }}" @endif
-                                            class="min-w-0 flex-1 text-left focus-ring rounded {{ $canManage ? 'cursor-pointer' : 'cursor-default' }}">
-                                        <span class="block truncate text-sm font-medium text-ink">{{ $lesson->title }}</span>
-                                        <span class="text-xs text-ink/50">{{ $lesson->type->label() }}</span>
-                                    </button>
-
-                                    @if ($lesson->is_free_preview)
-                                        <x-ui.badge variant="success" class="hidden sm:inline-flex">Preview</x-ui.badge>
-                                    @endif
-                                    @if ($d = $fmt((int) $lesson->duration_minutes))
-                                        <span class="shrink-0 text-xs text-ink/40">{{ $d }}</span>
-                                    @endif
-
-                                    @if ($canManage)
-                                        <button type="button" data-action="delete-lesson" data-lesson-id="{{ $lesson->id }}"
-                                                class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Delete lesson">
-                                            <x-ui.icon name="trash" class="h-4 w-4" />
-                                        </button>
-                                    @endif
-                                </li>
-                            @empty
-                                <li class="px-4 py-3 text-sm text-ink/40">No lessons yet.</li>
-                            @endforelse
+                        {{-- An empty bucket must render an element-EMPTY <ul>: that is the
+                             only shape Sortable's empty-list detection recognises, and
+                             without it a module you have just created cannot be dropped
+                             into. Hence the placeholder and the trailing "+" both sit
+                             outside the list. --}}
+                        <ul data-item-list data-module-id="{{ $module->id }}"
+                            class="group/list {{ $canManage ? '' : 'divide-y divide-line' }} {{ $items->isEmpty() ? 'min-h-[2.75rem]' : '' }}">
+                            @foreach ($items as $item)
+                                @if ($canManage)
+                                    @include('courses.partials._curriculum_insert', ['edge' => $loop->first])
+                                @endif
+                                @include('courses.partials._curriculum_item', ['item' => $item])
+                            @endforeach
                         </ul>
 
-                        {{-- Post-module assessments sit after the lessons. --}}
-                        @foreach ($module->assessments->where('placement', \App\Enums\AssessmentPlacement::PostModule) as $assessment)
-                            @include('courses.partials._assessment_chip', ['assessment' => $assessment])
-                        @endforeach
+                        @if ($items->isEmpty())
+                            <p class="px-4 pb-1 text-sm text-ink/40">
+                                @if ($canManage)
+                                    Nothing in this module yet — drag an item here, or use the + below.
+                                @else
+                                    Nothing in this module yet.
+                                @endif
+                            </p>
+                        @endif
 
-                        {{-- Module assignments come last in the module. --}}
-                        @foreach ($module->assignments as $assignment)
-                            @include('courses.partials._assignment_chip', ['assignment' => $assignment])
-                        @endforeach
+                        @if ($canManage)
+                            @include('courses.partials._curriculum_insert', [
+                                'edge' => true, 'tag' => 'div', 'bucket' => $module->id,
+                            ])
+                        @endif
 
                         @if ($canManage)
                             <div class="border-t border-line px-3 py-2">
@@ -135,5 +130,45 @@
                 </li>
             @endforeach
         </ul>
+    @endif
+
+    {{-- The course-level bucket: quizzes and assignments that belong to no module. It
+         renders with the same affordances, so an item can be dragged in or out of it. --}}
+    @if ($canManage || $courseLevel->isNotEmpty())
+        <div class="group/list mt-3 overflow-hidden rounded-xl border border-dashed border-line bg-card">
+            <div class="flex items-center gap-2 border-b border-line bg-surface/40 px-3 py-3">
+                <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ink/5 text-ink/50">
+                    <x-ui.icon name="layers" class="h-4 w-4" />
+                </span>
+                <span class="min-w-0 flex-1">
+                    <span class="block font-display font-semibold text-ink">Course level</span>
+                    <span class="block text-xs text-ink/50">Final exams and coursework that sit outside any module — shown at the end of the course.</span>
+                </span>
+            </div>
+
+            <ul data-item-list data-module-id=""
+                class="group/list {{ $canManage ? '' : 'divide-y divide-line' }} {{ $courseLevel->isEmpty() ? 'min-h-[2.75rem]' : '' }}">
+                @foreach ($courseLevel as $item)
+                    @if ($canManage)
+                        @include('courses.partials._curriculum_insert', ['edge' => $loop->first])
+                    @endif
+                    @include('courses.partials._curriculum_item', ['item' => $item])
+                @endforeach
+            </ul>
+
+            @if ($courseLevel->isEmpty())
+                <p class="px-4 pb-1 text-sm text-ink/40">
+                    @if ($canManage)
+                        Nothing at course level — drag a quiz or assignment here, or use the + below.
+                    @else
+                        Nothing at course level.
+                    @endif
+                </p>
+            @endif
+
+            @if ($canManage)
+                @include('courses.partials._curriculum_insert', ['edge' => true, 'tag' => 'div', 'bucket' => ''])
+            @endif
+        </div>
     @endif
 </div>

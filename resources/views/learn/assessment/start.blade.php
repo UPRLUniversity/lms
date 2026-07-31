@@ -12,7 +12,10 @@
                     <x-ui.icon name="clipboard" class="h-6 w-6" />
                 </span>
                 <div>
-                    <p class="text-xs font-medium uppercase tracking-wide text-ink/50">{{ $assessment->placement->label() }} assessment</p>
+                    {{-- Placement is derived from where the quiz sits in the curriculum
+                         (Section 14), so surfacing it here would tell a student nothing
+                         the outline hasn't already shown — and could contradict a title. --}}
+                    <p class="text-xs font-medium uppercase tracking-wide text-ink/50">Quiz</p>
                     <h1 class="font-display text-2xl font-semibold text-ink">{{ $assessment->title }}</h1>
                 </div>
             </div>

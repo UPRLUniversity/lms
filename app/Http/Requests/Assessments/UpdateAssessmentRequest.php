@@ -35,6 +35,7 @@ class UpdateAssessmentRequest extends FormRequest
             'shuffle_options' => ['boolean'],
             'show_explanations' => ['boolean'],
             'is_required' => ['boolean'],
+            'counts_toward_grade' => ['boolean'],
         ];
     }
 
@@ -46,7 +47,7 @@ class UpdateAssessmentRequest extends FormRequest
         $data = parent::validated();
 
         // Normalise checkbox booleans so an unchecked box persists as false.
-        foreach (['shuffle_questions', 'shuffle_options', 'show_explanations', 'is_required'] as $flag) {
+        foreach (['shuffle_questions', 'shuffle_options', 'show_explanations', 'is_required', 'counts_toward_grade'] as $flag) {
             $data[$flag] = $this->boolean($flag);
         }
 

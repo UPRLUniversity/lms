@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Courses;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
-use App\Models\Lesson;
-use App\Models\Module;
+use App\Services\Courses\CurriculumOrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CourseCurriculumController extends Controller
 {
+    public function __construct(private readonly CurriculumOrderService $order) {}
+
     /**
      * The curriculum outline partial — re-fetched after each AJAX mutation so the
      * builder always reflects persisted state (the same server-renders-the-partial
@@ -22,7 +23,13 @@ class CourseCurriculumController extends Controller
     {
         $this->authorize('view', $course);
 
-        $course->load(['modules.lessons.media', 'modules.assessments', 'modules.assignments']);
+        $course->load([
+            'modules.lessons.media',
+            'modules.assessments',
+            'modules.assignments',
+            'assessments',
+            'assignments',
+        ]);
 
         return view('courses.partials._curriculum', [
             'course' => $course,
@@ -31,10 +38,12 @@ class CourseCurriculumController extends Controller
     }
 
     /**
-     * Persist a drag-and-drop reorder of the whole outline in one call: module
-     * order, lesson order within each module, and lessons moved between modules.
+     * Persist a drag-and-drop (or keyboard) reorder of the whole outline in one call:
+     * module order, and the single merged item order within each bucket — lessons,
+     * assessments and assignments as equal siblings, moving freely between modules and
+     * to/from the course-level bucket.
      *
-     * Payload: order => [ { module_id, lessons: [lessonId, …] }, … ]
+     * Payload: order => [ { module_id: int|null, items: [ {type, id}, … ] }, … ]
      */
     public function reorder(Request $request, Course $course): JsonResponse
     {
@@ -42,37 +51,15 @@ class CourseCurriculumController extends Controller
 
         $validated = $request->validate([
             'order' => ['required', 'array'],
-            'order.*.module_id' => ['required', 'integer'],
-            'order.*.lessons' => ['array'],
-            'order.*.lessons.*' => ['integer'],
+            'order.*.module_id' => ['present', 'nullable', 'integer'],
+            'order.*.items' => ['array'],
+            'order.*.items.*.type' => ['required', 'string', Rule::in(CurriculumOrderService::TYPES)],
+            'order.*.items.*.id' => ['required', 'integer'],
         ]);
 
-        // Guard: every referenced module/lesson must belong to this course, so a
-        // crafted payload can't re-home another course's content.
-        $moduleIds = $course->modules()->pluck('id')->all();
-        $lessonIds = Lesson::whereIn('module_id', $moduleIds)->pluck('id')->all();
-
-        DB::transaction(function () use ($validated, $moduleIds, $lessonIds) {
-            foreach ($validated['order'] as $moduleIndex => $row) {
-                $moduleId = $row['module_id'];
-                if (! in_array($moduleId, $moduleIds, true)) {
-                    continue;
-                }
-
-                Module::whereKey($moduleId)->update(['position' => $moduleIndex + 1]);
-
-                foreach (($row['lessons'] ?? []) as $lessonIndex => $lessonId) {
-                    if (! in_array($lessonId, $lessonIds, true)) {
-                        continue;
-                    }
-
-                    Lesson::whereKey($lessonId)->update([
-                        'module_id' => $moduleId,
-                        'position' => $lessonIndex + 1,
-                    ]);
-                }
-            }
-        });
+        // Ownership of every referenced module/lesson/assessment/assignment is enforced
+        // inside the service, which skips anything outside this course.
+        $this->order->apply($course, $validated['order']);
 
         return response()->json(['ok' => true, 'message' => 'Order saved.']);
     }

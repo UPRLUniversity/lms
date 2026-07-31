@@ -40,6 +40,7 @@ class Assignment extends Model
         'rubric_id',
         'status',
         'is_required',
+        'counts_toward_grade',
         'position',
     ];
 
@@ -53,6 +54,7 @@ class Assignment extends Model
             'allow_late' => 'boolean',
             'max_points' => 'decimal:2',
             'is_required' => 'boolean',
+            'counts_toward_grade' => 'boolean',
             'position' => 'integer',
         ];
     }

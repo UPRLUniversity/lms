@@ -20,9 +20,11 @@ use Illuminate\Support\Collection;
 /**
  * Pure aggregation over the Section 5/6 scoring engine — reads Attempt/Grade results and
  * maps them through a GradeScale; never writes a score. Gradebook items are every
- * published, REQUIRED assessment/assignment in the course: the same set that already
- * gates course completion (Sections 5/6), so "every item graded" and "course reached
- * 100%" stay in lock-step (see docs/decisions.md for why optional items are excluded).
+ * published, REQUIRED assessment/assignment in the course that also COUNTS TOWARD THE
+ * GRADE: required keeps "every item graded" and "course reached 100%" in lock-step
+ * (see docs/decisions.md for why optional items are excluded), and counts_toward_grade
+ * (Section 14) lets an instructor make a practice quiz compulsory to work through
+ * without letting its score into the transcript.
  *
  * Course percentage is POINTS-WEIGHTED — Σ earned ÷ Σ possible across graded items —
  * never the mean of per-item percentages, so a 10-point quiz and a 90-point exam don't
@@ -134,12 +136,14 @@ class GradebookService
         $assessments = $course->assessments
             ->where('status', AssessmentStatus::Published)
             ->where('is_required', true)
+            ->where('counts_toward_grade', true)
             ->sortBy('position')
             ->values();
 
         $assignments = $course->assignments
             ->where('status', AssignmentStatus::Published)
             ->where('is_required', true)
+            ->where('counts_toward_grade', true)
             ->sortBy('position')
             ->values();
 

@@ -10,6 +10,7 @@ use App\Http\Requests\Courses\UpdateLessonRequest;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Module;
+use App\Services\Courses\CurriculumOrderService;
 use App\Services\Courses\VideoEmbedService;
 use App\Services\Media\PrivateFileService;
 use Illuminate\Http\JsonResponse;
@@ -26,6 +27,7 @@ class LessonController extends Controller
     public function __construct(
         private VideoEmbedService $video,
         private PrivateFileService $files,
+        private CurriculumOrderService $order,
     ) {}
 
     /**
@@ -63,8 +65,12 @@ class LessonController extends Controller
         $lesson = $module->lessons()->create([
             'title' => $request->validated('title'),
             'type' => $request->validated('type'),
-            'position' => (int) $module->lessons()->max('position') + 1,
+            // The module's ladder is shared with its assessments and assignments now, so
+            // "the end" is the end of the whole bucket (Section 14).
+            'position' => $this->order->nextPosition($course, $module->id),
         ]);
+
+        $this->order->insertAt($course, $module->id, 'lesson', $lesson->id, $request->validated('insert_at'));
 
         $this->applyPayload($lesson, $request);
 

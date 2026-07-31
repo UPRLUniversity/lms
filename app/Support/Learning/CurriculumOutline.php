@@ -36,8 +36,8 @@ final class CurriculumOutline
     }
 
     /**
-     * Items belonging to a module, in order (its pre-assessments, lessons,
-     * post-assessments, then assignments).
+     * Items belonging to a module, in the module's merged curriculum order — lessons,
+     * assessments and assignments interleaved exactly as the builder arranged them.
      *
      * @return Collection<int, CurriculumItem>
      */

@@ -2,9 +2,12 @@
 
 namespace Tests\Feature\Courses;
 
+use App\Enums\AssessmentPlacement;
 use App\Enums\CourseStatus;
 use App\Enums\LessonType;
 use App\Enums\Role;
+use App\Models\Assessment;
+use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Department;
 use App\Models\Lesson;
@@ -101,8 +104,13 @@ class CourseBuilderTest extends TestCase
         // Swap module order, and move lesson a2 into module B (after b1).
         $this->actingAs($instructor)->postJson(route('courses.curriculum.reorder', $course), [
             'order' => [
-                ['module_id' => $moduleB->id, 'lessons' => [$b1->id, $a2->id]],
-                ['module_id' => $moduleA->id, 'lessons' => [$a1->id]],
+                ['module_id' => $moduleB->id, 'items' => [
+                    ['type' => 'lesson', 'id' => $b1->id],
+                    ['type' => 'lesson', 'id' => $a2->id],
+                ]],
+                ['module_id' => $moduleA->id, 'items' => [
+                    ['type' => 'lesson', 'id' => $a1->id],
+                ]],
             ],
         ])->assertOk()->assertJson(['ok' => true]);
 
@@ -114,6 +122,38 @@ class CourseBuilderTest extends TestCase
         $this->assertSame($moduleB->id, $a2->module_id);
         $this->assertSame(2, $a2->position);
         $this->assertSame(1, $b1->fresh()->position);
+    }
+
+    public function test_the_outline_renders_every_item_type_as_an_equal_draggable_sibling(): void
+    {
+        $instructor = $this->instructor();
+        $course = Course::factory()->withInstructor($instructor)->create(['created_by' => $instructor->id]);
+        $module = Module::factory()->for($course)->create(['position' => 1]);
+
+        $lesson = Lesson::factory()->for($module)->create(['position' => 1, 'title' => 'Opening lesson']);
+        $quiz = Assessment::factory()->create([
+            'course_id' => $course->id, 'module_id' => $module->id,
+            'placement' => AssessmentPlacement::PostModule->value, 'position' => 2, 'title' => 'Module check',
+        ]);
+        $assignment = Assignment::factory()->create([
+            'course_id' => $course->id, 'module_id' => null, 'position' => 1, 'title' => 'Final brief',
+        ]);
+
+        $response = $this->actingAs($instructor)->get(route('courses.curriculum', $course))->assertOk();
+
+        foreach ([$lesson, $quiz, $assignment] as $model) {
+            $response->assertSee($model->title);
+        }
+
+        // Each row carries the merged-order attributes the reorder payload is built from,
+        // and its own drag handle — the chips are no longer a fixed decoration.
+        $response
+            ->assertSee('data-item-type="lesson"', false)
+            ->assertSee('data-item-type="assessment"', false)
+            ->assertSee('data-item-type="assignment"', false)
+            ->assertSee('data-drag-item', false)
+            // The course-level bucket renders as a real drop target.
+            ->assertSee('data-item-list data-module-id=""', false);
     }
 
     public function test_instructor_cannot_touch_another_instructors_course(): void
@@ -142,7 +182,7 @@ class CourseBuilderTest extends TestCase
         $foreignModule = Module::factory()->for($foreignCourse)->create(['position' => 5]);
 
         $this->actingAs($instructor)->postJson(route('courses.curriculum.reorder', $course), [
-            'order' => [['module_id' => $foreignModule->id, 'lessons' => []]],
+            'order' => [['module_id' => $foreignModule->id, 'items' => []]],
         ])->assertOk();
 
         // The foreign module is untouched — the guard ignored it.

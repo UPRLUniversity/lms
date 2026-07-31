@@ -1072,3 +1072,108 @@ paid courses, a cart, checkout, discount codes and admin-managed payment gateway
 14. **`tests/Feature/ExampleTest`'s `GET /` needed a database.** The scaffolding smoke
     test ran without `RefreshDatabase` because the old homepage queried nothing. It now
     uses it; the homepage's real behaviour is covered in `Tests\Feature\Public`.
+
+---
+
+## Section 14 — Unified drag-and-drop curriculum + grading control (2026-07-30)
+
+1. **One `position` ladder per bucket, not a polymorphic `curriculum_items` table.** Three
+   parallel sequences existed — `lessons.position` per module, `assessments.position` per
+   `(module, placement)`, `assignments.position` per module — which is why a quiz could
+   never sit between lesson 2 and lesson 3. They are collapsed into one ladder per
+   BUCKET, where a bucket is a module or the course-level bucket (`module_id = null`).
+   A new source-of-truth table was the alternative; it would have needed a backfill of
+   every course, a rewrite of `LearningService`, `GradebookService`, the player and every
+   existing curriculum test, and a permanent join on the hottest read path. Merging the
+   three ladders costs one renumbering migration and leaves all of that intact.
+2. **`AssessmentPlacement` becomes derived, not authored.** On every write,
+   `CurriculumOrderService` sets `pre_module` when the quiz sits before its bucket's first
+   lesson, `post_module` otherwise, `standalone` in the course-level bucket. The enum
+   stays on the model, so the insights pre/post pairing and the builder badge keep working
+   untouched — but position is now the single truth about where an item is, and placement
+   can no longer disagree with it. The one case position cannot answer is a module with no
+   lessons at all — nothing exists to be before or after — so there an existing
+   `pre_module` choice is left alone and derivation takes over the moment a lesson
+   arrives. Overwriting it would have silently contradicted an author who had just typed
+   "before the lessons" into the create dialog.
+3. **The reorder payload changed shape rather than gaining a second form.**
+   `order[].lessons[]` became `order[].items[]` of `{type, id}`. Supporting both would have
+   meant two code paths through the one place order is written, for a payload only this
+   app's own builder ever sends.
+4. **Ownership is enforced in the service, silently.** Anything in the payload that isn't
+   this course's is skipped, not rejected: it blocks the crafted-payload attack the same
+   way a 422 would, and a stale tab whose item someone else just deleted still saves the
+   rest of the order instead of failing wholesale.
+5. **`counts_toward_grade`, defaulting to true.** `is_required` was answering two
+   questions at once — must the student complete it, and does its score count. Splitting
+   them lets a practice quiz gate progress without entering the transcript. The default
+   reproduces today's behaviour exactly, so no backfill exists to get wrong, and the
+   gradebook is derived at read time so none is needed. The reverse combination (optional
+   but graded) is deliberately not offered: `GradebookService` derives the gradebook from
+   required items, so it would let a course hit 100% with an ungraded score outstanding.
+6. **No course-level grade weights.** The gradebook stays points-weighted (Σ earned ÷ Σ
+   possible); an item's weight is its points. Adding a weights matrix on top would give
+   two competing ways to say the same thing.
+7. **Alt+↑/↓ is a requirement, not a nicety** — and it steps into the neighbouring bucket
+   at either end, so a keyboard user can move an item between modules exactly as a drag
+   can. A `role="status"` region announces "Moved *Quiz 1* to position 3 of 7 in
+   *Module 2*". The region lives outside the re-rendered outline: a partial refresh would
+   otherwise destroy the element mid-announcement. Keyboard moves deliberately do NOT
+   re-fetch the partial — re-rendering would throw away the focus the user is mid-move
+   with — while pointer drops do.
+8. **The "insert here" slot carries no index.** It counts the `[data-curriculum-item]`
+   rows before it at click time, so it stays correct after a drag without a re-render.
+   Server-side, `insert_at` is a 0-based slot honoured by `CurriculumOrderService::
+   insertAt`, which splices and renumbers rather than shifting — self-correcting even if
+   the ladder was already inconsistent.
+9. **The standalone assessment/assignment lists left the curriculum tab.** They are the
+   course-level bucket now, rendered in the outline with the same affordances. Keeping
+   both would have shown every standalone item twice on one page.
+10. **Seeders call `CurriculumOrderService::normalise()`.** `migrate:fresh --seed` runs
+    the backfill migration against an empty database and the seeders afterwards, so the
+    seeders' own per-ladder numbering would have survived it. One call at the end of
+    `AssessmentSeeder` and `AssignmentSeeder` folds each course into the merged ladder.
+
+### Found while building
+
+11. **`Collection::sortBy()` treats closures inside an array as COMPARATORS, not value
+    extractors.** `sortBy([fn, fn, fn])` silently scrambled the merged order — PHP accepts
+    the extra argument, so the value-extracting closure was read as a comparison result
+    and no error was ever raised. It surfaced as two sequential-gating player tests
+    failing for no visible reason. Every multi-key sort here now builds one composite
+    string key (`CurriculumOrderService::sortKey`).
+12. **Creating an item appended to the wrong end.** `LessonController` used
+    `max(lessons.position) + 1` and the two builder services their own equivalents, all of
+    which now under-count the bucket and collide with whatever sits at that slot. All
+    three go through `CurriculumOrderService::nextPosition`.
+13. **Changing an assignment's module left its position behind.** The settings form can
+    re-home an assignment; its old position means nothing in the new bucket, so
+    `AssignmentBuilderService` re-appends it on a dirty `module_id`.
+14. **The `hidden` ATTRIBUTE lost to Tailwind's display utilities.** Preflight's
+    `[hidden] { display: none }` has the same specificity as a class, and utilities are
+    emitted later, so `<div hidden class="flex">` stayed visible — every collapsed insert
+    menu in the builder rendered permanently expanded. `resources/css/app.css` now forces
+    `[hidden]` in the base layer. Distinct from Tailwind's `hidden` UTILITY, which was
+    never affected.
+15. **`x-init="init()"` on a component that already has an `init()` ran it twice.** Alpine
+    calls the data object's own `init()`, so the attribute was a second call — which
+    re-entered `initSortables()`, and the second pass tore down the instances the first
+    had just bound. Sortable then threw on every `dragover`. The attribute is gone from
+    the course builder and `initSortables()` caches the dynamic import so the rebuild is
+    synchronous and a re-entrant call is harmless. **The same double-init pattern is still
+    present in `assessments/builder`, `learn/show` and `learn/assessment/take`** — left
+    alone as out of section scope, but worth a sweep.
+16. **An empty bucket needs an element-empty `<ul>`.** Sortable only offers an empty list
+    as a drop target when it has no element children, so the placeholder text and the
+    trailing "+" moved outside the list (the slot names its bucket via `data-bucket`
+    instead of being found by ancestry). Without this, a module you had just created could
+    not be dragged into at all.
+17. **Placement disappeared from student-facing copy.** The player sidebar and the quiz
+    start screen printed "Pre-module assessment" / "Post-module assessment". Now that
+    placement is derived from position, that is redundant with the outline the student is
+    already looking at — and actively contradictory on a quiz titled "(pre)" that has been
+    dragged below a lesson. Both now read "Quiz". The instructor-facing badge stays, since
+    pre/post is what drives the insights pairing.
+18. **Inline `@if` directly after a word is not a Blade directive.** `yet@if ($canManage)`
+    compiled to literal text and leaked `@if`/`@endif` onto the page. Directives in these
+    partials sit on their own lines.

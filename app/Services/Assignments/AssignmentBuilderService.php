@@ -7,6 +7,7 @@ use App\Enums\AssignmentType;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\User;
+use App\Services\Courses\CurriculumOrderService;
 use Illuminate\Support\Str;
 
 /**
@@ -17,14 +18,16 @@ use Illuminate\Support\Str;
  */
 class AssignmentBuilderService
 {
+    public function __construct(private readonly CurriculumOrderService $order) {}
+
     /**
-     * @param  array<string, mixed>  $data  title, module_id, type, …
+     * @param  array<string, mixed>  $data  title, module_id, type, insert_at, …
      */
     public function createAt(Course $course, array $data, User $author): Assignment
     {
         $moduleId = $data['module_id'] ?? null;
 
-        return $course->assignments()->create([
+        $assignment = $course->assignments()->create([
             'module_id' => $moduleId,
             'created_by' => $author->id,
             'title' => $data['title'],
@@ -32,8 +35,14 @@ class AssignmentBuilderService
             // Explicit default: an omitted key must not write NULL into the NOT NULL column.
             'type' => $data['type'] ?? AssignmentType::Either->value,
             'status' => AssignmentStatus::Draft->value,
-            'position' => (int) $course->assignments()->where('module_id', $moduleId)->max('position') + 1,
+            // One merged ladder per bucket now, so "the end" means after the lessons and
+            // assessments too — not just after the other assignments.
+            'position' => $this->order->nextPosition($course, $moduleId),
         ]);
+
+        $this->order->insertAt($course, $moduleId, 'assignment', $assignment->id, $data['insert_at'] ?? null);
+
+        return $assignment->refresh();
     }
 
     /**
@@ -56,7 +65,7 @@ class AssignmentBuilderService
         }
 
         // Booleans explicitly (array_filter would drop a false).
-        foreach (['allow_late', 'is_required'] as $flag) {
+        foreach (['allow_late', 'is_required', 'counts_toward_grade'] as $flag) {
             if (array_key_exists($flag, $data)) {
                 $assignment->{$flag} = (bool) $data[$flag];
             }
@@ -67,6 +76,12 @@ class AssignmentBuilderService
             if (array_key_exists($nullable, $data)) {
                 $assignment->{$nullable} = ($data[$nullable] === null || $data[$nullable] === '') ? null : $data[$nullable];
             }
+        }
+
+        // Changing the module moves the assignment into a different ladder, where its old
+        // position means nothing — land it at the end of the bucket it just joined.
+        if ($assignment->isDirty('module_id')) {
+            $assignment->position = $this->order->nextPosition($assignment->course, $assignment->module_id);
         }
 
         $assignment->save();

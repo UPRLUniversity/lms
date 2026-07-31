@@ -12,6 +12,7 @@ use App\Models\Question;
 use App\Models\QuestionCategory;
 use App\Models\User;
 use App\Services\Assessments\AttemptService;
+use App\Services\Courses\CurriculumOrderService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -79,6 +80,10 @@ class AssessmentSeeder extends Seeder
         ]);
         $essay = $bank->first(fn ($q) => $q->type->value === 'essay');
         $assignment->questions()->sync([$essay->id => ['position' => 0]]);
+
+        // The quizzes above were numbered per placement, as authoring used to work. One
+        // pass folds them into the merged ladder they now share with the lessons.
+        app(CurriculumOrderService::class)->normalise($course);
 
         $this->seedAttempts($course, $pre, $post, $exam, $assignment);
     }

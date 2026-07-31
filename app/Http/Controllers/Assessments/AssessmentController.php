@@ -34,6 +34,9 @@ class AssessmentController extends Controller
             'placement' => ['required', 'string', 'in:'.implode(',', AssessmentPlacement::values())],
             'module_id' => ['nullable', 'integer', 'exists:modules,id'],
             'selection_mode' => ['nullable', 'string', 'in:fixed,pooled'],
+            // 0-based slot in the target bucket's merged ladder, sent by the outline's
+            // "insert here" affordance. Absent means append.
+            'insert_at' => ['nullable', 'integer', 'min:0', 'max:1000'],
         ]);
 
         // A pre/post placement must name a module that belongs to this course.
