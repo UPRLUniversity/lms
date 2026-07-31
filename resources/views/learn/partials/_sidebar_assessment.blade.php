@@ -2,7 +2,9 @@
     /** @var \App\Support\Learning\CurriculumItem $item */
     /** @var \App\Models\Course $course */
     $assessment = $item->model;
-    $label = $assessment->placement->label();
+    // Not the placement: it is derived from where the quiz sits (Section 14), so naming
+    // it here is at best redundant with the outline and at worst contradicts the title.
+    $label = 'Quiz';
 
     // Not-started default is gold-ink; an in-progress/awaiting-grading/failed attempt
     // recolors both the icon and the caption to match, so the state reads at a glance.
@@ -35,7 +37,7 @@
             <span class="min-w-0 flex-1">
                 <span class="block truncate">{{ $assessment->title }}</span>
                 <span class="text-[11px] {{ $item->statusLabel ? $tone.' font-medium' : 'text-ink/40' }}">
-                    {{ $item->statusLabel ?? $label.' assessment' }}
+                    {{ $item->statusLabel ?? $label }}
                 </span>
             </span>
         </a>

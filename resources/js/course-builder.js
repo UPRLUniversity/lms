@@ -48,6 +48,7 @@ export function courseBuilder(config = {}) {
         // Curriculum
         newModuleTitle: '',
         sortables: [],
+        sortableLib: null,
         collapsed: new Set(),
 
         // Where the next created item should land: the bucket clicked and the 0-based
@@ -177,13 +178,20 @@ export function courseBuilder(config = {}) {
          */
         insertItem(el, type) {
             const slot = el.closest('[data-insert-slot]');
-            const list = slot?.closest('[data-item-list]');
+            if (!slot) return;
+
+            // In-between slots sit inside their list; the trailing one names its bucket
+            // instead, because it renders outside the <ul> (see _curriculum_insert).
+            const list = slot.closest('[data-item-list]')
+                ?? this.$refs.outline.querySelector(`[data-item-list][data-module-id="${slot.dataset.bucket ?? ''}"]`);
             if (!list) return;
 
             const moduleId = list.dataset.moduleId === '' ? null : Number(list.dataset.moduleId);
-            const index = [...list.children]
-                .slice(0, [...list.children].indexOf(slot))
-                .filter((child) => child.matches('[data-curriculum-item]')).length;
+            const index = slot.parentElement === list
+                ? [...list.children]
+                    .slice(0, [...list.children].indexOf(slot))
+                    .filter((child) => child.matches('[data-curriculum-item]')).length
+                : list.querySelectorAll('[data-curriculum-item]').length;
 
             this.insert = { moduleId, index };
             this.closeInsertMenus();
@@ -466,7 +474,12 @@ export function courseBuilder(config = {}) {
         },
 
         async initSortables() {
-            const { default: Sortable } = await import('sortablejs');
+            // The import is awaited, so two callers could otherwise interleave and each
+            // tear down the other's instances. Cache the module and keep everything after
+            // it synchronous, so a re-entrant call is simply a clean rebuild.
+            this.sortableLib ??= (await import('sortablejs')).default;
+            const Sortable = this.sortableLib;
+
             this.sortables.forEach((s) => s.destroy());
             this.sortables = [];
 
@@ -486,9 +499,12 @@ export function courseBuilder(config = {}) {
                     ...SORTABLE_OPTS,
                     group: {
                         name: 'curriculum',
-                        // A lesson has nowhere to live outside a module.
+                        // A lesson has nowhere to live outside a module. Sortable calls
+                        // this on every dragover and does not guarantee either argument
+                        // is populated, so both are optional-chained — throwing in here
+                        // kills the drag. The server refuses the same move regardless.
                         put: (to, from, dragged) =>
-                            !(to.el.dataset.moduleId === '' && dragged.dataset.itemType === 'lesson'),
+                            !(to?.el?.dataset.moduleId === '' && dragged?.dataset.itemType === 'lesson'),
                     },
                     draggable: '[data-curriculum-item]',
                     handle: '[data-drag-item]',

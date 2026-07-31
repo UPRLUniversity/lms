@@ -78,26 +78,45 @@
                         @endif
                     </div>
 
-                    {{-- The module's items: lessons, quizzes and assignments in one order --}}
-                    <div data-module-body>
+                    {{-- The module's items: lessons, quizzes and assignments in one order.
+                         `group/list` sits here as well as on the <ul> so the trailing
+                         insert slot — which renders outside the list — still reveals on
+                         hover like the ones between rows. --}}
+                    <div data-module-body class="group/list">
                         @if ($module->description)
                             <p class="px-4 pt-3 text-sm text-ink/60">{{ $module->description }}</p>
                         @endif
 
-                        <ul data-item-list data-module-id="{{ $module->id }}" class="group/list {{ $canManage ? '' : 'divide-y divide-line' }}">
-                            @forelse ($items as $item)
+                        {{-- An empty bucket must render an element-EMPTY <ul>: that is the
+                             only shape Sortable's empty-list detection recognises, and
+                             without it a module you have just created cannot be dropped
+                             into. Hence the placeholder and the trailing "+" both sit
+                             outside the list. --}}
+                        <ul data-item-list data-module-id="{{ $module->id }}"
+                            class="group/list {{ $canManage ? '' : 'divide-y divide-line' }} {{ $items->isEmpty() ? 'min-h-[2.75rem]' : '' }}">
+                            @foreach ($items as $item)
                                 @if ($canManage)
-                                    @include('courses.partials._curriculum_insert')
+                                    @include('courses.partials._curriculum_insert', ['edge' => $loop->first])
                                 @endif
                                 @include('courses.partials._curriculum_item', ['item' => $item])
-                            @empty
-                                <li class="px-4 py-3 text-sm text-ink/40">Nothing in this module yet.</li>
-                            @endforelse
-
-                            @if ($canManage)
-                                @include('courses.partials._curriculum_insert')
-                            @endif
+                            @endforeach
                         </ul>
+
+                        @if ($items->isEmpty())
+                            <p class="px-4 pb-1 text-sm text-ink/40">
+                                @if ($canManage)
+                                    Nothing in this module yet — drag an item here, or use the + below.
+                                @else
+                                    Nothing in this module yet.
+                                @endif
+                            </p>
+                        @endif
+
+                        @if ($canManage)
+                            @include('courses.partials._curriculum_insert', [
+                                'edge' => true, 'tag' => 'div', 'bucket' => $module->id,
+                            ])
+                        @endif
 
                         @if ($canManage)
                             <div class="border-t border-line px-3 py-2">
@@ -116,7 +135,7 @@
     {{-- The course-level bucket: quizzes and assignments that belong to no module. It
          renders with the same affordances, so an item can be dragged in or out of it. --}}
     @if ($canManage || $courseLevel->isNotEmpty())
-        <div class="mt-3 overflow-hidden rounded-xl border border-dashed border-line bg-card">
+        <div class="group/list mt-3 overflow-hidden rounded-xl border border-dashed border-line bg-card">
             <div class="flex items-center gap-2 border-b border-line bg-surface/40 px-3 py-3">
                 <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ink/5 text-ink/50">
                     <x-ui.icon name="layers" class="h-4 w-4" />
@@ -127,20 +146,29 @@
                 </span>
             </div>
 
-            <ul data-item-list data-module-id="" class="group/list {{ $canManage ? '' : 'divide-y divide-line' }}">
-                @forelse ($courseLevel as $item)
+            <ul data-item-list data-module-id=""
+                class="group/list {{ $canManage ? '' : 'divide-y divide-line' }} {{ $courseLevel->isEmpty() ? 'min-h-[2.75rem]' : '' }}">
+                @foreach ($courseLevel as $item)
                     @if ($canManage)
-                        @include('courses.partials._curriculum_insert')
+                        @include('courses.partials._curriculum_insert', ['edge' => $loop->first])
                     @endif
                     @include('courses.partials._curriculum_item', ['item' => $item])
-                @empty
-                    <li class="px-4 py-3 text-sm text-ink/40">Nothing at course level — drag a quiz or assignment here, or use the + below.</li>
-                @endforelse
-
-                @if ($canManage)
-                    @include('courses.partials._curriculum_insert')
-                @endif
+                @endforeach
             </ul>
+
+            @if ($courseLevel->isEmpty())
+                <p class="px-4 pb-1 text-sm text-ink/40">
+                    @if ($canManage)
+                        Nothing at course level — drag a quiz or assignment here, or use the + below.
+                    @else
+                        Nothing at course level.
+                    @endif
+                </p>
+            @endif
+
+            @if ($canManage)
+                @include('courses.partials._curriculum_insert', ['edge' => true, 'tag' => 'div', 'bucket' => ''])
+            @endif
         </div>
     @endif
 </div>

@@ -1149,3 +1149,31 @@ paid courses, a cart, checkout, discount codes and admin-managed payment gateway
 13. **Changing an assignment's module left its position behind.** The settings form can
     re-home an assignment; its old position means nothing in the new bucket, so
     `AssignmentBuilderService` re-appends it on a dirty `module_id`.
+14. **The `hidden` ATTRIBUTE lost to Tailwind's display utilities.** Preflight's
+    `[hidden] { display: none }` has the same specificity as a class, and utilities are
+    emitted later, so `<div hidden class="flex">` stayed visible — every collapsed insert
+    menu in the builder rendered permanently expanded. `resources/css/app.css` now forces
+    `[hidden]` in the base layer. Distinct from Tailwind's `hidden` UTILITY, which was
+    never affected.
+15. **`x-init="init()"` on a component that already has an `init()` ran it twice.** Alpine
+    calls the data object's own `init()`, so the attribute was a second call — which
+    re-entered `initSortables()`, and the second pass tore down the instances the first
+    had just bound. Sortable then threw on every `dragover`. The attribute is gone from
+    the course builder and `initSortables()` caches the dynamic import so the rebuild is
+    synchronous and a re-entrant call is harmless. **The same double-init pattern is still
+    present in `assessments/builder`, `learn/show` and `learn/assessment/take`** — left
+    alone as out of section scope, but worth a sweep.
+16. **An empty bucket needs an element-empty `<ul>`.** Sortable only offers an empty list
+    as a drop target when it has no element children, so the placeholder text and the
+    trailing "+" moved outside the list (the slot names its bucket via `data-bucket`
+    instead of being found by ancestry). Without this, a module you had just created could
+    not be dragged into at all.
+17. **Placement disappeared from student-facing copy.** The player sidebar and the quiz
+    start screen printed "Pre-module assessment" / "Post-module assessment". Now that
+    placement is derived from position, that is redundant with the outline the student is
+    already looking at — and actively contradictory on a quiz titled "(pre)" that has been
+    dragged below a lesson. Both now read "Quiz". The instructor-facing badge stays, since
+    pre/post is what drives the insights pairing.
+18. **Inline `@if` directly after a word is not a Blade directive.** `yet@if ($canManage)`
+    compiled to literal text and leaked `@if`/`@endif` onto the page. Directives in these
+    partials sit on their own lines.

@@ -15,8 +15,11 @@
 @endphp
 
 <x-app-layout :title="$course->title">
+    {{-- No x-init="init()": Alpine already calls the data object's own init(), and the
+         second call re-entered initSortables(), leaving Sortable instances bound to
+         elements a later run had already torn down. --}}
     <div class="mx-auto max-w-5xl"
-         x-data="courseBuilder(@js($builderConfig))" x-init="init()">
+         x-data="courseBuilder(@js($builderConfig))">
 
         {{-- Header --}}
         <div class="flex flex-wrap items-start justify-between gap-4">
