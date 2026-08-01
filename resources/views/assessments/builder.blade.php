@@ -37,7 +37,10 @@
 @endphp
 
 <x-app-layout :title="'Builder — '.$assessment->title">
-    <div class="mx-auto max-w-5xl" x-data="assessmentBuilder(@js($config))" x-init="init()">
+    {{-- No x-init="init()": Alpine already calls the data object's own init(), and the
+         second call bound a second Sortable to the question list — every drop fired two
+         reorder saves. --}}
+    <div class="mx-auto max-w-5xl" x-data="assessmentBuilder(@js($config))">
 
         {{-- Header --}}
         <div class="flex flex-wrap items-start justify-between gap-4">

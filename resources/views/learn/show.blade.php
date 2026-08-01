@@ -26,7 +26,10 @@
 @endphp
 
 <x-learn-layout :title="$lesson->title">
-    <div x-data="learnPlayer(@js($config))" x-init="init()"
+    {{-- No x-init="init()": Alpine already calls the data object's own init(), and the
+         second call bound a second set of video listeners — every timeupdate and pause
+         sent two position pings. --}}
+    <div x-data="learnPlayer(@js($config))"
          @keydown.window="onKey($event)"
          class="min-h-screen">
 
