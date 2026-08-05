@@ -3,7 +3,13 @@
 @php
     $cover = $course->coverUrl();
     $lead = $course->leadInstructor();
-    $minutes = $course->total_duration ?? $course->totalDurationMinutes();
+    // Presence, not null-coalescing. withSum() returns NULL for a course with no
+    // lessons, and `??` read that as "not loaded" and fired a per-card SUM — an N+1 on
+    // exactly the courses that had nothing to sum. Ask whether the aggregate was
+    // SELECTED, then trust it, however empty.
+    $minutes = (int) ($course->hasAttribute('total_duration')
+        ? $course->total_duration
+        : $course->totalDurationMinutes());
     $hours = intdiv($minutes, 60);
     $duration = $minutes > 0
         ? ($hours > 0 ? $hours.'h'.($minutes % 60 ? ' '.($minutes % 60).'m' : '') : $minutes.'m')
