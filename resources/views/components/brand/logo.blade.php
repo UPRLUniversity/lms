@@ -5,15 +5,18 @@
 ])
 
 @php
-    $path = config("brand.logos.$variant", config('brand.logos.color'));
-    $exists = $path && file_exists(public_path($path));
+    // Resolved through BrandAssets: an upload from Settings → Branding wins, the
+    // file shipped in public/images/brand/ is the fallback, and null means neither
+    // exists — in which case the inline monogram below keeps the app presentable.
+    $src = brand_assets()->url($variant);
+
     $reversed = $variant === 'white';   // reversed knockout lockup sits on dark surfaces
     $markOnly = $variant === 'mark';    // symbol only, no wordmark
     $altText = $alt ?? config('brand.university');
 @endphp
 
-@if ($exists)
-    <img src="{{ asset($path) }}"
+@if ($src)
+    <img src="{{ $src }}"
          alt="{{ $altText }}"
          {{ $attributes->merge(['class' => 'h-9 w-auto']) }}>
 @else

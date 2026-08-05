@@ -1,13 +1,16 @@
 @props(['url'])
 @php
-    // Use the real brand logo if the asset exists, otherwise a serif wordmark.
-    $logoPath = public_path(config('brand.logos.white'));
+    // Resolved through BrandAssets, so a logo uploaded in Settings reaches e-mail
+    // with no change here. Embedded as a data URI rather than linked: a mail client
+    // reading offline, or blocking remote images by default (most do), would
+    // otherwise render the header empty. Falls back to a serif wordmark.
+    $logo = brand_assets()->dataUri('white');
 @endphp
 <tr>
 <td class="header">
 <a href="{{ $url }}" style="display: inline-block;">
-@if (is_file($logoPath))
-<img src="{{ asset(config('brand.logos.white')) }}" class="logo" alt="{{ config('brand.short') }}">
+@if ($logo)
+<img src="{{ $logo }}" class="logo" alt="{{ config('brand.short') }}">
 @else
 {{ config('brand.short') }}
 @endif
