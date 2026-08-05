@@ -146,8 +146,12 @@ class AuditActivity extends SpatieActivity
 
         $subject = $this->subject;
 
+        // `label` is in the chain for PaymentMethod, which has no name/title/code and
+        // otherwise rendered as a bare "PaymentMethod #3" in the viewer's subject
+        // column — unreadable in exactly the row a security review comes looking for.
         return (string) ($subject->name
             ?? $subject->title
+            ?? $subject->label
             ?? $subject->code
             ?? $subject->reference
             ?? class_basename($subject).' #'.$subject->getKey());

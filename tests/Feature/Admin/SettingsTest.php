@@ -8,6 +8,7 @@ use App\Enums\SettingGroup;
 use App\Models\AuditActivity;
 use App\Models\Course;
 use App\Models\GradeScale;
+use App\Models\Setting;
 use App\Providers\SettingsServiceProvider;
 use App\Services\Settings\SettingsRepository;
 use Database\Seeders\GradeScaleSeeder;
@@ -120,6 +121,26 @@ class SettingsTest extends TestCase
 
         app(SettingsRepository::class)->flush();
         $this->assertFalse(app(SettingsRepository::class)->bool('security.force_email_verification'));
+    }
+
+    public function test_a_direct_model_write_busts_the_resolved_cache(): void
+    {
+        // The repository caches the resolved map indefinitely. Anything that writes a
+        // Setting outside SettingsRepository::set() — a console command, a maintenance
+        // script — must not leave the cache serving a value that no longer exists.
+        $this->assertSame('Creativity, Competence, Character', setting('general.motto'));
+
+        Setting::updateOrCreate(
+            ['key' => 'general.motto'],
+            ['value' => 'Written directly', 'group' => 'general'],
+        );
+
+        $this->assertSame('Written directly', setting('general.motto'));
+
+        Setting::where('key', 'general.motto')->first()->delete();
+
+        // Back to the schema/config default, not a stale cached string.
+        $this->assertSame('Creativity, Competence, Character', setting('general.motto'));
     }
 
     public function test_invalid_input_is_rejected_with_a_field_error(): void
