@@ -19,10 +19,14 @@ the point of the sweep is that these cannot silently regress.
 | Security | 12 | 10 | 2 |
 | Performance | 5 | 5 | 0 |
 | Accessibility | 4 | 1 | 3 (verified already correct) |
-| Correctness (found while sweeping) | 4 | 4 | 0 |
+| Correctness (found while sweeping) | 6 | 6 | 0 |
 
-Route-permission map: **143 mutating routes, 0 unguarded.**
+Route-permission map: **144 mutating routes, 0 unguarded.**
 Dependency advisories: **14 found, 0 remaining.**
+
+Two of the correctness defects (H-27, H-28) were found only by **driving the finished
+section in a real browser** — the suite was green when they were present. That walk is
+summarised at the end of this document.
 
 ---
 
@@ -57,7 +61,7 @@ counts as guarded by middleware (`auth`, `permission:`, `role:`, `can:`, `signed
 `authorize()`/`Gate::` call or a `FormRequest::authorize()` in its action, or by an
 explicit entry in `PUBLIC_BY_DESIGN` with a stated justification.
 
-**Result: 143 mutating routes, 0 unguarded.** The command exits non-zero on any finding,
+**Result: 144 mutating routes, 0 unguarded.** The command exits non-zero on any finding,
 so it works as a CI gate.
 
 Four routes needed an explicit justification rather than a guard, because each is
@@ -358,6 +362,26 @@ compared against stale state, concluded nothing had changed, and **wrote nothing
 silently. Found because the seeded settings change never appeared. Fixed: a writer
 resolves fresh before comparing.
 
+### H-27 — The audit viewer showed "PaymentMethod #3" instead of "Paystack"
+
+Found by driving the app in a browser, not by the suite. `AuditActivity::subjectLabel()`
+checked `name / title / code / reference` — none of which PaymentMethod has. The trait's
+own label chain had already been given `label`; the viewer kept its own copy and did not.
+
+Unreadable in precisely the row a security review comes looking for. Fixed.
+
+### H-28 — A direct Setting write left a stale resolved-settings cache
+
+The resolved map is cached indefinitely. `SettingsRepository::set()` flushes it, and that
+is the path the application uses — confirmed live in the browser, where saving the motto
+updated the sidebar on the very next render. But a console command or maintenance script
+writing a `Setting` model directly bypassed that and left the cache serving a value that
+no longer existed.
+
+Fixed with `saved`/`deleted` model hooks as a backstop. One gap remains and is documented
+in the model: a query-builder mass delete (`Setting::where(...)->delete()`) fires no model
+events, so anything doing that must call `SettingsRepository::flush()` itself.
+
 ### H-26 — A false-positive credential rotation was possible in principle
 
 An encrypted column produces fresh ciphertext on every write, so dirtiness judged on
@@ -379,3 +403,36 @@ php artisan audit:routes --csv=map.csv
 composer audit                      # dependency advisories
 php artisan test tests/Feature/Hardening   # every assertion in this report
 ```
+
+
+---
+
+## Browser verification
+
+The suite being green is not the same as the product working, so the finished section was
+driven end-to-end in a real browser (Playwright, `php artisan serve`, built assets). This
+is what was exercised, and what it caught.
+
+**Verified working**
+
+| Area | Result |
+|---|---|
+| All eight settings tabs | 200, distinct correct `<title>`, no console errors |
+| Saving a setting | Toast shown, value persisted, **and the sidebar motto changed on the next render** — the config override confirmed live, not just unit-tested |
+| Bool-off + int together (Security tab) | Unticked checkbox correctly turned OFF via the hidden-input path; integer saved |
+| Logo upload | Stored on the public disk, rendered in app chrome, **and on the guest-facing public site**, and embedded as a data URI in the e-mail header |
+| Audit viewer | Filters by event/area/search; expandable diff; credential row reads "Changed — value withheld" |
+| CSV export | Filter preserved, correct content-type, **no secret anywhere in the file** |
+| Curriculum Alt+↓ (Section 14 regression check) | Lesson moved, order persisted, **focus stayed on the handle** for repeat presses, and the move was audited with a readable outline diff |
+| Role boundaries (real sessions) | super-admin: settings+audit · auditor: audit only · admin: audit only · instructor/student: neither |
+| Locale switcher | Hidden by default; with a second locale it renders, switches `<html lang>`, and a missing `lang/` directory falls back to English rather than blanking the UI |
+| 404 page | Branded, correct heading, favicon wired |
+| Responsive at 375px | No horizontal overflow on settings, audit, catalogue or the legal pages |
+| Learner + guest pages | All 200 after the app-layout footer change |
+
+**Caught here, not by the suite** — see H-27 and H-28.
+
+One console error appeared during the walk and was **not** a product defect: a media URL
+built from `APP_URL` 404'd while the dev server was running on a different port. Re-run on
+the matching port, it loads. Worth knowing because it means public media URLs are absolute
+and derived from `APP_URL`, so that value must be correct in production.
