@@ -24,6 +24,8 @@
 
                 <p class="mt-2 text-ink/70">@yield('message')</p>
 
+                @yield('extra')
+
                 <div class="mt-8 flex items-center justify-center gap-3">
                     <x-ui.button href="{{ url('/') }}">Back to safety</x-ui.button>
                     @auth
