@@ -3,6 +3,7 @@
 namespace Tests;
 
 use App\Models\User;
+use App\Services\Settings\SettingsRepository;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Spatie\Permission\PermissionRegistrar;
@@ -21,6 +22,11 @@ abstract class TestCase extends BaseTestCase
         if (app()->bound(PermissionRegistrar::class)) {
             app(PermissionRegistrar::class)->forgetCachedPermissions();
         }
+
+        // Settings are cached forever and resolved from a table RefreshDatabase has
+        // just truncated. Without this, one test's saved setting bleeds into the
+        // next's baseline — the same class of leak as the permission cache above.
+        app(SettingsRepository::class)->flush();
     }
 
     /**

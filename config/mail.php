@@ -134,4 +134,20 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Support address
+    |--------------------------------------------------------------------------
+    |
+    | Where learners are told to write when something goes wrong — shown in error
+    | pages and e-mail footers. Distinct from `from.address`, which is the sender
+    | and is frequently a no-reply mailbox.
+    |
+    | Overridden at runtime by Settings → General (Section 15); this is the value a
+    | fresh install starts from.
+    |
+    */
+
+    'support' => env('MAIL_SUPPORT_ADDRESS', env('MAIL_FROM_ADDRESS', 'support@uprl.edu.ng')),
+
 ];
