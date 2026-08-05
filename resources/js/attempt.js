@@ -26,6 +26,7 @@ export function attemptRunner(config = {}) {
         submitting: false,
         dirty: new Set(),
         savingQid: null,
+        _tick: null,
 
         init() {
             // Seed responses + flags from the server's saved state.
@@ -34,11 +35,16 @@ export function attemptRunner(config = {}) {
                 this.flags[it.question_id] = !!it.flagged;
             });
 
-            if (this.timed) {
+            // Belt and braces on the clock: assigning over a live interval orphans it,
+            // and an orphaned tick cannot be cleared — it keeps draining `remaining` and
+            // fires a second auto-submit at zero. An exam timer is the wrong place to
+            // rely on init() being called exactly once.
+            if (this.timed && !this._tick) {
                 this._tick = setInterval(() => {
                     this.remaining = Math.max(0, this.remaining - 1);
                     if (this.remaining <= 0) {
                         clearInterval(this._tick);
+                        this._tick = null;
                         this.submit(true);
                     }
                 }, 1000);

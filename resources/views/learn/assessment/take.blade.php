@@ -9,7 +9,10 @@
 @endphp
 
 <x-learn-layout :title="$assessment->title">
-    <div class="min-h-screen" x-data="attemptRunner(@js($config))" x-init="init()">
+    {{-- No x-init="init()": Alpine already calls the data object's own init(), and the
+         second call started a SECOND countdown interval on the same attempt — the clock
+         ran at double speed and a timed exam auto-submitted at half its time limit. --}}
+    <div class="min-h-screen" x-data="attemptRunner(@js($config))">
         {{-- Top bar --}}
         <header class="sticky top-0 z-30 border-b border-line bg-card/95 backdrop-blur">
             <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">

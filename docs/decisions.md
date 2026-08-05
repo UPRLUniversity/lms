@@ -1177,3 +1177,36 @@ paid courses, a cart, checkout, discount codes and admin-managed payment gateway
 18. **Inline `@if` directly after a word is not a Blade directive.** `yet@if ($canManage)`
     compiled to literal text and leaked `@if`/`@endif` onto the page. Directives in these
     partials sit on their own lines.
+
+---
+
+## Duplicate Alpine init sweep (2026-08-01)
+
+Follow-up to Section 14 finding 15, which flagged three components still carrying the
+double-`init()` pattern and guessed they were symptom-free. Two of them were not.
+
+1. **The timed-assessment clock ran at exactly 2× speed.** `attemptRunner.init()` starts a
+   one-second `setInterval`; running it twice left two intervals draining the same
+   `remaining`, and because the second assignment overwrote `this._tick`, the first was
+   orphaned and could never be cleared. Measured in Chrome before the fix: 10 seconds of
+   countdown per 5 seconds of wall clock. A 20-minute exam ended in 10, and the orphaned
+   tick fired a second auto-submit at zero. This was live for students.
+2. **The lesson player sent two position pings per event.** `setupVideo()` bound its
+   `timeupdate`, `pause` and `beforeunload` listeners twice. `seconds_spent` is `max()`-ed
+   server-side so no data was corrupted, but every uploaded-video lesson doubled its
+   write traffic.
+3. **The assessment builder bound two Sortables to the question list**, so each drop fired
+   two `saveFixed()` requests — the same defect Section 14 fixed in the course builder.
+
+The fix is one line per file: drop `x-init="init()"`, because Alpine already calls a data
+object's own `init()`. Verified after the change that each component still initialises —
+the clock now reads 1.00×, the builder's Sortable is bound, and the player's `collapsed`
+watcher still persists to localStorage.
+
+`attempt.js` additionally guards `if (this.timed && !this._tick)` and nulls `_tick` when it
+clears. An exam timer is the wrong place to depend on a framework calling a hook exactly
+once, and an orphaned interval is unrecoverable without a page reload.
+
+The remaining `x-init` attributes in the codebase are inline expressions (`$watch`,
+`setTimeout`, `$el.scrollTop`, the toast component's session flash) on components that
+define no `init()` — they run once and are unaffected.
