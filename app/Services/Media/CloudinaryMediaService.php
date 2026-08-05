@@ -27,7 +27,7 @@ class CloudinaryMediaService implements MediaUploadService
         $this->validateUpload($file, $purpose);
 
         $response = $this->cloudinary->uploadApi()->upload($file->getRealPath(), array_filter([
-            'folder' => 'uprl/'.$purpose->value,
+            'folder' => $this->folderFor($purpose),
             'transformation' => $purpose->transformations() ?: null,
             'resource_type' => 'image',
         ]));
@@ -64,5 +64,17 @@ class CloudinaryMediaService implements MediaUploadService
         }
 
         $media->delete();
+    }
+
+    /**
+     * "<root>/<purpose>" — e.g. uprl/course_covers. The root is configurable so a
+     * staging site can share the Cloudinary account without mixing its uploads into
+     * the live library; the purpose segment means a new MediaPurpose files itself.
+     */
+    private function folderFor(MediaPurpose $purpose): string
+    {
+        $root = trim((string) config('media.root_folder', 'uprl'), '/');
+
+        return ($root === '' ? '' : $root.'/').$purpose->value;
     }
 }

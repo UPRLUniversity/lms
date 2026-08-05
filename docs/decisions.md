@@ -1210,3 +1210,41 @@ once, and an orphaned interval is unrecoverable without a page reload.
 The remaining `x-init` attributes in the codebase are inline expressions (`$watch`,
 `setTimeout`, `$el.scrollTop`, the toast component's session flash) on components that
 define no `init()` — they run once and are unaffected.
+
+---
+
+## Payment-method form, trusted proxies, Cloudinary root (2026-08-05)
+
+Found while the human was configuring Paystack for the first time. Two of these were
+real defects that no server-side test could have caught, because both lived in markup.
+
+1. **"Save changes" was submitting a DELETE.** The Remove form was nested inside the
+   update form. Browsers do not allow nested forms — they flatten them — so the update
+   form ended up carrying a second `_method`, value `DELETE`, after the `PUT`. PHP keeps
+   the LAST duplicate of a scalar key, so every save destroyed the payment method,
+   which was then reinstalled with blank credentials and refused to switch on for want
+   of the keys just entered. Diagnosed from `created_at == updated_at` on a row that
+   should only ever have been updated. The Remove button now targets a sibling form
+   through the HTML5 `form` attribute, so the layout is unchanged and nothing nests.
+2. **Chrome's password manager was overwriting the public key.** It treats a text input
+   sitting above a password input as the username field and filled it with the signed-in
+   address — observed as `config[public_key] = admin1@uprl.test`. `autocomplete="off"` is
+   ignored for credential autofill; `autocomplete="new-password"` on BOTH inputs is what
+   suppresses it, because opting out only the secret still leaves the "username" guess.
+3. **The enable toggle no longer offers an action that cannot succeed.** It is disabled
+   until the method is configured, with the reason stated next to the badge rather than
+   only as an error after the click. The switch-OFF direction is never blocked, so a
+   method whose credentials are later cleared can still be taken out of service.
+4. **Trusted proxies are configured.** Behind ngrok in development or a load balancer in
+   production, TLS terminates before Laravel sees the request, so it generated `http://`
+   URLs on an `https://` site — including the `callback_url` handed to Paystack and the
+   webhook URL shown on this very screen. `TRUSTED_PROXIES` defaults to `*` because the
+   app is only reached through its own proxy.
+5. **The Cloudinary root folder is configurable.** Uploads were already filed under
+   `uprl/<purpose>` rather than loose at the account root; the root is now
+   `CLOUDINARY_ROOT_FOLDER` so a staging deployment can share one Cloudinary account
+   without its uploads landing in the live library.
+
+`PaymentMethodFormTest` asserts on the rendered markup — no nested form, exactly one
+`_method`, both credential fields opted out of autofill, and the toggle's disabled state.
+It was confirmed to fail when the form is re-nested.
