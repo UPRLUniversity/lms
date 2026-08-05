@@ -47,6 +47,7 @@
 
                             @if ($installed && ! $ready)
                                 <x-ui.badge variant="gold">Needs configuration</x-ui.badge>
+                                <span class="text-xs text-ink/50">Add its keys below, then press <strong class="font-medium">Save changes</strong> to switch it on.</span>
                             @endif
                         </div>
 
@@ -66,16 +67,24 @@
                                     {{-- Toggle. A real button, not a checkbox in a form that
                                          needs a separate save — a switch that does not switch
                                          anything is a lie. --}}
+                                    @php
+                                        // Switching ON needs credentials; switching OFF never does, so a
+                                        // configured-then-broken method can always be taken out of service.
+                                        $blocked = ! $ready && ! $method->is_enabled;
+                                    @endphp
                                     <form method="POST" action="{{ route('admin.payment-methods.toggle', $method) }}">
                                         @csrf
                                         <input type="hidden" name="enable" value="{{ $method->is_enabled ? 0 : 1 }}">
                                         <button type="submit" role="switch"
+                                                @disabled($blocked)
                                                 aria-checked="{{ $method->is_enabled ? 'true' : 'false' }}"
                                                 aria-label="{{ $method->is_enabled ? 'Switch off' : 'Switch on' }} {{ $card['label'] }}"
+                                                title="{{ $blocked ? 'Add this method\'s keys below and press Save changes first.' : '' }}"
                                                 @class([
                                                     'relative inline-flex h-6 w-11 shrink-0 rounded-full transition focus-ring',
                                                     'bg-crimson' => $method->is_enabled,
                                                     'bg-ink/20' => ! $method->is_enabled,
+                                                    'cursor-not-allowed opacity-50' => $blocked,
                                                 ])>
                                             <span @class([
                                                 'inline-block h-5 w-5 translate-y-0.5 rounded-full bg-white shadow transition',
@@ -132,12 +141,17 @@
                                             <div class="relative mt-1.5">
                                                 {{-- A stored secret is never rendered back; the placeholder
                                                      says it exists and a blank submit leaves it untouched. --}}
+                                                {{-- autocomplete="new-password" on BOTH fields, not just the secret:
+                                                     Chrome treats a text input sitting above a password input as the
+                                                     username and fills it with the signed-in address, which silently
+                                                     replaced a pasted public key. "off" alone is ignored here. --}}
                                                 <input :type="show ? 'text' : '{{ $isSecret ? 'password' : 'text' }}'"
                                                        id="config-{{ $key }}"
                                                        name="config[{{ $key }}]"
                                                        value="{{ $isSecret ? '' : $stored }}"
                                                        placeholder="{{ $isSecret && $stored !== '' ? '•••••••••••••••••••• (saved)' : 'Paste your '.str_replace('_', ' ', $key) }}"
-                                                       autocomplete="off" spellcheck="false"
+                                                       autocomplete="new-password" spellcheck="false"
+                                                       data-lpignore="true" data-1p-ignore data-form-type="other"
                                                        class="block w-full rounded-xl border-line bg-card pr-11 font-mono text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                                 @if ($isSecret)
                                                     <button type="button" @click="show = !show"
@@ -183,17 +197,27 @@
                                     @endif
 
                                     @if ($canManage)
+                                        {{-- The Remove button submits the separate delete form declared AFTER this
+                                             one, via the HTML5 `form` attribute. It must not be a nested <form>:
+                                             browsers flatten those, which left a second `_method=DELETE` inside
+                                             this form. PHP keeps the LAST duplicate, so "Save changes" silently
+                                             submitted a DELETE and wiped the method's saved keys. --}}
                                         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-                                            <form method="POST" action="{{ route('admin.payment-methods.destroy', $method) }}"
-                                                  onsubmit="event.preventDefault(); window.uprlConfirm({ title: 'Remove {{ $card['label'] }}?', text: 'Its saved keys will be deleted.', confirmText: 'Remove', danger: true }).then(ok => ok &amp;&amp; this.submit());">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="rounded text-xs font-medium text-ink/50 hover:text-crimson focus-ring">Remove</button>
-                                            </form>
+                                            <button type="submit" form="remove-{{ $card['key'] }}"
+                                                    class="rounded text-xs font-medium text-ink/50 hover:text-crimson focus-ring">Remove</button>
                                             <x-ui.button type="submit">Save changes</x-ui.button>
                                         </div>
                                     @endif
                                 </fieldset>
                             </form>
+
+                            @if ($canManage)
+                                <form id="remove-{{ $card['key'] }}" method="POST" class="hidden"
+                                      action="{{ route('admin.payment-methods.destroy', $method) }}"
+                                      onsubmit="event.preventDefault(); window.uprlConfirm({ title: 'Remove {{ $card['label'] }}?', text: 'Its saved keys will be deleted.', confirmText: 'Remove', danger: true }).then(ok => ok &amp;&amp; this.submit());">
+                                    @csrf @method('DELETE')
+                                </form>
+                            @endif
                         </div>
                     @endif
                 </x-ui.card>

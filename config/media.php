@@ -22,6 +22,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cloudinary root folder
+    |--------------------------------------------------------------------------
+    |
+    | Every public image is filed under "<root>/<purpose>" — uprl/avatars,
+    | uprl/course_covers and so on — so nothing lands loose at the account root
+    | and a new MediaPurpose gets its own folder without a decision.
+    |
+    | Configurable so a staging deployment can point at the SAME Cloudinary
+    | account under its own root (UPRL_LMS_staging) without test uploads
+    | landing in the live library.
+    |
+    */
+
+    'root_folder' => env('CLOUDINARY_ROOT_FOLDER', 'uprl'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Purposes
     |--------------------------------------------------------------------------
     |
