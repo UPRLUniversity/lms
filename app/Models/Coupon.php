@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\CouponScope;
 use App\Enums\CouponType;
+use App\Models\Concerns\LogsAuditActivity;
+use Database\Factories\CouponFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,8 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Coupon extends Model
 {
-    /** @use HasFactory<\Database\Factories\CouponFactory> */
-    use HasFactory;
+    /** @use HasFactory<CouponFactory> */
+    use HasFactory, LogsAuditActivity;
 
     protected $fillable = [
         'code',

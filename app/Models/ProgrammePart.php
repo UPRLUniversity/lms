@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CourseRequirement;
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\ProgrammePartFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class ProgrammePart extends Model
 {
     /** @use HasFactory<ProgrammePartFactory> */
-    use HasFactory;
+    use HasFactory, LogsAuditActivity;
 
     protected $fillable = [
         'programme_id',

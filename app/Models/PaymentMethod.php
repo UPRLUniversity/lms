@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Casts\RichHtml;
 use App\Enums\PaymentEnvironment;
+use App\Models\Concerns\LogsAuditActivity;
+use Database\Factories\PaymentMethodFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,8 +20,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class PaymentMethod extends Model
 {
-    /** @use HasFactory<\Database\Factories\PaymentMethodFactory> */
-    use HasFactory;
+    /** @use HasFactory<PaymentMethodFactory> */
+    use HasFactory, LogsAuditActivity;
 
     protected $fillable = [
         'key',

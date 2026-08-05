@@ -6,6 +6,7 @@ use App\Casts\RichHtml;
 use App\Enums\LessonType;
 use App\Enums\MediaPurpose;
 use App\Models\Concerns\HasMedia;
+use App\Models\Concerns\LogsAuditActivity;
 use App\Services\Courses\VideoEmbedService;
 use Database\Factories\LessonFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
-    use HasFactory, HasMedia;
+    use HasFactory, HasMedia, LogsAuditActivity;
 
     protected $fillable = [
         'module_id',

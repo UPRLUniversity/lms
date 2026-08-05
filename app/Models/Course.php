@@ -11,6 +11,7 @@ use App\Enums\EnrollmentStatus;
 use App\Enums\MediaPurpose;
 use App\Enums\ProgressionMode;
 use App\Models\Concerns\HasMedia;
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\CourseFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,11 +20,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Collection;
 
 class Course extends Model
 {
     /** @use HasFactory<CourseFactory> */
-    use HasFactory, HasMedia;
+    use HasFactory, HasMedia, LogsAuditActivity;
 
     protected $fillable = [
         'title',
@@ -294,9 +296,9 @@ class Course extends Model
      * enrolled/completed students. The membership pool for messaging classmates and
      * instructors, and the roster of a "message all enrolled" group.
      *
-     * @return \Illuminate\Support\Collection<int, User>
+     * @return Collection<int, User>
      */
-    public function members(): \Illuminate\Support\Collection
+    public function members(): Collection
     {
         return $this->instructors()->get()
             ->concat($this->enrolledStudents())

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\EnrollmentSource;
 use App\Enums\EnrollmentStatus;
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\EnrollmentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Enrollment extends Model
 {
     /** @use HasFactory<EnrollmentFactory> */
-    use HasFactory;
+    use HasFactory, LogsAuditActivity;
 
     protected $fillable = [
         'user_id',

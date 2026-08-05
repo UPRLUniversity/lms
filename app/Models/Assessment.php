@@ -8,6 +8,7 @@ use App\Enums\AssessmentStatus;
 use App\Enums\AttemptStatus;
 use App\Enums\ReviewPolicy;
 use App\Enums\SelectionMode;
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\AssessmentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -26,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Assessment extends Model
 {
     /** @use HasFactory<AssessmentFactory> */
-    use HasFactory;
+    use HasFactory, LogsAuditActivity;
 
     protected $fillable = [
         'course_id',

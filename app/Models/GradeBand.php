@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\GradeBandFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class GradeBand extends Model
 {
     /** @use HasFactory<GradeBandFactory> */
-    use HasFactory;
+    use HasFactory, LogsAuditActivity;
 
     protected $fillable = [
         'grade_scale_id',

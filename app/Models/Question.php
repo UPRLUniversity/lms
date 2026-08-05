@@ -8,6 +8,7 @@ use App\Enums\MediaPurpose;
 use App\Enums\QuestionDifficulty;
 use App\Enums\QuestionType;
 use App\Models\Concerns\HasMedia;
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\QuestionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,7 +29,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Question extends Model
 {
     /** @use HasFactory<QuestionFactory> */
-    use HasFactory, HasMedia, SoftDeletes;
+    use HasFactory, HasMedia, LogsAuditActivity, SoftDeletes;
 
     protected $fillable = [
         'category_id',

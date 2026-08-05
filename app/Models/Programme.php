@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\RichHtml;
 use App\Enums\MediaPurpose;
 use App\Models\Concerns\HasMedia;
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\ProgrammeFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,7 +29,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class Programme extends Model
 {
     /** @use HasFactory<ProgrammeFactory> */
-    use HasFactory, HasMedia;
+    use HasFactory, HasMedia, LogsAuditActivity;
 
     protected $fillable = [
         'name',

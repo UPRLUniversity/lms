@@ -5,10 +5,12 @@ namespace App\Models;
 use App\Enums\MediaPurpose;
 use App\Enums\NotificationType;
 use App\Models\Concerns\HasMedia;
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -18,7 +20,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasMedia, HasRoles, Notifiable;
+    use HasFactory, HasMedia, HasRoles, LogsAuditActivity, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -69,9 +71,9 @@ class User extends Authenticatable implements MustVerifyEmail
      * @param  Builder<User>  $query
      */
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\App\Models\Order, $this>
+     * @return HasMany<Order, $this>
      */
-    public function orders(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function orders(): HasMany
     {
         return $this->hasMany(Order::class)->latest();
     }
@@ -117,9 +119,9 @@ class User extends Authenticatable implements MustVerifyEmail
      * Conversations (direct + group) this user takes part in (Section 9). last_read_at
      * on the pivot is the read watermark used to derive unread counts.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<Conversation, $this>
+     * @return BelongsToMany<Conversation, $this>
      */
-    public function conversations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function conversations(): BelongsToMany
     {
         return $this->belongsToMany(Conversation::class)
             ->withPivot('last_read_at')
