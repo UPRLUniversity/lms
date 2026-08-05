@@ -1,29 +1,27 @@
 <?php
 
 use App\Enums\Role;
+use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\CertificateController as AdminCertificateController;
 use App\Http\Controllers\Admin\CertificateTemplateController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\ForumReportController;
+use App\Http\Controllers\Admin\GradeScaleController;
 use App\Http\Controllers\Admin\InvitationController;
-use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentMethodController;
 use App\Http\Controllers\Admin\ProgrammeController;
 use App\Http\Controllers\Admin\ProgrammePartController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Communication\ConversationController;
-use App\Http\Controllers\Communication\ForumController;
-use App\Http\Controllers\Communication\ForumPostController;
-use App\Http\Controllers\Communication\MessageController;
-use App\Http\Controllers\Courses\AnnouncementController;
 use App\Http\Controllers\Assessments\AssessmentContentController;
 use App\Http\Controllers\Assessments\AssessmentController;
 use App\Http\Controllers\Assessments\AssessmentInsightController;
 use App\Http\Controllers\Assessments\AttemptController;
-use App\Http\Controllers\Assessments\GradingController;
 use App\Http\Controllers\Assessments\AttemptResultController;
+use App\Http\Controllers\Assessments\GradingController;
 use App\Http\Controllers\Assessments\QuestionCategoryController;
 use App\Http\Controllers\Assessments\QuestionController;
 use App\Http\Controllers\Assignments\AssignmentController;
@@ -36,11 +34,12 @@ use App\Http\Controllers\Commerce\CartController;
 use App\Http\Controllers\Commerce\CheckoutController;
 use App\Http\Controllers\Commerce\OrderController;
 use App\Http\Controllers\Commerce\PaymentWebhookController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\InstructorAnalyticsController;
-use App\Http\Controllers\Reports\ReportController;
-use App\Http\Controllers\Reports\ReportDownloadController;
+use App\Http\Controllers\Communication\ConversationController;
+use App\Http\Controllers\Communication\ForumController;
+use App\Http\Controllers\Communication\ForumPostController;
+use App\Http\Controllers\Communication\MessageController;
 use App\Http\Controllers\Courses\AdminEnrollmentController;
+use App\Http\Controllers\Courses\AnnouncementController;
 use App\Http\Controllers\Courses\BulkEnrollmentController;
 use App\Http\Controllers\Courses\CourseController;
 use App\Http\Controllers\Courses\CourseCurriculumController;
@@ -54,14 +53,18 @@ use App\Http\Controllers\Courses\LessonController;
 use App\Http\Controllers\Courses\ModuleController;
 use App\Http\Controllers\Courses\MyLearningController;
 use App\Http\Controllers\Courses\RosterController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EditorUploadController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\Public\ProgrammeController as PublicProgrammeController;
-use App\Http\Controllers\Admin\GradeScaleController;
 use App\Http\Controllers\Grades\GradebookController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InstructorAnalyticsController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Public\ProgrammeController as PublicProgrammeController;
+use App\Http\Controllers\Reports\ReportController;
+use App\Http\Controllers\Reports\ReportDownloadController;
 use App\Http\Controllers\VerificationController;
 use App\Models\User;
 use App\Models\UserInvitation;
@@ -84,6 +87,26 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', HomeController::class)->name('home');
 Route::get('/programmes', [PublicProgrammeController::class, 'index'])->name('programmes.index');
 Route::get('/programmes/{programme}', [PublicProgrammeController::class, 'show'])->name('programmes.show');
+
+/*
+|--------------------------------------------------------------------------
+| Legal pages (Section 15) — linked from BOTH footers
+|--------------------------------------------------------------------------
+| Placeholders with the real structure in place, so the institution's counsel can
+| supply the wording without anyone touching routing or layout. Reachable by guests
+| because a visitor must be able to read the terms BEFORE creating an account.
+*/
+Route::view('/terms', 'legal.terms')->name('legal.terms');
+Route::view('/privacy', 'legal.privacy')->name('legal.privacy');
+
+/*
+| Language switcher (Section 15). Open to guests — someone reading the marketing
+| site should be able to change language before signing up. It writes one session
+| key; the controller rejects any locale this install does not offer.
+*/
+Route::post('/locale/{locale}', [LocaleController::class, 'update'])
+    ->middleware('throttle:30,1')
+    ->name('locale.update');
 
 /*
 |--------------------------------------------------------------------------
@@ -143,7 +166,13 @@ Route::post('/webhooks/payments/{method}', PaymentWebhookController::class)
 Route::get('/checkout', [CheckoutController::class, 'show'])->name('checkout.show');
 
 Route::middleware('auth')->group(function () {
-    Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    // Throttled (Section 15): placing an order talks to a payment gateway and writes a
+    // money record, so a double-click storm or a scripted loop must not be able to open
+    // a hundred pending orders. Generous enough that a genuine retry after a failed card
+    // is never blocked.
+    Route::post('/checkout', [CheckoutController::class, 'store'])
+        ->middleware('throttle:20,1')
+        ->name('checkout.store');
     Route::get('/checkout/{order}/callback', [CheckoutController::class, 'callback'])->name('checkout.callback');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
@@ -190,8 +219,12 @@ Route::middleware('auth')->group(function () {
         ->middleware('can:view,media')
         ->name('media.download');
 
-    // In-editor image uploads (TinyMCE) → MediaUploadService.
-    Route::post('/editor/upload', [EditorUploadController::class, 'store'])->name('editor.upload');
+    // In-editor image uploads (TinyMCE) → MediaUploadService. Throttled (Section 15):
+    // an authenticated author is trusted, but an upload endpoint is still the cheapest
+    // way to fill a disk or a Cloudinary quota by accident.
+    Route::post('/editor/upload', [EditorUploadController::class, 'store'])
+        ->middleware('throttle:60,1')
+        ->name('editor.upload');
 });
 
 /*
@@ -403,6 +436,48 @@ Route::middleware(['auth', 'verified'])
         Route::get('coupons/{coupon}/edit', [CouponController::class, 'edit'])->name('coupons.edit');
         Route::put('coupons/{coupon}', [CouponController::class, 'update'])->name('coupons.update');
         Route::delete('coupons/{coupon}', [CouponController::class, 'destroy'])->name('coupons.destroy');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin — system settings (Section 15)
+|--------------------------------------------------------------------------
+| Super-admin ONLY (settings.manage), a deliberately narrower door than the rest of
+| /admin: these values reach branding, security, session length and money formatting
+| across the whole institution.
+|
+| The optional {group} segment is the tab, so a tab is linkable and a save can
+| redirect back to the one it came from.
+|
+| Note what is NOT here: gateway credentials stay on the Section 12 payment-methods
+| screen (encrypted, admin-only) and the grade-band grid stays on the Section 6.5
+| scale admin. This page links to both rather than re-implementing either.
+*/
+Route::middleware(['auth', 'verified', 'permission:settings.manage'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('settings/{group?}', [SettingController::class, 'index'])->name('settings.index');
+        Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+    });
+
+/*
+|--------------------------------------------------------------------------
+| Admin — audit trail (Section 15)
+|--------------------------------------------------------------------------
+| Gated on audit.view, which the read-only auditor holds by construction (every
+| ".view" permission) — reading the record of what happened is exactly that role's
+| job. Admins hold it too; the super-admin passes via Gate::before.
+|
+| GET only, by design. The trail is APPEND-ONLY: there is no delete or edit route
+| here, and AuditActivity refuses both at the model level even if one were added.
+*/
+Route::middleware(['auth', 'verified', 'permission:audit.view'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::get('audit', [AuditController::class, 'index'])->name('audit.index');
+        Route::get('audit/export', [AuditController::class, 'export'])->name('audit.export');
     });
 
 /*

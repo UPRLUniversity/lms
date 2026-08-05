@@ -176,10 +176,21 @@ return [
         'roles' => ['admin', 'super-admin', 'auditor'],
     ],
     [
+        // The audit trail (Section 15). The read-only auditor is included by design:
+        // reading the record of what happened is precisely that role's purpose.
+        'label' => 'Audit trail',
+        'icon' => 'clipboard',
+        'route' => 'admin.audit.index',
+        'match' => 'admin.audit.*',
+        'roles' => ['admin', 'super-admin', 'auditor'],
+    ],
+    [
+        // Super-admin only — narrower than the rest of /admin, because these values
+        // reach branding, security and money formatting across the institution.
         'label' => 'Settings',
         'icon' => 'cog',
-        'route' => null,
-        'match' => 'settings.*',
-        'roles' => ['admin', 'super-admin'],
+        'route' => 'admin.settings.index',
+        'match' => 'admin.settings.*',
+        'roles' => ['super-admin'],
     ],
 ];
