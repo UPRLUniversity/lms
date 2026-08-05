@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,9 +17,31 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    /*
+     * Event listeners are registered EXPLICITLY, in AppServiceProvider, and nowhere
+     * else. Laravel's automatic discovery is switched off here because the two
+     * mechanisms silently compound: discovery binds any `handle*` method in
+     * app/Listeners to its type-hinted event, so a listener that is also registered by
+     * hand fires TWICE per event.
+     *
+     * That was already happening to MergeGuestCart (found in Section 15) — every login
+     * ran the guest-cart merge twice. It survived unnoticed because the merge happens to
+     * be idempotent; the audit listener added in this section would not have been so
+     * forgiving, recording two entries for one sign-in.
+     *
+     * One registration mechanism, visible in one file, is worth more than the
+     * convenience of discovery.
+     */
+    ->withEvents(discover: false)
     ->withMiddleware(function (Middleware $middleware): void {
         // Boot out any session whose account was deactivated after login.
         $middleware->appendToGroup('web', EnsureUserIsActive::class);
+
+        // Baseline security response headers on every web response (Section 15).
+        $middleware->appendToGroup('web', SecurityHeaders::class);
+
+        // Apply the visitor's chosen language, if this install offers one (Section 15).
+        $middleware->appendToGroup('web', SetLocale::class);
 
         /*
          * Behind a proxy — an ngrok tunnel in development, nginx or a load balancer in

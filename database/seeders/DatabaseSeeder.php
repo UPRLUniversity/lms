@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Models\User;
 use Database\Seeders\Support\Nigeria;
 use Illuminate\Database\Seeder;
+use Spatie\Activitylog\Facades\Activity;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,6 +16,28 @@ class DatabaseSeeder extends Seeder
      * Every account's password is "password" (see README for the credential table).
      */
     public function run(): void
+    {
+        /*
+         * The bulk seed runs with activity logging OFF (Section 15).
+         *
+         * Every audited model would otherwise write an entry per row, burying the audit
+         * trail under tens of thousands of machine-generated "created" records and making
+         * /admin/audit useless to click through — the opposite of a clickable demo. It
+         * also roughly doubles the seed's runtime.
+         *
+         * AuditTrailSeeder then produces a small, deliberate history at the end by
+         * performing REAL actions through the real services.
+         */
+        Activity::withoutLogs(function () {
+            $this->seedEverything();
+        });
+
+        // A believable trail: a fee change, a coupon deactivation, a credential
+        // rotation, a curriculum reorder, a settings change and a failed sign-in.
+        $this->call(AuditTrailSeeder::class);
+    }
+
+    private function seedEverything(): void
     {
         $this->call(RolesAndPermissionsSeeder::class);
 

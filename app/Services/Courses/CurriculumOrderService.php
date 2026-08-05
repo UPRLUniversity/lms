@@ -3,13 +3,16 @@
 namespace App\Services\Courses;
 
 use App\Enums\AssessmentPlacement;
+use App\Enums\AuditEvent;
 use App\Models\Assessment;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Module;
+use App\Support\Audit\AuditLogger;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * The single place the curriculum's merged order is written and read.
@@ -49,6 +52,12 @@ class CurriculumOrderService
             'assignment' => $course->assignments()->pluck('id')->all(),
         ];
 
+        // Captured before the write, for the audit entry below. A reorder changes the
+        // shape of what a student must work through, so it is recorded — and it is
+        // recorded HERE because the writes below are bulk query-builder updates, which
+        // fire no model events for the audit trait to notice.
+        $before = $this->outlineSignature($course);
+
         DB::transaction(function () use ($order, $moduleIds, $owned) {
             $modulePosition = 0;
 
@@ -76,6 +85,73 @@ class CurriculumOrderService
                 $this->write($items, $moduleId);
             }
         });
+
+        $this->recordReorder($course, $before);
+    }
+
+    /**
+     * Record the reorder, if it actually moved anything.
+     *
+     * The diff is the readable outline — "Module A: Lesson 3, Quiz 1" — rather than a
+     * wall of position integers, because the question an administrator brings to the
+     * audit log is "what did the course look like before?", not "which row got which
+     * number".
+     *
+     * @param  array<string, string>  $before
+     */
+    private function recordReorder(Course $course, array $before): void
+    {
+        $after = $this->outlineSignature($course);
+
+        if ($before === $after) {
+            return;   // a drag that ended where it started is not an event
+        }
+
+        app(AuditLogger::class)->recordChange(
+            AuditEvent::CurriculumReordered,
+            $course,
+            $before,
+            $after,
+            [],
+            "Curriculum reordered — {$course->title}",
+        );
+    }
+
+    /**
+     * A human-readable snapshot of the merged outline: bucket label => ordered items.
+     *
+     * Titles are resolved up front into one lookup per type — bucketRows() carries only
+     * ids, and a per-row query here would mean an N+1 on every single reorder.
+     *
+     * @return array<string, string>
+     */
+    private function outlineSignature(Course $course): array
+    {
+        $moduleIds = $course->modules()->pluck('id')->all();
+
+        $titles = [
+            'lesson' => Lesson::whereIn('module_id', $moduleIds)->pluck('title', 'id')->all(),
+            'assessment' => $course->assessments()->pluck('title', 'id')->all(),
+            'assignment' => $course->assignments()->pluck('title', 'id')->all(),
+        ];
+
+        $buckets = $course->modules()->orderBy('position')->get(['id', 'title'])
+            ->map(fn (Module $module) => ['id' => $module->id, 'label' => $module->title])
+            ->push(['id' => null, 'label' => 'Course level']);
+
+        $signature = [];
+
+        foreach ($buckets as $bucket) {
+            $items = $this->bucketRows($course, $bucket['id'])
+                ->map(fn (array $row) => $titles[$row['type']][$row['id']] ?? Str::headline($row['type'])." #{$row['id']}")
+                ->all();
+
+            if ($items !== []) {
+                $signature[$bucket['label']] = implode(' → ', $items);
+            }
+        }
+
+        return $signature;
     }
 
     /**

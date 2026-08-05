@@ -1248,3 +1248,109 @@ real defects that no server-side test could have caught, because both lived in m
 `PaymentMethodFormTest` asserts on the rendered markup — no nested form, exactly one
 `_method`, both credential fields opted out of autofill, and the toggle's disabled state.
 It was confirmed to fail when the form is re-nested.
+
+---
+
+## Section 15 — Administration, Audit Logs, Settings & Hardening
+
+### Settings are a thin layer over `config()`, not a parallel universe
+
+Each setting in `config/settings.php` may declare the config key it OVERRIDES, and
+`SettingsServiceProvider` pushes stored values into `config()` at boot. Code that already
+said `config('brand.university')` or `config('commerce.currency')` keeps working, unchanged,
+and now honours the administrator's choice.
+
+The alternative — teaching every call site about a settings table — would have meant
+touching dozens of files and leaving a permanent trap for the next one written. This way
+"add a setting" is a config-only change, and the acceptance criterion about branding
+reaching chrome, e-mail, certificates and the public site is satisfied *structurally*
+rather than by remembering four places.
+
+The `settings` table is **sparse**: a row exists only for a value actually changed. A fresh
+install has an empty table and behaves identically to a configured one.
+
+### Setting keys contain dots, which fights two Laravel conventions
+
+`config('settings.definitions.general.university_name')` cannot work — `config()` reads
+dots as nesting and would look for a `general` array. `SettingsRepository::definition()`
+indexes the resolved array directly. Likewise the form posts
+`settings[general__university_name]`, decoded in `SettingsRequest`, because Laravel's
+validator would otherwise read the dot as nesting too.
+
+### Brand artwork goes through one resolver, in two shapes
+
+`BrandAssets` returns a URL for HTML and embedded bytes for renderers that cannot fetch
+one — dompdf (certificates, report PDFs) and the e-mail header, which must survive a mail
+client reading offline with remote images blocked. Every brand-artwork consumer goes
+through it, which is what makes "change the logo in Settings" reach all of them.
+
+### The default grade scale stays owned by `GradeScale`, not mirrored into settings
+
+The Settings → Grading selector writes `GradeScale.is_default` through
+`GradeScaleService::makeDefault()`. Settings is a second *door* onto that state, never a
+second *owner* — so "exactly one default" keeps a single writer, and
+`Course::gradeScaleOrDefault()` needs no change. `grading.default_scale_id` is marked
+`derived` and is deliberately never written to the settings table.
+
+The model write is wrapped in `Activity::withoutLogs()` there, because a deliberate entry
+naming both the old and new scale is strictly better than a generic "Grade Scale X was
+updated" sitting beside it. One change should read as one entry.
+
+### Audit events are DERIVED from state transitions, not sprinkled at call sites
+
+`SemanticEventResolver` inspects what actually moved and, where the change has a name,
+returns it — a publish, a deactivation, a credential rotation, a fee change. It runs from
+`tapActivity`, i.e. at the moment the entry is written, so **every** path that causes the
+transition is covered: controller, service, artisan command, queued job. Instrumenting
+call sites would have covered only the ones someone remembered.
+
+It RENAMES the single entry rather than adding a second, so one change never double-reports.
+
+### Redaction is unconditional; renaming is not
+
+`tapActivity` runs every property through `AuditLogger::redact()` regardless of origin —
+there is no code path that skips it, so a model gaining a secret column later is covered
+without anyone returning to this file. Two independent layers guard it: an explicit
+per-model field list, and a substring blocklist applied to every key whatever model it
+came from.
+
+Renaming is the opposite: it applies only to genuine Eloquent events, because spatie taps
+the subject for manually-logged entries too and was overwriting descriptions their authors
+had chosen.
+
+### The audit log is append-only beneath the controller layer
+
+`AuditActivity` throws on update and delete at the model level, not merely in the absence
+of a route. Evidence you can edit is not evidence. The single sanctioned exception is
+scheduled retention pruning via `forcePrune()`, and `AUDIT_RETENTION_DAYS` defaults to
+unset — an audit log that quietly forgets is worse than a large one.
+
+### Listener auto-discovery is switched off
+
+Laravel 11+ enables it by default, and it compounds silently with explicit registration:
+`MergeGuestCart` was running twice on every login. One registration mechanism, visible in
+one file, is worth more than the convenience. See H-1 in `docs/hardening-report.md`.
+
+### Administrator upload ceilings INTERSECT with per-purpose policy
+
+Settings → Uploads narrows; it can never widen. Which purposes each ceiling governs is
+listed explicitly in `config/media.php` rather than inferred from mime prefixes, because
+inference got the interesting cases wrong — `LessonMedia` (large, env-tunable, for video),
+`BrandAssets` (needs SVG/ICO) and `Signatures` (already stricter) are deliberately
+ungoverned. The global lists are the **union** of what governed purposes legitimately
+accept, which is what makes intersection safe.
+
+### `.env.example` stays developer-friendly; a boot guard makes that safe
+
+It still ships `APP_DEBUG=true` because it is the LOCAL template and a developer needs the
+error page. `.env.production.example` carries production defaults, and
+`AppServiceProvider::guardProductionConfig()` refuses to boot with `APP_ENV=production` and
+debug on — so mixing them up fails loudly instead of printing the database password on the
+first uncaught exception.
+
+### No Content-Security-Policy, deliberately
+
+Recorded as an accepted risk with its revisit conditions, not an oversight — see H-12 in
+`docs/hardening-report.md`. In short: a policy loose enough for TinyMCE and Alpine buys
+very little, the XSS exposure is already closed at the source by server-side sanitization
+on every rich field, and a CSP that breaks the editor in production is worse than none.

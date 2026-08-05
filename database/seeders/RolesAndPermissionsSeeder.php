@@ -71,6 +71,9 @@ class RolesAndPermissionsSeeder extends Seeder
             Perm::OrdersManage->value,
             Perm::CouponsManage->value,
             Perm::PaymentMethodsManage->value,
+            // An admin READS the audit trail but does not hold settings.manage:
+            // institution-wide settings stay with the super-admin.
+            Perm::AuditView->value,
         ];
 
         $instructor = [

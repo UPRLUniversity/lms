@@ -39,6 +39,14 @@
             @include('layouts.partials.topbar')
 
             <main id="main-content" class="p-4 sm:p-6 lg:p-8">
+                {{-- Breadcrumbs, where a page supplies them. Above the heading so the
+                     trail reads before the title, as a breadcrumb should. --}}
+                @isset($breadcrumbs)
+                    <div class="mb-4">
+                        {{ $breadcrumbs }}
+                    </div>
+                @endisset
+
                 {{-- Legacy Breeze header slot (e.g. profile page) renders above content. --}}
                 @isset($header)
                     <div class="mb-6">
@@ -48,6 +56,24 @@
 
                 {{ $slot }}
             </main>
+
+            {{-- App footer (Section 15). Deliberately quiet — this is a working
+                 surface, not a marketing page — but the legal pages have to be
+                 reachable from inside the app, not only from the public site. --}}
+            <footer class="border-t border-line px-4 py-6 sm:px-6 lg:px-8">
+                <div class="flex flex-col items-center justify-between gap-3 text-xs text-ink/50 sm:flex-row">
+                    <p>&copy; {{ date('Y') }} {{ config('brand.university') }}. {{ __('common.all_rights_reserved') }}</p>
+
+                    <nav class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1" aria-label="Legal and support">
+                        <a href="{{ route('legal.terms') }}" class="rounded hover:text-ink focus-ring">{{ __('common.terms') }}</a>
+                        <a href="{{ route('legal.privacy') }}" class="rounded hover:text-ink focus-ring">{{ __('common.privacy') }}</a>
+                        @if ($support = config('mail.support'))
+                            <a href="mailto:{{ $support }}" class="rounded hover:text-ink focus-ring">{{ __('common.support') }}</a>
+                        @endif
+                        <x-ui.locale-switcher />
+                    </nav>
+                </div>
+            </footer>
         </div>
 
         {{-- Global top-right toast stack (server flashes + JS `toast` events). --}}

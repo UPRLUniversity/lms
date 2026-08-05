@@ -147,8 +147,55 @@ CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
 
 Private files always use the local `private` disk (S3-compatible later via config).
 
+## Administration, settings & the audit trail
+
+- **`/admin/settings`** (super-admin) — institution name, branding, timezone and date
+  format, enrolment/assessment defaults, the default grade scale, money formatting and
+  receipt footer, upload ceilings, password and session policy.
+
+  Settings sit **on top of `config()`**: each one may declare the config key it overrides,
+  and `SettingsServiceProvider` applies stored values at boot. Code that already reads
+  `config('brand.university')` keeps working and now honours the administrator's choice —
+  which is why replacing the logo reaches the app chrome, e-mails, certificates *and* the
+  public site with no code change. Adding a setting is a change to
+  [`config/settings.php`](config/settings.php) and nothing else.
+
+  Gateway credentials are deliberately **not** here — they stay encrypted on the Section 12
+  payment-methods screen, rotatable without a deploy. This page links to it.
+
+- **`/admin/audit`** (admin + read-only auditor) — who changed what, filterable by actor,
+  area, event and date, with expandable before/after diffs and CSV export.
+
+  The trail is **append-only**: `AuditActivity` refuses update and delete at the model
+  level, beneath any controller or policy. Secret-bearing fields are redacted at write
+  time, so a credential rotation is recorded as *having happened* and never by value.
+
+  Events are derived from the state transition itself rather than instrumented per call
+  site, so every path that causes a change is covered — controller, service, command or job.
+
+## Production
+
+See [`docs/production.md`](docs/production.md). Two items there are not optional: without a
+**queue worker** nothing is ever e-mailed and no certificate is rendered, and without the
+**scheduler** digests never send. Copy `.env.production.example`, not `.env.example` — the
+latter is the local template and enables debug mode. (The app refuses to boot with
+`APP_ENV=production` and `APP_DEBUG=true`, so that mistake fails loudly.)
+
+Useful checks:
+
+```bash
+php artisan audit:routes     # every route → the permission/policy that guards it
+                             # exits non-zero if any mutating route is unguarded
+composer audit               # dependency advisories
+```
+
 ## Project docs
 
 - [`docs/audit.md`](docs/audit.md) — audit of the starting template.
 - [`docs/decisions.md`](docs/decisions.md) — running log of engineering decisions.
+- [`docs/hardening-report.md`](docs/hardening-report.md) — the Section 15 security,
+  performance and accessibility sweep: every finding, and how it was fixed or why it was
+  accepted.
+- [`docs/production.md`](docs/production.md) — deployment, queue worker, scheduler, backups.
+- [`docs/localization.md`](docs/localization.md) — how to add a language.
 - [`CLAUDE.md`](CLAUDE.md) — the project constitution (conventions, brand, DoD).

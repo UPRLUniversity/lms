@@ -54,6 +54,16 @@ enum Permission: string
     case CouponsManage = 'coupons.manage';
     case PaymentMethodsManage = 'payment-methods.manage';
 
+    // Administration (Section 15). System settings are super-admin ONLY — they
+    // reach branding, security and money formatting across the whole institution,
+    // which is a narrower blast radius than day-to-day administration deserves.
+    case SettingsManage = 'settings.manage';
+
+    // The audit trail is a ".view" permission, so the read-only auditor receives it
+    // automatically — reading the record of what happened is precisely that role's
+    // job. Nothing anywhere grants a write: the log is append-only.
+    case AuditView = 'audit.view';
+
     /**
      * @return array<int, string>
      */

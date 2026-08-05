@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MediaPurpose;
 use App\Models\Concerns\HasMedia;
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\CertificateFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Certificate extends Model
 {
     /** @use HasFactory<CertificateFactory> */
-    use HasFactory, HasMedia;
+    use HasFactory, HasMedia, LogsAuditActivity;
 
     protected $fillable = [
         'public_id',

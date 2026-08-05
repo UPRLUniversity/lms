@@ -4,10 +4,10 @@
      * $title, $headings (array), $rows (array of positional value arrays),
      * $filters (label => value echo) and $generatedAt are supplied by ReportPdf.
      */
-    $logoPath = config('brand.logos.color');
-    $logoData = $logoPath && file_exists(public_path($logoPath))
-        ? 'data:image/png;base64,'.base64_encode(file_get_contents(public_path($logoPath)))
-        : null;
+    // Embedded bytes via BrandAssets — a logo uploaded in Settings → Branding
+    // appears on every report PDF with no change here, including a Cloudinary-hosted
+    // one that dompdf could not fetch for itself. Null falls back to the wordmark.
+    $logoData = brand_assets()->dataUri('color');
 @endphp
 <!DOCTYPE html>
 <html>

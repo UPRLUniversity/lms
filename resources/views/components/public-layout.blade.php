@@ -106,14 +106,17 @@
                         <a href="{{ route('programmes.index') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">Programmes</a>
                         <a href="{{ route('catalogue.index') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">Catalogue</a>
                         <a href="{{ route('verify.index') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">Verify a certificate</a>
+                        <a href="{{ route('legal.terms') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">{{ __('common.terms') }}</a>
+                        <a href="{{ route('legal.privacy') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">{{ __('common.privacy') }}</a>
                         @guest
                             <a href="{{ route('login') }}" class="rounded text-ink/70 hover:text-crimson focus-ring">Log in</a>
                         @endguest
+                        <x-ui.locale-switcher />
                     </nav>
                 </div>
 
                 <p class="mt-8 border-t border-line pt-6 text-center text-xs text-ink/50">
-                    &copy; {{ date('Y') }} {{ config('brand.university') }}. All rights reserved.
+                    &copy; {{ date('Y') }} {{ config('brand.university') }}. {{ __('common.all_rights_reserved') }}
                 </p>
             </div>
         </footer>

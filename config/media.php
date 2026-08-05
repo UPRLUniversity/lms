@@ -222,6 +222,86 @@ return [
             'max_kb' => 10240,
             'transformations' => [],
         ],
+
+        MediaPurpose::BrandAssets->value => [
+            // Logos and the favicon, uploaded from /admin/settings. SVG is accepted
+            // because a logo is exactly the case vector belongs to, and ICO because
+            // that is still what a favicon is often supplied as. No transformation:
+            // brand artwork arrives at the size it was drawn for, and re-cropping a
+            // lockup is how you get a logo with its wordmark cut off.
+            'visibility' => 'public',
+            'disk' => 'public',
+            'allowed_mimes' => [
+                'image/png',
+                'image/jpeg',
+                'image/webp',
+                'image/svg+xml',
+                'image/x-icon',
+                'image/vnd.microsoft.icon',
+            ],
+            'max_kb' => 2048,
+            'transformations' => [],
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Administrator-set ceilings (Section 15)
+    |--------------------------------------------------------------------------
+    |
+    | Overridden at boot from /admin/settings → Uploads, and applied ON TOP of the
+    | per-purpose policy above: MediaPurpose takes the SMALLER max size and the
+    | INTERSECTION of the mime lists. Tightening here can therefore never widen
+    | what a purpose accepts — only narrow it.
+    |
+    | Which purposes each ceiling governs is listed EXPLICITLY rather than inferred
+    | from mime prefixes, because inference gets the interesting cases wrong. Three
+    | purposes are deliberately left out:
+    |
+    |   LessonMedia   its ceiling is intentionally large and env-tunable for the
+    |                 exceptional self-hosted video; a general document limit must
+    |                 not quietly halve it
+    |   BrandAssets   needs SVG and ICO, which have no business in the general
+    |                 image allow-list
+    |   Signatures    a deliberately narrow PNG/WebP-only case, already stricter
+    |
+    | Certificates is absent because nothing uploads to it — the PDFs are generated.
+    |
+    */
+
+    'limits' => [
+
+        'image_kb' => 4096,
+        'image_mimes' => 'image/jpeg,image/png,image/webp,image/gif',
+        'image_purposes' => [
+            MediaPurpose::Avatars->value,
+            MediaPurpose::CourseCovers->value,
+            MediaPurpose::ProgrammeCovers->value,
+            MediaPurpose::LessonImages->value,
+            MediaPurpose::QuestionImages->value,
+            MediaPurpose::EditorUploads->value,
+        ],
+
+        'document_kb' => 20480,
+        // The UNION of what the governed purposes legitimately accept — images
+        // included, because submissions, assignment resources and message attachments
+        // all take them on purpose (a photographed hand-in previews inline in the
+        // grading workspace). Since MediaPurpose INTERSECTS this with each purpose's
+        // own list, a type listed here is only ever accepted where that purpose already
+        // allowed it: lesson resources still refuse images. Listing a narrower set here
+        // would silently revoke a deliberate Section 6 decision.
+        'document_mimes' => 'application/pdf,application/msword,'
+            .'application/vnd.openxmlformats-officedocument.wordprocessingml.document,'
+            .'application/vnd.openxmlformats-officedocument.presentationml.presentation,'
+            .'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,'
+            .'application/zip,text/plain,'
+            .'image/jpeg,image/png,image/webp',
+        'document_purposes' => [
+            MediaPurpose::LessonResources->value,
+            MediaPurpose::AssignmentResources->value,
+            MediaPurpose::Submissions->value,
+            MediaPurpose::MessageAttachments->value,
+        ],
     ],
 
 ];

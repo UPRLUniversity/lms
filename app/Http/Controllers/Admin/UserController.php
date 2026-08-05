@@ -42,7 +42,10 @@ class UserController extends Controller
         [$sort, $direction] = $this->resolveSort($request);
 
         $users = User::query()
-            ->with('roles')
+            // media, not just roles: every row renders <x-ui.avatar>, which resolves the
+            // user's avatar through the polymorphic media relation. Without it the list
+            // issued one extra query per person on the page.
+            ->with(['roles', 'media'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")

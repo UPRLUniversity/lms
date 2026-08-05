@@ -2,13 +2,14 @@
 
 namespace App\Services\Certificates;
 
+use App\Enums\CertificateLayout;
 use App\Models\Certificate;
 use App\Models\CertificateTemplate;
 use App\Models\Media;
+use App\Services\Branding\BrandAssets;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 /**
  * Turns a Certificate (or, for the admin live preview, a bare CertificateTemplate +
@@ -26,7 +27,7 @@ class CertificateRenderer
      */
     public function renderPdf(Certificate $certificate): string
     {
-        $layout = \App\Enums\CertificateLayout::from($certificate->snapshot['layout']);
+        $layout = CertificateLayout::from($certificate->snapshot['layout']);
 
         return Pdf::loadView($layout->view(), $this->dataForCertificate($certificate))
             ->setPaper('a4', 'landscape')
@@ -113,15 +114,15 @@ class CertificateRenderer
             : CertificateAsset::sunburstDataUri($accent);
     }
 
+    /**
+     * The institution logo as embedded bytes. Resolved through BrandAssets, so a
+     * logo uploaded in Settings → Branding appears on newly generated certificates
+     * with no change here — including when it lives on Cloudinary, which dompdf
+     * could not fetch for itself.
+     */
     private function embedLogo(): ?string
     {
-        $path = public_path(config('brand.logos.color'));
-
-        if (! file_exists($path)) {
-            return null;
-        }
-
-        return 'data:image/png;base64,'.base64_encode(file_get_contents($path));
+        return app(BrandAssets::class)->dataUri('color');
     }
 
     /**
@@ -149,5 +150,4 @@ class CertificateRenderer
             return null;
         }
     }
-
 }

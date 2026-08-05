@@ -24,3 +24,5 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 /docs/demo-script.md
+# Playwright MCP browser-session artefacts (snapshots, console logs).
+.playwright-mcp/

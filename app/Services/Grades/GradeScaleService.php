@@ -65,6 +65,39 @@ class GradeScaleService
     }
 
     /**
+     * Promote a scale to system default (Section 15's Settings → Grading selector).
+     *
+     * Kept here rather than in the settings screen so "exactly one default" stays
+     * enforced in ONE place: the settings page is a second door onto this state, not
+     * a second owner of it. Returns the scale that WAS the default, or null if there
+     * was none — the caller needs it for the audit diff.
+     *
+     * An archived scale is refused: it would leave every course without an override
+     * pointing at a scale the admin has already retired.
+     */
+    public function makeDefault(GradeScale $scale): ?GradeScale
+    {
+        if ($scale->status === GradeScaleStatus::Archived) {
+            throw ValidationException::withMessages([
+                'grading.default_scale_id' => 'An archived scale cannot be the system default. Restore it first.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($scale) {
+            $previous = GradeScale::query()->default()->where('id', '!=', $scale->id)->first();
+
+            if ($scale->is_default && $previous === null) {
+                return null;   // already the default; nothing moved
+            }
+
+            GradeScale::query()->where('id', '!=', $scale->id)->update(['is_default' => false]);
+            $scale->forceFill(['is_default' => true])->save();
+
+            return $previous;
+        });
+    }
+
+    /**
      * Archive, never delete. Blocked on the current default — the platform must always
      * have exactly one active default scale.
      */

@@ -4,9 +4,9 @@ namespace App\Models;
 
 use App\Enums\GradeDisplayMode;
 use App\Enums\GradeScaleStatus;
+use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\GradeScaleFactory;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class GradeScale extends Model
 {
     /** @use HasFactory<GradeScaleFactory> */
-    use HasFactory;
+    use HasFactory, LogsAuditActivity;
 
     protected $fillable = [
         'name',

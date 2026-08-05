@@ -25,6 +25,13 @@ enum MediaPurpose: string
     case Signatures = 'signatures';
 
     /**
+     * Institution artwork uploaded from /admin/settings — the logo variants and the
+     * favicon. Public, like any other brand image, and resolved everywhere through
+     * App\Services\Branding\BrandAssets.
+     */
+    case BrandAssets = 'brand_assets';
+
+    /**
      * The full config block for this purpose.
      *
      * @return array<string, mixed>
@@ -53,21 +60,83 @@ enum MediaPurpose: string
     }
 
     /**
-     * Allowed MIME types for this purpose.
+     * Allowed MIME types for this purpose — the purpose's own allow-list narrowed
+     * by the administrator's general list (config/media.php → limits), where one
+     * governs this purpose.
+     *
+     * Intersection, never union: an administrator tightening what the institution
+     * accepts must be able to remove a type, and must never be able to add one a
+     * purpose deliberately excludes.
      *
      * @return array<int, string>
      */
     public function allowedMimes(): array
     {
-        return $this->config()['allowed_mimes'] ?? [];
+        $own = $this->config()['allowed_mimes'] ?? [];
+        $ceiling = $this->mimeCeiling();
+
+        if ($own === [] || $ceiling === []) {
+            return $own;
+        }
+
+        $narrowed = array_values(array_intersect($own, $ceiling));
+
+        // An administrator who narrows the list to nothing this purpose accepts has
+        // made a mistake, not a policy: fall back to the purpose's own list rather
+        // than silently rejecting every upload to it.
+        return $narrowed === [] ? $own : $narrowed;
     }
 
     /**
-     * Maximum accepted size in kilobytes.
+     * Maximum accepted size in kilobytes — the stricter of the purpose's own
+     * ceiling and the administrator's general one.
      */
     public function maxKb(): int
     {
-        return (int) ($this->config()['max_kb'] ?? 0);
+        $own = (int) ($this->config()['max_kb'] ?? 0);
+        $ceiling = $this->sizeCeiling();
+
+        if ($own <= 0) {
+            return max($ceiling, 0);
+        }
+
+        return $ceiling > 0 ? min($own, $ceiling) : $own;
+    }
+
+    /**
+     * The administrator-set size ceiling governing this purpose, or 0 for the
+     * purposes deliberately left ungoverned (see config/media.php → limits).
+     */
+    private function sizeCeiling(): int
+    {
+        return match (true) {
+            $this->governedBy('image') => (int) config('media.limits.image_kb', 0),
+            $this->governedBy('document') => (int) config('media.limits.document_kb', 0),
+            default => 0,
+        };
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function mimeCeiling(): array
+    {
+        $list = match (true) {
+            $this->governedBy('image') => (string) config('media.limits.image_mimes', ''),
+            $this->governedBy('document') => (string) config('media.limits.document_mimes', ''),
+            default => '',
+        };
+
+        if (trim($list) === '') {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $list))));
+    }
+
+    private function governedBy(string $family): bool
+    {
+        return in_array($this->value, config("media.limits.{$family}_purposes", []), true);
     }
 
     /**

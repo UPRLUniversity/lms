@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Enums\OrderItemKind;
 use App\Enums\OrderStatus;
+use App\Models\Concerns\LogsAuditActivity;
 use App\Support\Money;
+use Database\Factories\OrderFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,8 +23,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Order extends Model
 {
-    /** @use HasFactory<\Database\Factories\OrderFactory> */
-    use HasFactory;
+    /** @use HasFactory<OrderFactory> */
+    use HasFactory, LogsAuditActivity;
 
     protected $fillable = [
         'reference',

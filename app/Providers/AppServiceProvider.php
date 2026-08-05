@@ -2,8 +2,13 @@
 
 namespace App\Providers;
 
+use App\Enums\Permission;
 use App\Enums\Role;
+use App\Events\CourseCompleted;
+use App\Listeners\IssueCertificateOnCompletion;
 use App\Listeners\MergeGuestCart;
+use App\Listeners\RecordAuthActivity;
+use App\Listeners\RecordCourseGradeSnapshot;
 use App\Models\User;
 use App\Policies\CourseAnnouncementPolicy;
 use App\Policies\EnrollmentPolicy;
@@ -11,7 +16,9 @@ use App\Policies\ForumPolicy;
 use App\Policies\GradebookPolicy;
 use App\Policies\MessagingPolicy;
 use App\Policies\UserPolicy;
+use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -54,9 +61,8 @@ class AppServiceProvider extends ServiceProvider
             return true;
         });
 
-        // A signed-out visitor's cart follows them into their account on login, so the
-        // "add to cart, sign in at checkout" journey does not lose their basket.
-        Event::listen(Login::class, MergeGuestCart::class);
+        $this->guardProductionConfig();
+        $this->registerListeners();
 
         // Ability for "may this user grant the named role?" — backed by the policy
         // so the privilege-escalation rule lives in one place.
@@ -101,7 +107,75 @@ class AppServiceProvider extends ServiceProvider
         // via Gate::before above).
         Gate::define('reviewForumReports', fn (User $user) => $user->hasRole(Role::Admin->value));
 
+        /*
+        | Administration (Section 15).
+        |
+        | System settings reach branding, security and money formatting across the
+        | whole institution, so they are super-admin only — deliberately narrower
+        | than the day-to-day admin role, which manages people and courses. The
+        | super-admin arrives here via Gate::before; the explicit permission check
+        | is what makes the boundary visible (and testable) rather than implied.
+        |
+        | The audit trail is read-only for everyone, including the roles that can
+        | reach it: there is no ability to write or erase an entry, at any level.
+        */
+        Gate::define('manage-settings', fn (User $user) => $user->can(Permission::SettingsManage->value));
+        Gate::define('view-audit-log', fn (User $user) => $user->can(Permission::AuditView->value));
+
         $this->brandedAuthMail();
+    }
+
+    /**
+     * Refuse to run in production with debug on (Section 15 hardening sweep).
+     *
+     * APP_DEBUG=true in production turns every uncaught exception into a public page
+     * listing environment variables — database password, mail credentials, APP_KEY. It
+     * is the single highest-severity misconfiguration this stack has, and the usual
+     * defence ("remember to set it") is exactly the one that fails on a rushed deploy.
+     *
+     * .env.example deliberately still ships APP_DEBUG=true, because it is the LOCAL
+     * template and a developer needs the error page. This guard is what makes that safe:
+     * copying the local template to a production box fails loudly and immediately,
+     * rather than running and leaking. See docs/production.md and .env.production.example.
+     */
+    protected function guardProductionConfig(): void
+    {
+        if ($this->app->isProduction() && config('app.debug')) {
+            throw new \RuntimeException(
+                'APP_DEBUG is enabled while APP_ENV=production. Refusing to boot: debug mode '
+                .'exposes environment variables, including database and mail credentials, on '
+                .'any error page. Set APP_DEBUG=false. See docs/production.md.'
+            );
+        }
+    }
+
+    /**
+     * EVERY event listener in the application, in one place.
+     *
+     * Laravel's automatic listener discovery is switched off in bootstrap/app.php — see
+     * the note there — so this method is the whole picture. A listener that is not
+     * registered here does not run.
+     */
+    protected function registerListeners(): void
+    {
+        // A signed-out visitor's cart follows them into their account on login, so the
+        // "add to cart, sign in at checkout" journey does not lose their basket.
+        Event::listen(Login::class, MergeGuestCart::class);
+
+        // Finishing a course issues the certificate and freezes the grade snapshot.
+        // Previously reached only through discovery; registered explicitly now.
+        Event::listen(CourseCompleted::class, IssueCertificateOnCompletion::class);
+        Event::listen(CourseCompleted::class, RecordCourseGradeSnapshot::class);
+
+        /*
+        | Authentication into the audit trail (Section 15). Listened for rather than
+        | hooked into the login controller, so EVERY path that authenticates is
+        | covered — the login form, an invitation acceptance, a remembered session,
+        | anything added later — not just the one door somebody instrumented.
+        */
+        Event::listen(Login::class, [RecordAuthActivity::class, 'handleLogin']);
+        Event::listen(Logout::class, [RecordAuthActivity::class, 'handleLogout']);
+        Event::listen(Failed::class, [RecordAuthActivity::class, 'handleFailed']);
     }
 
     /**
