@@ -107,6 +107,7 @@ export function courseBuilder(config = {}) {
         urlModule(id) { return `${this.base}/modules/${id}`; },
         urlLessonsIn(moduleId) { return `${this.base}/modules/${moduleId}/lessons`; },
         urlLesson(id) { return `${this.base}/lessons/${id}`; },
+        urlVisibility(type, id) { return `${this.base}/curriculum/${type}/${id}/visibility`; },
 
         /* ----- delegated clicks in the outline ----- */
         onCurriculumClick(event) {
@@ -128,6 +129,10 @@ export function courseBuilder(config = {}) {
             if (action === 'edit-lesson') return this.openLessonEditor(null, Number(el.dataset.lessonId));
             if (action === 'delete-lesson') return this.deleteLesson(Number(el.dataset.lessonId));
             if (action === 'delete-module') return this.deleteModule(Number(el.dataset.moduleId));
+
+            if (action === 'toggle-visibility') {
+                return this.setVisibility(el.dataset.itemType, Number(el.dataset.itemId), el.dataset.hidden !== '1');
+            }
 
             if (action === 'insert-here') return this.toggleInsertMenu(el);
             if (action === 'insert-lesson') return this.insertItem(el, 'lesson');
@@ -323,15 +328,12 @@ export function courseBuilder(config = {}) {
         },
 
         async deleteModule(id) {
-            const ok = await window.uprlConfirm({
+            await this.deleteOrHide(this.urlModule(id), 'module', id, {
                 title: 'Delete this module?',
-                text: 'Its lessons will be removed too.',
-                confirmText: 'Delete', danger: true,
+                text: 'Its lessons, quizzes and assignments will be removed too.',
+                confirmText: 'Delete',
+                danger: true,
             });
-            if (!ok) return;
-            const data = new FormData();
-            data.append('_method', 'DELETE');
-            if (await this.send(this.urlModule(id), 'POST', data)) await this.refresh();
         },
 
         /* ----- lessons ----- */
@@ -416,11 +418,11 @@ export function courseBuilder(config = {}) {
         },
 
         async deleteLesson(id) {
-            const ok = await window.uprlConfirm({ title: 'Delete this lesson?', confirmText: 'Delete', danger: true });
-            if (!ok) return;
-            const data = new FormData();
-            data.append('_method', 'DELETE');
-            if (await this.send(this.urlLesson(id), 'POST', data)) await this.refresh();
+            await this.deleteOrHide(this.urlLesson(id), 'lesson', id, {
+                title: 'Delete this lesson?',
+                confirmText: 'Delete',
+                danger: true,
+            });
         },
 
         flattenErrors(errors) {
@@ -433,21 +435,83 @@ export function courseBuilder(config = {}) {
         },
 
         /* ----- shared request + refresh + reorder ----- */
-        async send(url, method, body, withToast = true) {
+        /**
+         * One round trip, with the response kept intact. Callers that need to react to a
+         * refusal (rather than just report it) read the status and payload themselves.
+         */
+        async request(url, method, body) {
             try {
                 const res = await fetch(url, {
                     method,
                     headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken() },
                     body,
                 });
-                if (!res.ok) throw new Error('Request failed');
                 const data = await res.json().catch(() => ({}));
-                if (withToast && data.message) toast(data.message);
-                return true;
+                return { ok: res.ok, status: res.status, data };
             } catch (e) {
-                toast('Something went wrong. Please try again.', 'error');
+                return { ok: false, status: 0, data: {} };
+            }
+        },
+
+        async send(url, method, body, withToast = true) {
+            const { ok, data } = await this.request(url, method, body);
+
+            if (!ok) {
+                // Prefer the server's own words — a refusal explains itself far better
+                // than a generic failure ever could.
+                toast(data.message || 'Something went wrong. Please try again.', 'error');
                 return false;
             }
+
+            if (withToast && data.message) toast(data.message);
+            return true;
+        },
+
+        /**
+         * Delete a curriculum item — or, when the server refuses because students have
+         * already worked on it, offer the thing the refusal recommends instead of
+         * leaving the instructor at a dead end.
+         */
+        async deleteOrHide(url, type, id, confirmOptions) {
+            if (!(await window.uprlConfirm(confirmOptions))) return;
+
+            const body = new FormData();
+            body.append('_method', 'DELETE');
+
+            const { ok, status, data } = await this.request(url, 'POST', body);
+
+            if (ok) {
+                if (data.message) toast(data.message);
+                return this.refresh();
+            }
+
+            if (status === 422 && data.can_hide) {
+                const hide = await window.uprlConfirm({
+                    title: 'This holds student work',
+                    text: data.message,
+                    confirmText: 'Hide from students',
+                    cancelText: 'Leave it as it is',
+                    // Hiding is the safe way out, not the destructive one — green, not crimson.
+                    danger: false,
+                    icon: 'info',
+                });
+
+                if (hide) await this.setVisibility(type, id, true);
+                return;
+            }
+
+            toast(data.message || 'Something went wrong. Please try again.', 'error');
+        },
+
+        /**
+         * Hide or restore any curriculum item through the one polymorphic endpoint.
+         */
+        async setVisibility(type, id, hidden) {
+            const body = new FormData();
+            body.append('_method', 'PATCH');
+            body.append('hidden', hidden ? '1' : '0');
+
+            if (await this.send(this.urlVisibility(type, id), 'POST', body)) await this.refresh();
         },
 
         async refresh() {
