@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\EnrollmentSource;
 use App\Enums\EnrollmentStatus;
 use App\Models\Concerns\LogsAuditActivity;
+use App\Support\Curriculum\CompletionSnapshot;
 use Database\Factories\EnrollmentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,7 +44,43 @@ class Enrollment extends Model
             'progress_percent' => 'integer',
             'completed_at' => 'datetime',
             'pending_digested_at' => 'datetime',
+            'completion_snapshot' => 'array',
+            'completion_snapshot_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The completion snapshot is written once, by LearningService, at the instant the
+     * enrollment reaches Completed — and never rewritten. Guarded here rather than only
+     * at the call site so no future path can quietly restate what a finished student was
+     * measured against (the same append-only stance as AuditActivity and
+     * Certificate.snapshot).
+     */
+    protected static function booted(): void
+    {
+        static::updating(function (Enrollment $enrollment): void {
+            if ($enrollment->isDirty('completion_snapshot')
+                && $enrollment->getOriginal('completion_snapshot') !== null) {
+                throw new \RuntimeException(
+                    'A completion snapshot is written once and never rewritten. '
+                    .'Recompute reads it; it does not replace it.',
+                );
+            }
+        });
+    }
+
+    /**
+     * The frozen curriculum this student was measured against, or null while they are
+     * still working through the course (and so still follow the live one).
+     */
+    public function completionSnapshot(): ?CompletionSnapshot
+    {
+        return CompletionSnapshot::fromArray($this->completion_snapshot);
+    }
+
+    public function hasCompletionSnapshot(): bool
+    {
+        return $this->completion_snapshot !== null && $this->completion_snapshot !== [];
     }
 
     /*

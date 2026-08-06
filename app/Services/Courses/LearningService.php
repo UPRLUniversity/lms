@@ -19,6 +19,8 @@ use App\Models\LessonProgress;
 use App\Models\Module;
 use App\Models\Submission;
 use App\Models\User;
+use App\Services\Grades\GradebookService;
+use App\Support\Curriculum\CompletionSnapshot;
 use App\Support\Learning\CourseProgress;
 use App\Support\Learning\CurriculumItem;
 use App\Support\Learning\CurriculumOutline;
@@ -37,7 +39,35 @@ use Illuminate\Support\Collection;
  */
 class LearningService
 {
-    public function __construct(private readonly CurriculumOrderService $order) {}
+    public function __construct(
+        private readonly CurriculumOrderService $order,
+        private readonly GradebookService $gradebook,
+    ) {}
+
+    /**
+     * The curriculum a student is being measured against right now — captured verbatim
+     * when their enrollment reaches Completed, and never recomputed after that.
+     *
+     * Both sets are recorded because completion and grading have never had the same rule:
+     * completion counts every published, required item; the transcript counts only those
+     * that also feed the grade. Freezing one and re-deriving the other would reintroduce
+     * exactly the drift this exists to stop.
+     */
+    public function completionSnapshot(Course $course): CompletionSnapshot
+    {
+        [$gradedAssessmentIds, $gradedAssignmentIds] = $this->gradebook->gradedItemIds($course);
+
+        return new CompletionSnapshot(
+            lessonIds: $this->sequence($course)->pluck('id')->all(),
+            requiredAssessmentIds: $this->publishedAssessments($course)
+                ->where('is_required', true)->pluck('id')->all(),
+            requiredAssignmentIds: $this->publishedAssignments($course)
+                ->where('is_required', true)->pluck('id')->all(),
+            gradedAssessmentIds: $gradedAssessmentIds,
+            gradedAssignmentIds: $gradedAssignmentIds,
+            capturedAt: now()->toIso8601String(),
+        );
+    }
 
     /**
      * A query-free snapshot of $user's progress through $course: the ordered lesson
@@ -533,6 +563,14 @@ class LearningService
             return null;
         }
 
+        // A finished course is a closed record. Once the completion snapshot is written
+        // the student has been measured, so nothing recomputes against a curriculum that
+        // has since moved — no un-completing them because a new required item appeared,
+        // and no percentage drifting because an item was withdrawn (Section 16).
+        if ($enrollment->isComplete() && $enrollment->hasCompletionSnapshot()) {
+            return $enrollment;
+        }
+
         $snapshot ??= $this->snapshot($user, $course);
 
         $percent = $snapshot->percent();
@@ -544,8 +582,10 @@ class LearningService
         if ($justCompleted) {
             $attributes['status'] = EnrollmentStatus::Completed;
             $attributes['completed_at'] = now();
+            $attributes['completion_snapshot'] = $this->completionSnapshot($course)->toArray();
+            $attributes['completion_snapshot_at'] = now();
         } elseif (! $complete && $enrollment->status === EnrollmentStatus::Completed) {
-            // A lesson was un-marked — the course is no longer finished.
+            // A lesson was un-marked before the course was ever finished-and-frozen.
             $attributes['status'] = EnrollmentStatus::Active;
             $attributes['completed_at'] = null;
         }
