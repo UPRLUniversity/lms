@@ -42,6 +42,7 @@ use App\Http\Controllers\Courses\AdminEnrollmentController;
 use App\Http\Controllers\Courses\AnnouncementController;
 use App\Http\Controllers\Courses\BulkEnrollmentController;
 use App\Http\Controllers\Courses\CourseController;
+use App\Http\Controllers\Courses\CourseChangeController;
 use App\Http\Controllers\Courses\CourseCurriculumController;
 use App\Http\Controllers\Courses\CurriculumVisibilityController;
 use App\Http\Controllers\Courses\CourseProgressController;
@@ -250,6 +251,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/learn/{course}/congratulations', [LearnController::class, 'congratulations'])->name('learn.congratulations');
     Route::get('/learn/{course}/grades', [GradebookController::class, 'mine'])->name('learn.grades');
     Route::get('/learn/{course}/announcements', [AnnouncementController::class, 'index'])->name('learn.announcements');
+    // Above learn.show, which is a catch-all on /learn/{course}/{lesson}.
+    Route::get('/learn/{course}/changes', [CourseChangeController::class, 'index'])->name('learn.changes');
     Route::get('/learn/{course}/{lesson}', [LearnController::class, 'show'])->name('learn.show');
     Route::post('/learn/{course}/{lesson}/complete', [LearnController::class, 'complete'])->name('learn.complete');
     Route::post('/learn/{course}/{lesson}/incomplete', [LearnController::class, 'incomplete'])->name('learn.incomplete');
@@ -585,6 +588,7 @@ Route::middleware(['auth', 'verified'])
 
         // Curriculum — outline partial (AJAX refresh) + whole-outline reorder.
         Route::get('courses/{course}/curriculum', [CourseCurriculumController::class, 'show'])->name('courses.curriculum');
+        Route::get('courses/{course}/changes', [CourseChangeController::class, 'history'])->name('courses.changes');
         Route::post('courses/{course}/curriculum/reorder', [CourseCurriculumController::class, 'reorder'])->name('courses.curriculum.reorder');
 
         // Hide/restore any curriculum item — the safe alternative to deleting student work.

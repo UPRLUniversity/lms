@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Courses;
 
+use App\Enums\AuditEvent;
 use App\Http\Controllers\Controller;
 use App\Models\Assessment;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Module;
+use App\Services\Courses\CourseChangeService;
+use App\Services\Courses\CurriculumChangeClassifier;
+use App\Support\Audit\AuditLogger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,17 +36,37 @@ class CurriculumVisibilityController extends Controller
         'assignment' => Assignment::class,
     ];
 
+    public function __construct(
+        private readonly CurriculumChangeClassifier $classifier,
+        private readonly CourseChangeService $changes,
+        private readonly AuditLogger $audit,
+    ) {}
+
     public function update(Request $request, Course $course, string $type, int $id): JsonResponse
     {
         $this->authorize('manageCurriculum', $course);
 
-        $hidden = (bool) $request->validate([
+        $validated = $request->validate([
             'hidden' => ['required', 'boolean'],
-        ])['hidden'];
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
 
+        $hidden = (bool) $validated['hidden'];
         $item = $this->resolve($course, $type, $id);
 
+        // Classify while the model is still dirty — after save there is nothing to read.
+        $item->hidden_at = $hidden ? now() : null;
+        $described = $this->classifier->classify($item);
+
         $hidden ? $item->hide() : $item->restore();
+
+        $this->changes->record($course, $described, $validated['note'] ?? null);
+
+        $this->audit->record(
+            $hidden ? AuditEvent::CurriculumItemHidden : AuditEvent::CurriculumItemRestored,
+            $item,
+            ['course_id' => $course->id, 'type' => $type],
+        );
 
         return response()->json([
             'ok' => true,

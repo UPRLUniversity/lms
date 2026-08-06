@@ -7,6 +7,7 @@ use App\Enums\AssignmentType;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\User;
+use App\Services\Courses\CurriculumChangeClassifier;
 use App\Services\Courses\CurriculumImpactService;
 use App\Services\Courses\CurriculumOrderService;
 use Illuminate\Support\Str;
@@ -22,6 +23,7 @@ class AssignmentBuilderService
     public function __construct(
         private readonly CurriculumOrderService $order,
         private readonly CurriculumImpactService $impact,
+        private readonly CurriculumChangeClassifier $classifier,
     ) {}
 
     /**
@@ -93,6 +95,44 @@ class AssignmentBuilderService
         $assignment->save();
 
         return $assignment;
+    }
+
+    /**
+     * What updateSettings($data) would change, described for students — without changing
+     * anything.
+     *
+     * Runs the same fill against a throwaway copy of the model so the description can
+     * never disagree with the save that follows, then discards it.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<int, \App\Support\Curriculum\CurriculumChange>
+     */
+    public function describeSettingsChange(Assignment $assignment, array $data): array
+    {
+        $probe = $assignment->replicate();
+        $probe->exists = true;
+        $probe->setRawAttributes($assignment->getRawOriginal(), sync: true);
+
+        $probe->fill(array_filter([
+            'title' => $data['title'] ?? null,
+            'instructions' => $data['instructions'] ?? null,
+            'type' => $data['type'] ?? null,
+            'max_points' => $data['max_points'] ?? null,
+        ], fn ($v) => $v !== null));
+
+        foreach (['allow_late', 'is_required', 'counts_toward_grade'] as $flag) {
+            if (\array_key_exists($flag, $data)) {
+                $probe->{$flag} = (bool) $data[$flag];
+            }
+        }
+
+        foreach (['due_at', 'rubric_id', 'module_id'] as $nullable) {
+            if (\array_key_exists($nullable, $data)) {
+                $probe->{$nullable} = ($data[$nullable] === null || $data[$nullable] === '') ? null : $data[$nullable];
+            }
+        }
+
+        return $this->classifier->classify($probe);
     }
 
     /**
