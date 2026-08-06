@@ -127,16 +127,28 @@ class GradebookService
     }
 
     /**
+     * The items a grade is computed from: published, required, counting toward the grade —
+     * and visible. An item hidden from students (or sitting inside a hidden module) has
+     * been withdrawn from the course, so it stops counting for everyone still working
+     * through it; the attempts and grades already recorded against it survive untouched
+     * and stay visible to staff.
+     *
      * @return array{0: Collection<int, Assessment>, 1: Collection<int, Assignment>}
      */
     private function requiredItems(Course $course): array
     {
-        $course->loadMissing(['assessments', 'assignments']);
+        $course->loadMissing(['assessments', 'assignments', 'modules']);
+
+        $hiddenModules = $course->modules->whereNotNull('hidden_at')->pluck('id')->all();
+
+        $visible = fn (Assessment|Assignment $item): bool => $item->hidden_at === null
+            && ! ($item->module_id !== null && \in_array($item->module_id, $hiddenModules, true));
 
         $assessments = $course->assessments
             ->where('status', AssessmentStatus::Published)
             ->where('is_required', true)
             ->where('counts_toward_grade', true)
+            ->filter($visible)
             ->sortBy('position')
             ->values();
 
@@ -144,6 +156,7 @@ class GradebookService
             ->where('status', AssignmentStatus::Published)
             ->where('is_required', true)
             ->where('counts_toward_grade', true)
+            ->filter($visible)
             ->sortBy('position')
             ->values();
 

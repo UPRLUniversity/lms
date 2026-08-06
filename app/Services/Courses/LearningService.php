@@ -138,9 +138,11 @@ class LearningService
         };
 
         // One merged ladder per bucket — the same merge the builder outline renders.
-        foreach ($course->modules as $module) {
+        // Hidden modules (and hidden lessons inside visible ones) never reach a learner;
+        // $assessments/$assignments arrive already filtered.
+        foreach ($course->modules->whereNull('hidden_at') as $module) {
             $this->order->merge(
-                $module->lessons,
+                $module->lessons->whereNull('hidden_at'),
                 $assessments->where('module_id', $module->id),
                 $assignments->where('module_id', $module->id),
             )->each(fn (array $item) => $rows->push($toRow($item, $module->id)));
@@ -185,13 +187,26 @@ class LearningService
      */
     private function publishedAssessments(Course $course): Collection
     {
+        $hiddenModules = $this->hiddenModuleIds($course);
+
         if ($course->relationLoaded('assessments')) {
             return $course->assessments
                 ->where('status', AssessmentStatus::Published)
+                ->whereNull('hidden_at')
+                ->reject(fn (Assessment $a) => $this->sitsInHiddenModule($a->module_id, $hiddenModules))
                 ->values();
         }
 
-        return collect($course->assessments()->published()->get()->all());
+        return collect(
+            $course->assessments()
+                ->published()
+                ->visible()
+                ->when($hiddenModules !== [], fn ($q) => $q->where(
+                    fn ($w) => $w->whereNull('module_id')->orWhereNotIn('module_id', $hiddenModules),
+                ))
+                ->get()
+                ->all(),
+        );
     }
 
     /**
@@ -201,13 +216,52 @@ class LearningService
      */
     private function publishedAssignments(Course $course): Collection
     {
+        $hiddenModules = $this->hiddenModuleIds($course);
+
         if ($course->relationLoaded('assignments')) {
             return $course->assignments
                 ->where('status', AssignmentStatus::Published)
+                ->whereNull('hidden_at')
+                ->reject(fn (Assignment $a) => $this->sitsInHiddenModule($a->module_id, $hiddenModules))
                 ->values();
         }
 
-        return collect($course->assignments()->published()->get()->all());
+        return collect(
+            $course->assignments()
+                ->published()
+                ->visible()
+                ->when($hiddenModules !== [], fn ($q) => $q->where(
+                    fn ($w) => $w->whereNull('module_id')->orWhereNotIn('module_id', $hiddenModules),
+                ))
+                ->get()
+                ->all(),
+        );
+    }
+
+    /**
+     * Ids of this course's modules that are hidden from students.
+     *
+     * Hiding a module hides everything inside it, so an assessment or assignment sitting
+     * in one drops out of the learner's view without its own flag being touched — and
+     * comes back untouched when the module is restored. Deriving it beats cascading the
+     * flag onto children, which would lose track of what was individually hidden.
+     *
+     * @return array<int, int>
+     */
+    private function hiddenModuleIds(Course $course): array
+    {
+        return ($course->relationLoaded('modules')
+            ? $course->modules->whereNotNull('hidden_at')->pluck('id')
+            : $course->modules()->hidden()->pluck('id')
+        )->all();
+    }
+
+    /**
+     * @param  array<int, int>  $hiddenModuleIds
+     */
+    private function sitsInHiddenModule(?int $moduleId, array $hiddenModuleIds): bool
+    {
+        return $moduleId !== null && \in_array($moduleId, $hiddenModuleIds, true);
     }
 
     /**
@@ -529,10 +583,14 @@ class LearningService
     {
         if ($course->relationLoaded('modules')) {
             $lessons = $course->modules
+                ->whereNull('hidden_at')
                 ->sortBy('position')
                 ->flatMap(fn (Module $module) => ($module->relationLoaded('lessons')
                     ? $module->lessons
-                    : $module->lessons()->get())->sortBy('position')->values())
+                    : $module->lessons()->get())
+                    ->whereNull('hidden_at')
+                    ->sortBy('position')
+                    ->values())
                 ->values();
 
             return new EloquentCollection($lessons->all());
@@ -541,6 +599,8 @@ class LearningService
         return Lesson::query()
             ->join('modules', 'modules.id', '=', 'lessons.module_id')
             ->where('modules.course_id', $course->id)
+            ->whereNull('modules.hidden_at')
+            ->whereNull('lessons.hidden_at')
             ->orderBy('modules.position')
             ->orderBy('lessons.position')
             ->orderBy('lessons.id')

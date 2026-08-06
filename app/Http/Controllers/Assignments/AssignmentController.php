@@ -10,6 +10,7 @@ use App\Models\Course;
 use App\Models\Media;
 use App\Models\Rubric;
 use App\Services\Assignments\AssignmentBuilderService;
+use App\Services\Courses\CurriculumImpactService;
 use App\Services\Media\PrivateFileService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -120,10 +121,21 @@ class AssignmentController extends Controller
         return back()->with('status', 'Assignment unpublished — students can no longer open it.');
     }
 
-    public function destroy(Course $course, Assignment $assignment): RedirectResponse
+    /**
+     * An assignment students have handed work into is refused rather than deleted — the
+     * submissions and any grades against them are academic record. Hiding it is offered
+     * instead.
+     */
+    public function destroy(Course $course, Assignment $assignment, CurriculumImpactService $impact): RedirectResponse
     {
         $this->assertBelongs($course, $assignment);
         $this->authorize('manage', $assignment);
+
+        try {
+            $impact->assertDeletable($assignment);
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         $assignment->delete();
 

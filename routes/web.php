@@ -43,6 +43,7 @@ use App\Http\Controllers\Courses\AnnouncementController;
 use App\Http\Controllers\Courses\BulkEnrollmentController;
 use App\Http\Controllers\Courses\CourseController;
 use App\Http\Controllers\Courses\CourseCurriculumController;
+use App\Http\Controllers\Courses\CurriculumVisibilityController;
 use App\Http\Controllers\Courses\CourseProgressController;
 use App\Http\Controllers\Courses\CourseWorkflowController;
 use App\Http\Controllers\Courses\EnrollmentApprovalController;
@@ -585,6 +586,12 @@ Route::middleware(['auth', 'verified'])
         // Curriculum — outline partial (AJAX refresh) + whole-outline reorder.
         Route::get('courses/{course}/curriculum', [CourseCurriculumController::class, 'show'])->name('courses.curriculum');
         Route::post('courses/{course}/curriculum/reorder', [CourseCurriculumController::class, 'reorder'])->name('courses.curriculum.reorder');
+
+        // Hide/restore any curriculum item — the safe alternative to deleting student work.
+        Route::patch('courses/{course}/curriculum/{type}/{id}/visibility', [CurriculumVisibilityController::class, 'update'])
+            ->whereIn('type', ['module', 'lesson', 'assessment', 'assignment'])
+            ->whereNumber('id')
+            ->name('courses.curriculum.visibility');
 
         // Modules (AJAX).
         Route::post('courses/{course}/modules', [ModuleController::class, 'store'])->name('modules.store');

@@ -7,6 +7,7 @@ use App\Http\Requests\Courses\StoreModuleRequest;
 use App\Http\Requests\Courses\UpdateModuleRequest;
 use App\Models\Course;
 use App\Models\Module;
+use App\Services\Courses\CurriculumImpactService;
 use Illuminate\Http\JsonResponse;
 
 /**
@@ -43,10 +44,25 @@ class ModuleController extends Controller
         return response()->json(['ok' => true, 'message' => 'Module updated.']);
     }
 
-    public function destroy(Course $course, Module $module): JsonResponse
+    /**
+     * Removing a module takes its lessons, assessments and assignments with it, so the
+     * impact guard looks at everything beneath it before anything is destroyed. A module
+     * any student has worked through is refused and offered as a hide instead.
+     */
+    public function destroy(Course $course, Module $module, CurriculumImpactService $impact): JsonResponse
     {
         $this->authorize('manageCurriculum', $course);
         abort_unless($module->course_id === $course->id, 404);
+
+        try {
+            $impact->assertDeletable($module);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage(),
+                'can_hide' => true,
+            ], 422);
+        }
 
         $module->delete();
 

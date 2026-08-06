@@ -8,6 +8,7 @@ use App\Http\Requests\Assessments\UpdateAssessmentRequest;
 use App\Models\Assessment;
 use App\Models\Course;
 use App\Services\Assessments\AssessmentBuilderService;
+use App\Services\Courses\CurriculumImpactService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -139,10 +140,20 @@ class AssessmentController extends Controller
         ]);
     }
 
-    public function destroy(Course $course, Assessment $assessment): RedirectResponse
+    /**
+     * An assessment students have attempted is refused rather than deleted — the attempts
+     * and their answers are academic record. Hiding it is offered instead.
+     */
+    public function destroy(Course $course, Assessment $assessment, CurriculumImpactService $impact): RedirectResponse
     {
         $this->assertBelongs($course, $assessment);
         $this->authorize('manage', $assessment);
+
+        try {
+            $impact->assertDeletable($assessment);
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         $assessment->delete();
 
