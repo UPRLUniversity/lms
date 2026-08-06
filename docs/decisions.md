@@ -1485,3 +1485,39 @@ those students were *actually* measured against was never recorded and cannot be
 the command freezes them against today's curriculum, which stops further drift but does not
 undo drift that already happened. Snapshots written this way carry a `backfilled` flag so
 the distinction stays visible rather than being quietly forgotten.
+
+### Defects found outside this section's scope, and what was done about them
+
+Four bugs surfaced while building and driving Section 16. All are fixed; none were
+introduced by it, and two had been live for months.
+
+**`confirm.js` rendered its affirmative button invisibly.** The non-danger branch styled it
+`bg-green`, but the Tailwind token is named for its role — `success` — so the class resolved
+to nothing and the button was white text on white. Latent since the UI foundations: every
+caller until now passed `danger: true` and hit the crimson branch, so the path was never
+rendered. Section 16's "Hide from students" offer is the first non-danger confirm, which is
+why it appeared now. **A second caller was affected too** — the administrator's "Re-issue
+this certificate?" dialog has had an unreadable confirm button in production all along, and
+is repaired by the same one-word fix.
+
+Found by looking at a screenshot, not the DOM: the accessibility tree reported both buttons
+present and correctly labelled. No test in the suite could have caught it — it is a CSS
+class resolving to nothing, in a JavaScript file, visible only when rendered.
+
+A sweep for the same defect class across `resources/` (colour utilities naming a token that
+does not exist) found no other instance. A lint-style guard against undefined brand tokens
+would be worth having, but it is real tooling — which classes, which files, how to handle
+dynamically composed names — and deserves its own consideration rather than being bolted
+onto the end of an unrelated section.
+
+**The assignment builder's danger zone described behaviour this section removed.** It still
+promised that deleting would take "all student submissions and grades" with it, which is
+exactly what the guard now refuses. Copy that lies about a destructive action is worse than
+no copy. It was also a dead end — the refusal tells the instructor to hide the assignment,
+and that page had no way to — so the hide control now lives there too, above delete.
+
+**Two defects in this section's own code, caught by driving it rather than by tests.** The
+`max_points` refusal left the rejected value dirty on the model, so a later save on the same
+instance would have carried it through; and the impact summary reported progress *rows* as
+though they were *students* (36 against a real 14) because a module holds one row per
+student per lesson.
