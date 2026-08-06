@@ -46,7 +46,8 @@ class CourseUpdatedNotification extends UprlNotification
         }
 
         return $mail
-            ->action('Open the course', route('learn.show', $this->course))
+            // resume, not show: show needs a lesson and this mail is about the course.
+            ->action('Open the course', route('learn.resume', $this->course))
             ->salutation(config('brand.motto'));
     }
 

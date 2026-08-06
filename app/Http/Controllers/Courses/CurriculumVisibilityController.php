@@ -54,9 +54,11 @@ class CurriculumVisibilityController extends Controller
         $hidden = (bool) $validated['hidden'];
         $item = $this->resolve($course, $type, $id);
 
-        // Classify while the model is still dirty — after save there is nothing to read.
-        $item->hidden_at = $hidden ? now() : null;
-        $described = $this->classifier->classify($item);
+        // Describe the change on a COPY. Dirtying the real model would make hide()'s
+        // idempotency check believe the work was already done and skip the save.
+        $probe = clone $item;
+        $probe->hidden_at = $hidden ? now() : null;
+        $described = $this->classifier->classify($probe);
 
         $hidden ? $item->hide() : $item->restore();
 
