@@ -80,6 +80,16 @@ return [
         'remember_token',
         'last_seen_at',
         'current_position_seconds',
+
+        // Section 16. Hiding is already recorded explicitly, with a semantic verb and the
+        // course it belongs to; letting the automatic diff log it too would file the same
+        // act twice under a vaguer name.
+        'hidden_at',
+
+        // The completion snapshot is a large, write-once payload already preserved on the
+        // enrollment itself. Copying it into every audit diff would bury the row it sits in.
+        'completion_snapshot',
+        'completion_snapshot_at',
     ],
 
     /*

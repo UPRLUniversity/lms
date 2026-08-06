@@ -124,6 +124,12 @@ class DatabaseSeeder extends Seeder
         // year so the dashboards' "active users", enrolment trend and top courses read
         // like a lived-in platform. Real rows the reports then aggregate.
         $this->call(ReportingDemoSeeder::class);
+
+        // Change safety (Section 16): a lesson withdrawn from a course whose progress rows
+        // survive it, a short maintenance history, and one completion frozen against the
+        // curriculum it was measured on. Runs last so it describes courses that already
+        // have real enrolments and progress rather than inventing its own.
+        $this->call(CurriculumChangeSeeder::class);
     }
 
     /**
