@@ -385,7 +385,11 @@ class CurriculumChangeSafetyTest extends TestCase
         $this->assertNotNull($after->completed_at);
     }
 
-    public function test_un_marking_a_lesson_after_completion_does_not_reopen_the_course(): void
+    /**
+     * The line the freeze draws: a completed student's OWN work still counts live, so
+     * undoing it genuinely un-finishes the course. Only the curriculum is frozen.
+     */
+    public function test_a_completed_student_undoing_their_own_work_does_reopen_the_course(): void
     {
         $instructor = $this->instructor();
         $course = $this->courseFor($instructor);
@@ -394,10 +398,47 @@ class CurriculumChangeSafetyTest extends TestCase
         $student = $this->enrolledStudent($course);
 
         $enrollment = $this->completeCourse($student, $course);
+        $this->assertSame(EnrollmentStatus::Completed, $enrollment->status);
 
         app(LearningService::class)->markIncomplete($student, $lessons->first());
 
-        $this->assertSame(EnrollmentStatus::Completed, $enrollment->fresh()->status);
+        $after = $enrollment->fresh();
+        $this->assertSame(EnrollmentStatus::Active, $after->status);
+        $this->assertSame(50, (int) $after->progress_percent);
+    }
+
+    /**
+     * ...and having reopened, they are still measured against the frozen set — the extra
+     * required assignment added afterwards does not enlarge their denominator.
+     */
+    public function test_a_reopened_student_is_still_measured_against_the_frozen_curriculum(): void
+    {
+        $instructor = $this->instructor();
+        $course = $this->courseFor($instructor);
+        $module = Module::factory()->for($course)->create();
+        $lessons = Lesson::factory()->for($module)->count(2)->create();
+        $student = $this->enrolledStudent($course);
+
+        $enrollment = $this->completeCourse($student, $course);
+        $learning = app(LearningService::class);
+
+        Assignment::factory()->create([
+            'course_id' => $course->id,
+            'module_id' => $module->id,
+            'created_by' => $instructor->id,
+            'status' => AssignmentStatus::Published->value,
+            'is_required' => true,
+        ]);
+
+        $learning->markIncomplete($student, $lessons->first());
+        $this->assertSame(50, (int) $enrollment->fresh()->progress_percent);
+
+        // Re-doing their own work returns them to 100% of what they signed up to.
+        $learning->markComplete($student, $lessons->first());
+
+        $after = $enrollment->fresh();
+        $this->assertSame(EnrollmentStatus::Completed, $after->status);
+        $this->assertSame(100, (int) $after->progress_percent);
     }
 
     public function test_an_active_student_still_follows_the_live_course(): void
