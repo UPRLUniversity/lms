@@ -89,7 +89,13 @@ class AssignmentController extends Controller
     {
         $this->assertBelongs($course, $assignment);
 
-        $this->builder->updateSettings($assignment, $request->validated());
+        try {
+            $this->builder->updateSettings($assignment, $request->validated());
+        } catch (\DomainException $e) {
+            // Moving max_points under already-recorded grades — refused with the reason
+            // against the field itself, so the form shows it where the change was made.
+            return back()->withInput()->withErrors(['max_points' => $e->getMessage()]);
+        }
 
         return redirect()
             ->route('assignments.edit', [$course, $assignment])

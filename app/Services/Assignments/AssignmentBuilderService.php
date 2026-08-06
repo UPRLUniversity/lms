@@ -7,6 +7,7 @@ use App\Enums\AssignmentType;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\User;
+use App\Services\Courses\CurriculumImpactService;
 use App\Services\Courses\CurriculumOrderService;
 use Illuminate\Support\Str;
 
@@ -18,7 +19,10 @@ use Illuminate\Support\Str;
  */
 class AssignmentBuilderService
 {
-    public function __construct(private readonly CurriculumOrderService $order) {}
+    public function __construct(
+        private readonly CurriculumOrderService $order,
+        private readonly CurriculumImpactService $impact,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data  title, module_id, type, insert_at, …
@@ -60,6 +64,8 @@ class AssignmentBuilderService
             'max_points' => $data['max_points'] ?? null,
         ], fn ($v) => $v !== null));
 
+        $this->assertPointsDenominatorIsSafeToMove($assignment);
+
         if (! $assignment->isPublished() && isset($data['title'])) {
             $assignment->slug = $this->uniqueSlug($assignment->course, $data['title'], $assignment->id);
         }
@@ -87,6 +93,43 @@ class AssignmentBuilderService
         $assignment->save();
 
         return $assignment;
+    }
+
+    /**
+     * Refuse to move max_points once work has been marked against it.
+     *
+     * Grade.points_total stores absolute points, not a percentage, and the gradebook
+     * derives percentages live (Σ earned ÷ Σ possible). So changing the denominator after
+     * marking silently restates every grade already recorded — a student marked 18/20
+     * becomes 18/40 without anyone touching their work. Re-grading is the honest path.
+     *
+     * @throws \DomainException
+     */
+    private function assertPointsDenominatorIsSafeToMove(Assignment $assignment): void
+    {
+        if (! $assignment->isDirty('max_points')) {
+            return;
+        }
+
+        $graded = $this->impact->for($assignment)->grades;
+
+        if ($graded === 0) {
+            return;
+        }
+
+        $was = $assignment->getOriginal('max_points');
+        $now = $assignment->max_points;
+
+        // Put the rejected value back before throwing, so a refused save leaves the model
+        // exactly as it was found rather than carrying a dirty attribute into a later save.
+        $assignment->max_points = $was;
+
+        throw new \DomainException(
+            "Can't change the total points from {$was} to {$now}: "
+            .$graded.' '.($graded === 1 ? 'grade has' : 'grades have').' already been recorded against it, '
+            .'and each one stores absolute points — so every mark would silently restate itself. '
+            .'Re-grade those submissions instead, or add a new assignment.',
+        );
     }
 
     /**
