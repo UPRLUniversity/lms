@@ -8,6 +8,7 @@ use App\Enums\AssignmentType;
 use App\Enums\MediaPurpose;
 use App\Enums\SubmissionStatus;
 use App\Models\Concerns\HasMedia;
+use App\Models\Concerns\Hideable;
 use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\AssignmentFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Assignment extends Model
 {
     /** @use HasFactory<AssignmentFactory> */
-    use HasFactory, HasMedia, LogsAuditActivity;
+    use HasFactory, HasMedia, Hideable, LogsAuditActivity;
 
     protected $fillable = [
         'course_id',
@@ -57,6 +58,7 @@ class Assignment extends Model
             'is_required' => 'boolean',
             'counts_toward_grade' => 'boolean',
             'position' => 'integer',
+            'hidden_at' => 'datetime',
         ];
     }
 
