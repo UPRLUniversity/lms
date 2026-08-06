@@ -36,7 +36,10 @@ export function uprlConfirm({
                 baseButton +
                 (danger
                     ? ' bg-crimson border-transparent text-white hover:bg-crimson-dark'
-                    : ' bg-green border-transparent text-white hover:opacity-90'),
+                    // `success`, not `green` — the Tailwind token is named for its role.
+                    // `bg-green` does not exist, so this button rendered white-on-white
+                    // and was effectively invisible.
+                    : ' bg-success border-transparent text-white hover:opacity-90'),
             cancelButton: baseButton + ' bg-card border-line text-ink hover:bg-surface',
         },
     }).then((result) => result.isConfirmed);
