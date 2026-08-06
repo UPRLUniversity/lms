@@ -253,6 +253,28 @@ class CurriculumChangeSafetyTest extends TestCase
         $this->assertCount(3, $learning->outline($student, $course->fresh())->items);
     }
 
+    /**
+     * The assignment page posts an ordinary form rather than calling the AJAX builder, so
+     * the one endpoint has to answer with a redirect there and JSON in the outline.
+     */
+    public function test_hiding_from_a_plain_form_post_redirects_back_with_a_message(): void
+    {
+        $instructor = $this->instructor();
+        $course = $this->courseFor($instructor);
+        $assignment = Assignment::factory()->create([
+            'course_id' => $course->id,
+            'created_by' => $instructor->id,
+        ]);
+
+        $this->actingAs($instructor)
+            ->from(route('assignments.edit', [$course, $assignment]))
+            ->patch(route('courses.curriculum.visibility', [$course, 'assignment', $assignment->id]), ['hidden' => true])
+            ->assertRedirect(route('assignments.edit', [$course, $assignment]))
+            ->assertSessionHas('status');
+
+        $this->assertNotNull($assignment->fresh()->hidden_at);
+    }
+
     public function test_visibility_cannot_be_changed_on_another_instructors_course(): void
     {
         $owner = $this->instructor();

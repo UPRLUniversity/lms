@@ -261,9 +261,25 @@
                 @if ($canManage)
                     <x-ui.card>
                         <h3 class="font-display text-base font-semibold text-ink">Danger zone</h3>
-                        <p class="mt-1 text-xs text-ink/55">Deleting removes the assignment and every submission version with it.</p>
-                        <form method="POST" action="{{ route('assignments.destroy', [$course, $assignment]) }}" class="mt-3"
-                              onsubmit="event.preventDefault(); window.uprlConfirm({ title: 'Delete this assignment?', text: 'All student submissions and grades on it will be removed too. This cannot be undone.', confirmText: 'Delete assignment' }).then(ok => ok && this.submit());">
+                        <p class="mt-1 text-xs text-ink/55">
+                            Deleting works only while nobody has handed anything in. Once there are
+                            submissions or grades, deleting is refused — hide it instead, which takes it
+                            off the students’ curriculum and out of their grades while keeping their work.
+                        </p>
+
+                        {{-- Hiding sits above deleting, because it is nearly always the right answer for
+                             a published assignment students have already reached (Section 16). --}}
+                        <form method="POST" action="{{ route('courses.curriculum.visibility', [$course, 'assignment', $assignment->id]) }}" class="mt-3">
+                            @csrf @method('PATCH')
+                            <input type="hidden" name="hidden" value="{{ $assignment->isHidden() ? 0 : 1 }}">
+                            <x-ui.button type="submit" variant="ghost" size="sm" class="w-full justify-center">
+                                <x-ui.icon :name="$assignment->isHidden() ? 'eye' : 'eye-off'" class="h-4 w-4" />
+                                {{ $assignment->isHidden() ? 'Show to students again' : 'Hide from students' }}
+                            </x-ui.button>
+                        </form>
+
+                        <form method="POST" action="{{ route('assignments.destroy', [$course, $assignment]) }}" class="mt-2"
+                              onsubmit="event.preventDefault(); window.uprlConfirm({ title: 'Delete this assignment?', text: 'This works only while no one has submitted. If students have already handed work in, the delete is refused and you can hide it instead.', confirmText: 'Delete assignment' }).then(ok => ok && this.submit());">
                             @csrf @method('DELETE')
                             <x-ui.button type="submit" variant="ghost" size="sm" class="w-full justify-center text-crimson">
                                 <x-ui.icon name="trash" class="h-4 w-4" /> Delete assignment

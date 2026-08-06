@@ -14,6 +14,7 @@ use App\Services\Courses\CurriculumChangeClassifier;
 use App\Support\Audit\AuditLogger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -42,7 +43,7 @@ class CurriculumVisibilityController extends Controller
         private readonly AuditLogger $audit,
     ) {}
 
-    public function update(Request $request, Course $course, string $type, int $id): JsonResponse
+    public function update(Request $request, Course $course, string $type, int $id): JsonResponse|RedirectResponse
     {
         $this->authorize('manageCurriculum', $course);
 
@@ -70,12 +71,20 @@ class CurriculumVisibilityController extends Controller
             ['course_id' => $course->id, 'type' => $type],
         );
 
+        $message = $hidden
+            ? ucfirst($type).' hidden from students. Their work on it is kept.'
+            : ucfirst($type).' is visible to students again.';
+
+        // The builder outline calls this over AJAX; the assignment and assessment pages
+        // post an ordinary form. One endpoint, answering in whichever way it was asked.
+        if (! $request->expectsJson()) {
+            return back()->with('status', $message);
+        }
+
         return response()->json([
             'ok' => true,
             'hidden' => $item->isHidden(),
-            'message' => $hidden
-                ? ucfirst($type).' hidden from students. Their work on it is kept.'
-                : ucfirst($type).' is visible to students again.',
+            'message' => $message,
         ]);
     }
 
