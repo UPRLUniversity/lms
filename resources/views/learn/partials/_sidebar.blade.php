@@ -39,6 +39,10 @@
                    class="inline-flex items-center gap-1 text-xs font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
                     <x-ui.icon name="megaphone" class="h-3.5 w-3.5" /> Announcements
                 </a>
+                <a href="{{ route('learn.changes', $course) }}"
+                   class="inline-flex items-center gap-1 text-xs font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
+                    <x-ui.icon name="arrow-path" class="h-3.5 w-3.5" /> What’s changed
+                </a>
                 <a href="{{ route('forum.index', $course) }}"
                    class="inline-flex items-center gap-1 text-xs font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
                     <x-ui.icon name="chat-group" class="h-3.5 w-3.5" /> Forum

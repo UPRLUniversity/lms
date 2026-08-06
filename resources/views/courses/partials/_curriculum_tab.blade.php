@@ -11,6 +11,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+            <x-ui.button variant="ghost" size="sm" :href="route('courses.changes', $course)">
+                <x-ui.icon name="arrow-path" class="h-4 w-4" /> Change history
+            </x-ui.button>
             <x-ui.button variant="ghost" size="sm" :href="route('assessments.insights', $course)">
                 <x-ui.icon name="sparkles" class="h-4 w-4" /> Insights
             </x-ui.button>
@@ -22,6 +25,8 @@
             </x-ui.button>
         </div>
     </div>
+
+    @include('courses.partials._curriculum_impact_strip')
 
     {{-- Reorder announcements for screen readers: drag has no natural narration, and the
          keyboard path needs to confirm the move landed. Lives outside x-ref="outline" so
