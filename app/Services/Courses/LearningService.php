@@ -19,6 +19,8 @@ use App\Models\LessonProgress;
 use App\Models\Module;
 use App\Models\Submission;
 use App\Models\User;
+use App\Services\Grades\GradebookService;
+use App\Support\Curriculum\CompletionSnapshot;
 use App\Support\Learning\CourseProgress;
 use App\Support\Learning\CurriculumItem;
 use App\Support\Learning\CurriculumOutline;
@@ -37,15 +39,48 @@ use Illuminate\Support\Collection;
  */
 class LearningService
 {
-    public function __construct(private readonly CurriculumOrderService $order) {}
+    public function __construct(
+        private readonly CurriculumOrderService $order,
+        private readonly GradebookService $gradebook,
+    ) {}
+
+    /**
+     * The curriculum a student is being measured against right now — captured verbatim
+     * when their enrollment reaches Completed, and never recomputed after that.
+     *
+     * Both sets are recorded because completion and grading have never had the same rule:
+     * completion counts every published, required item; the transcript counts only those
+     * that also feed the grade. Freezing one and re-deriving the other would reintroduce
+     * exactly the drift this exists to stop.
+     */
+    public function completionSnapshot(Course $course): CompletionSnapshot
+    {
+        [$gradedAssessmentIds, $gradedAssignmentIds] = $this->gradebook->gradedItemIds($course);
+
+        return new CompletionSnapshot(
+            lessonIds: $this->sequence($course)->pluck('id')->all(),
+            requiredAssessmentIds: $this->publishedAssessments($course)
+                ->where('is_required', true)->pluck('id')->all(),
+            requiredAssignmentIds: $this->publishedAssignments($course)
+                ->where('is_required', true)->pluck('id')->all(),
+            gradedAssessmentIds: $gradedAssessmentIds,
+            gradedAssignmentIds: $gradedAssignmentIds,
+            capturedAt: now()->toIso8601String(),
+        );
+    }
 
     /**
      * A query-free snapshot of $user's progress through $course: the ordered lesson
      * sequence + a single progress query. Reuses already-loaded curriculum relations.
+     *
+     * When $frozen is given (a student who has already completed), the measuring stick is
+     * the curriculum they finished rather than the live one. Their own work still counts
+     * live against it — a submission returned for resubmission genuinely does un-finish
+     * the course — but the course moving underneath them cannot change the total.
      */
-    public function snapshot(User $user, Course $course): CourseProgress
+    public function snapshot(User $user, Course $course, ?CompletionSnapshot $frozen = null): CourseProgress
     {
-        $sequence = $this->sequence($course);
+        $sequence = $this->sequence($course, $frozen);
 
         $progress = $sequence->isEmpty()
             ? new Collection
@@ -57,14 +92,18 @@ class LearningService
 
         // Required, published assessments count toward course completion like lessons.
         $assessments = $this->publishedAssessments($course);
-        $required = $assessments->where('is_required', true);
-        $passedIds = $this->passedAssessmentIds($user, $assessments->pluck('id'));
+        $required = $frozen !== null
+            ? $this->frozenItems($course, 'assessments', $frozen->requiredAssessmentIds)
+            : $assessments->where('is_required', true);
+        $passedIds = $this->passedAssessmentIds($user, $required->pluck('id')->merge($assessments->pluck('id'))->unique());
         $requiredComplete = $required->filter(fn (Assessment $a) => $passedIds->contains($a->id))->count();
 
         // As do required, published assignments once graded (Section 6).
         $assignments = $this->publishedAssignments($course);
-        $requiredAssignments = $assignments->where('is_required', true);
-        $gradedIds = $this->gradedAssignmentIds($user, $assignments->pluck('id'));
+        $requiredAssignments = $frozen !== null
+            ? $this->frozenItems($course, 'assignments', $frozen->requiredAssignmentIds)
+            : $assignments->where('is_required', true);
+        $gradedIds = $this->gradedAssignmentIds($user, $requiredAssignments->pluck('id')->merge($assignments->pluck('id'))->unique());
         $requiredAssignmentsComplete = $requiredAssignments
             ->filter(fn (Assignment $a) => $gradedIds->contains($a->id))
             ->count();
@@ -138,9 +177,11 @@ class LearningService
         };
 
         // One merged ladder per bucket — the same merge the builder outline renders.
-        foreach ($course->modules as $module) {
+        // Hidden modules (and hidden lessons inside visible ones) never reach a learner;
+        // $assessments/$assignments arrive already filtered.
+        foreach ($course->modules->whereNull('hidden_at') as $module) {
             $this->order->merge(
-                $module->lessons,
+                $module->lessons->whereNull('hidden_at'),
                 $assessments->where('module_id', $module->id),
                 $assignments->where('module_id', $module->id),
             )->each(fn (array $item) => $rows->push($toRow($item, $module->id)));
@@ -185,13 +226,26 @@ class LearningService
      */
     private function publishedAssessments(Course $course): Collection
     {
+        $hiddenModules = $this->hiddenModuleIds($course);
+
         if ($course->relationLoaded('assessments')) {
             return $course->assessments
                 ->where('status', AssessmentStatus::Published)
+                ->whereNull('hidden_at')
+                ->reject(fn (Assessment $a) => $this->sitsInHiddenModule($a->module_id, $hiddenModules))
                 ->values();
         }
 
-        return collect($course->assessments()->published()->get()->all());
+        return collect(
+            $course->assessments()
+                ->published()
+                ->visible()
+                ->when($hiddenModules !== [], fn ($q) => $q->where(
+                    fn ($w) => $w->whereNull('module_id')->orWhereNotIn('module_id', $hiddenModules),
+                ))
+                ->get()
+                ->all(),
+        );
     }
 
     /**
@@ -201,13 +255,73 @@ class LearningService
      */
     private function publishedAssignments(Course $course): Collection
     {
+        $hiddenModules = $this->hiddenModuleIds($course);
+
         if ($course->relationLoaded('assignments')) {
             return $course->assignments
                 ->where('status', AssignmentStatus::Published)
+                ->whereNull('hidden_at')
+                ->reject(fn (Assignment $a) => $this->sitsInHiddenModule($a->module_id, $hiddenModules))
                 ->values();
         }
 
-        return collect($course->assignments()->published()->get()->all());
+        return collect(
+            $course->assignments()
+                ->published()
+                ->visible()
+                ->when($hiddenModules !== [], fn ($q) => $q->where(
+                    fn ($w) => $w->whereNull('module_id')->orWhereNotIn('module_id', $hiddenModules),
+                ))
+                ->get()
+                ->all(),
+        );
+    }
+
+    /**
+     * Ids of this course's modules that are hidden from students.
+     *
+     * Hiding a module hides everything inside it, so an assessment or assignment sitting
+     * in one drops out of the learner's view without its own flag being touched — and
+     * comes back untouched when the module is restored. Deriving it beats cascading the
+     * flag onto children, which would lose track of what was individually hidden.
+     *
+     * @return array<int, int>
+     */
+    private function hiddenModuleIds(Course $course): array
+    {
+        return ($course->relationLoaded('modules')
+            ? $course->modules->whereNotNull('hidden_at')->pluck('id')
+            : $course->modules()->hidden()->pluck('id')
+        )->all();
+    }
+
+    /**
+     * @param  array<int, int>  $hiddenModuleIds
+     */
+    private function sitsInHiddenModule(?int $moduleId, array $hiddenModuleIds): bool
+    {
+        return $moduleId !== null && \in_array($moduleId, $hiddenModuleIds, true);
+    }
+
+    /**
+     * The frozen items by id, taken WITHOUT the published/visible filters.
+     *
+     * They counted when this student finished, so they keep counting for them even if the
+     * course has since unpublished or hidden them — otherwise a completed student's
+     * denominator would quietly shrink, which is the same drift in the other direction.
+     *
+     * @param  array<int, int>  $ids
+     * @return Collection<int, covariant Assessment|Assignment>
+     */
+    private function frozenItems(Course $course, string $relation, array $ids): Collection
+    {
+        if ($ids === []) {
+            return new Collection;
+        }
+
+        $course->loadMissing($relation);
+
+        return collect($course->{$relation}->whereIn('id', $ids)->values()->all());
     }
 
     /**
@@ -402,7 +516,9 @@ class LearningService
         return [
             'progress' => $progress,
             'enrollment' => $enrollment,
-            'percent' => $snapshot->percent(),
+            // From the enrollment, not the live snapshot: a student measured against a
+            // frozen curriculum must be shown the same number that was stored for them.
+            'percent' => $enrollment?->progress_percent ?? $snapshot->percent(),
             'newly_completed' => ! $wasComplete,
             'module_completed' => ! $wasComplete && $lesson->module instanceof Module
                 && $snapshot->isModuleComplete($lesson->module),
@@ -433,7 +549,7 @@ class LearningService
         return [
             'progress' => $progress,
             'enrollment' => $enrollment,
-            'percent' => $snapshot->percent(),
+            'percent' => $enrollment?->progress_percent ?? $snapshot->percent(),
         ];
     }
 
@@ -479,6 +595,21 @@ class LearningService
             return null;
         }
 
+        // Once a student has finished a course, that curriculum is the one they are
+        // measured against from then on — not the live one. Their own work still counts
+        // live against it (a submission returned for resubmission genuinely does un-finish
+        // the course), but the course changing underneath them can no longer move their
+        // total (Section 16).
+        //
+        // Keyed on the snapshot existing, not on still being Completed: a student who
+        // reopens the course by undoing their own work must not suddenly be held to
+        // requirements added after they finished.
+        $frozen = $enrollment->completionSnapshot();
+
+        if ($frozen !== null) {
+            $snapshot = $this->snapshot($user, $course, $frozen);
+        }
+
         $snapshot ??= $this->snapshot($user, $course);
 
         $percent = $snapshot->percent();
@@ -490,8 +621,16 @@ class LearningService
         if ($justCompleted) {
             $attributes['status'] = EnrollmentStatus::Completed;
             $attributes['completed_at'] = now();
+
+            // Only ever the FIRST completion. A student who reopened the course and
+            // finished it again keeps the original measuring stick — re-freezing here
+            // would quietly adopt today's curriculum, which is the drift this prevents.
+            if (! $enrollment->hasCompletionSnapshot()) {
+                $attributes['completion_snapshot'] = $this->completionSnapshot($course)->toArray();
+                $attributes['completion_snapshot_at'] = now();
+            }
         } elseif (! $complete && $enrollment->status === EnrollmentStatus::Completed) {
-            // A lesson was un-marked — the course is no longer finished.
+            // A lesson was un-marked before the course was ever finished-and-frozen.
             $attributes['status'] = EnrollmentStatus::Active;
             $attributes['completed_at'] = null;
         }
@@ -525,14 +664,35 @@ class LearningService
      *
      * @return EloquentCollection<int, Lesson>
      */
-    public function sequence(Course $course): EloquentCollection
+    public function sequence(Course $course, ?CompletionSnapshot $frozen = null): EloquentCollection
     {
+        // A completed student's lesson set is the one they finished — lessons added since
+        // don't appear, and lessons since hidden still count, so their total can't move.
+        if ($frozen !== null) {
+            return new EloquentCollection(
+                Lesson::query()
+                    ->join('modules', 'modules.id', '=', 'lessons.module_id')
+                    ->where('modules.course_id', $course->id)
+                    ->whereIn('lessons.id', $frozen->lessonIds ?: [0])
+                    ->orderBy('modules.position')
+                    ->orderBy('lessons.position')
+                    ->orderBy('lessons.id')
+                    ->select('lessons.*')
+                    ->get()
+                    ->all(),
+            );
+        }
+
         if ($course->relationLoaded('modules')) {
             $lessons = $course->modules
+                ->whereNull('hidden_at')
                 ->sortBy('position')
                 ->flatMap(fn (Module $module) => ($module->relationLoaded('lessons')
                     ? $module->lessons
-                    : $module->lessons()->get())->sortBy('position')->values())
+                    : $module->lessons()->get())
+                    ->whereNull('hidden_at')
+                    ->sortBy('position')
+                    ->values())
                 ->values();
 
             return new EloquentCollection($lessons->all());
@@ -541,6 +701,8 @@ class LearningService
         return Lesson::query()
             ->join('modules', 'modules.id', '=', 'lessons.module_id')
             ->where('modules.course_id', $course->id)
+            ->whereNull('modules.hidden_at')
+            ->whereNull('lessons.hidden_at')
             ->orderBy('modules.position')
             ->orderBy('lessons.position')
             ->orderBy('lessons.id')

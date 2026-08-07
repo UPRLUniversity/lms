@@ -4,7 +4,9 @@ namespace App\Services\Grades;
 
 use App\Models\Course;
 use App\Models\CourseGradeRecord;
+use App\Models\Enrollment;
 use App\Models\User;
+use App\Support\Curriculum\CompletionSnapshot;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -72,7 +74,17 @@ class CourseGradeRecordService
             return null;
         }
 
-        $summary = $this->gradebook->summaryFor($user, $course, $scale);
+        // Recompute against what the student was actually measured on. Without this, an
+        // admin re-issue months later would grade them on today's curriculum — items they
+        // never saw counting against a mark they already earned (Section 16). The scale is
+        // still the course's current one, which is the documented Section 6.5 behaviour.
+        $summary = $this->gradebook->summaryFor(
+            $user,
+            $course,
+            $scale,
+            frozen: $this->frozenCurriculumFor($user, $course),
+        );
+
         if (! $summary->isFinal()) {
             return null;
         }
@@ -87,5 +99,19 @@ class CourseGradeRecordService
             'scale_snapshot' => $scale->toSnapshot(),
             'computed_at' => now(),
         ]);
+    }
+
+    /**
+     * The item set frozen when this student completed, or null when they haven't completed
+     * — and also null for completions that predate Section 16 and were never snapshotted,
+     * which fall back to live derivation until the backfill command stamps them.
+     */
+    private function frozenCurriculumFor(User $user, Course $course): ?CompletionSnapshot
+    {
+        return Enrollment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first()
+            ?->completionSnapshot();
     }
 }

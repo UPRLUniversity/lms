@@ -6,6 +6,7 @@ use App\Casts\RichHtml;
 use App\Enums\LessonType;
 use App\Enums\MediaPurpose;
 use App\Models\Concerns\HasMedia;
+use App\Models\Concerns\Hideable;
 use App\Models\Concerns\LogsAuditActivity;
 use App\Services\Courses\VideoEmbedService;
 use Database\Factories\LessonFactory;
@@ -18,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Lesson extends Model
 {
     /** @use HasFactory<LessonFactory> */
-    use HasFactory, HasMedia, LogsAuditActivity;
+    use HasFactory, HasMedia, Hideable, LogsAuditActivity;
 
     protected $fillable = [
         'module_id',
@@ -41,6 +42,7 @@ class Lesson extends Model
             'duration_minutes' => 'integer',
             'is_free_preview' => 'boolean',
             'position' => 'integer',
+            'hidden_at' => 'datetime',
         ];
     }
 

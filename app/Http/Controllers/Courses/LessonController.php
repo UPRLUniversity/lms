@@ -10,6 +10,7 @@ use App\Http\Requests\Courses\UpdateLessonRequest;
 use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Module;
+use App\Services\Courses\CurriculumImpactService;
 use App\Services\Courses\CurriculumOrderService;
 use App\Services\Courses\VideoEmbedService;
 use App\Services\Media\PrivateFileService;
@@ -95,10 +96,25 @@ class LessonController extends Controller
         return response()->json(['ok' => true, 'message' => 'Lesson saved.']);
     }
 
-    public function destroy(Course $course, Lesson $lesson): JsonResponse
+    /**
+     * A lesson any student has progressed through is refused rather than deleted — its
+     * LessonProgress rows are part of their record. The guard runs before the file is
+     * removed, so a refused delete leaves the lesson completely untouched.
+     */
+    public function destroy(Course $course, Lesson $lesson, CurriculumImpactService $impact): JsonResponse
     {
         $this->authorize('manageCurriculum', $course);
         $this->assertBelongs($course, $lesson);
+
+        try {
+            $impact->assertDeletable($lesson);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage(),
+                'can_hide' => true,
+            ], 422);
+        }
 
         if ($file = $lesson->file()) {
             $this->files->delete($file);

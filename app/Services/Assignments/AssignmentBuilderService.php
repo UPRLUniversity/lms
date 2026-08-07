@@ -7,6 +7,8 @@ use App\Enums\AssignmentType;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\User;
+use App\Services\Courses\CurriculumChangeClassifier;
+use App\Services\Courses\CurriculumImpactService;
 use App\Services\Courses\CurriculumOrderService;
 use Illuminate\Support\Str;
 
@@ -18,7 +20,11 @@ use Illuminate\Support\Str;
  */
 class AssignmentBuilderService
 {
-    public function __construct(private readonly CurriculumOrderService $order) {}
+    public function __construct(
+        private readonly CurriculumOrderService $order,
+        private readonly CurriculumImpactService $impact,
+        private readonly CurriculumChangeClassifier $classifier,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data  title, module_id, type, insert_at, …
@@ -60,6 +66,8 @@ class AssignmentBuilderService
             'max_points' => $data['max_points'] ?? null,
         ], fn ($v) => $v !== null));
 
+        $this->assertPointsDenominatorIsSafeToMove($assignment);
+
         if (! $assignment->isPublished() && isset($data['title'])) {
             $assignment->slug = $this->uniqueSlug($assignment->course, $data['title'], $assignment->id);
         }
@@ -87,6 +95,81 @@ class AssignmentBuilderService
         $assignment->save();
 
         return $assignment;
+    }
+
+    /**
+     * What updateSettings($data) would change, described for students — without changing
+     * anything.
+     *
+     * Runs the same fill against a throwaway copy of the model so the description can
+     * never disagree with the save that follows, then discards it.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<int, \App\Support\Curriculum\CurriculumChange>
+     */
+    public function describeSettingsChange(Assignment $assignment, array $data): array
+    {
+        $probe = $assignment->replicate();
+        $probe->exists = true;
+        $probe->setRawAttributes($assignment->getRawOriginal(), sync: true);
+
+        $probe->fill(array_filter([
+            'title' => $data['title'] ?? null,
+            'instructions' => $data['instructions'] ?? null,
+            'type' => $data['type'] ?? null,
+            'max_points' => $data['max_points'] ?? null,
+        ], fn ($v) => $v !== null));
+
+        foreach (['allow_late', 'is_required', 'counts_toward_grade'] as $flag) {
+            if (\array_key_exists($flag, $data)) {
+                $probe->{$flag} = (bool) $data[$flag];
+            }
+        }
+
+        foreach (['due_at', 'rubric_id', 'module_id'] as $nullable) {
+            if (\array_key_exists($nullable, $data)) {
+                $probe->{$nullable} = ($data[$nullable] === null || $data[$nullable] === '') ? null : $data[$nullable];
+            }
+        }
+
+        return $this->classifier->classify($probe);
+    }
+
+    /**
+     * Refuse to move max_points once work has been marked against it.
+     *
+     * Grade.points_total stores absolute points, not a percentage, and the gradebook
+     * derives percentages live (Σ earned ÷ Σ possible). So changing the denominator after
+     * marking silently restates every grade already recorded — a student marked 18/20
+     * becomes 18/40 without anyone touching their work. Re-grading is the honest path.
+     *
+     * @throws \DomainException
+     */
+    private function assertPointsDenominatorIsSafeToMove(Assignment $assignment): void
+    {
+        if (! $assignment->isDirty('max_points')) {
+            return;
+        }
+
+        $graded = $this->impact->for($assignment)->grades;
+
+        if ($graded === 0) {
+            return;
+        }
+
+        $was = $assignment->getOriginal('max_points');
+        $now = $assignment->max_points;
+
+        // Put the rejected value back before throwing, so a refused save leaves the model
+        // exactly as it was found rather than carrying a dirty attribute into a later save.
+        $assignment->max_points = $was;
+
+        throw new \DomainException(
+            "Can't change the total points from {$was} to {$now}: "
+            .$graded.' '.($graded === 1 ? 'grade has' : 'grades have').' already been recorded against it, '
+            .'and each one stores absolute points — so every mark would silently restate itself. '
+            .'Re-grade those submissions instead, or add a new assignment.',
+        );
     }
 
     /**

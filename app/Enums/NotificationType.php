@@ -21,6 +21,7 @@ enum NotificationType: string
     case CertificateIssued = 'certificate_issued';
     case AssignmentDueSoon = 'assignment_due_soon';
     case CourseAnnouncement = 'course_announcement';
+    case CourseUpdated = 'course_updated';
 
     // Communication (Section 9) — reaches students and staff alike.
     case NewMessage = 'new_message';
@@ -53,6 +54,7 @@ enum NotificationType: string
             self::CertificateIssued => 'Certificate issued',
             self::AssignmentDueSoon => 'Assignment due soon',
             self::CourseAnnouncement => 'Course announcements',
+            self::CourseUpdated => 'Changes to a course you are taking',
             self::NewMessage => 'New messages',
             self::ForumReply => 'Forum replies',
             self::CourseApproved => 'Course approved',
@@ -79,6 +81,7 @@ enum NotificationType: string
             self::CertificateIssued => 'certificate',
             self::AssignmentDueSoon => 'clock',
             self::CourseAnnouncement => 'megaphone',
+            self::CourseUpdated => 'arrow-path',
             self::NewMessage => 'chat',
             self::ForumReply => 'chat',
             self::CourseApproved => 'check',
@@ -105,7 +108,7 @@ enum NotificationType: string
             self::EnrollmentConfirmed, self::EnrollmentApproved, self::WaitlistPromoted, self::CourseApproved => 'success',
             self::EnrollmentRejected, self::AssignmentReturned, self::CourseReturned => 'crimson',
             self::CertificateIssued, self::AssignmentGraded, self::AttemptGraded, self::AssignmentDueSoon,
-            self::CourseAnnouncement, self::NewMessage, self::ForumReply, self::NewSubmission,
+            self::CourseAnnouncement, self::CourseUpdated, self::NewMessage, self::ForumReply, self::NewSubmission,
             self::NewPendingEnrollment, self::CourseSubmittedForReview, self::BulkImportCompleted,
             self::ReportReady => 'gold',
             self::OrderPaid => 'success',
@@ -121,7 +124,7 @@ enum NotificationType: string
             self::EnrollmentConfirmed, self::EnrollmentApproved, self::EnrollmentRejected, self::WaitlistPromoted => 'Enrollment',
             self::AssignmentGraded, self::AssignmentReturned, self::AttemptGraded, self::CertificateIssued => 'Grades & certificates',
             self::AssignmentDueSoon => 'Reminders',
-            self::CourseAnnouncement => 'Course announcements',
+            self::CourseAnnouncement, self::CourseUpdated => 'Course announcements',
             self::NewMessage, self::ForumReply => 'Messages & forums',
             self::CourseApproved, self::CourseReturned, self::CourseSubmittedForReview => 'Course workflow',
             self::NewSubmission, self::NewPendingEnrollment => 'Teaching',
@@ -151,7 +154,8 @@ enum NotificationType: string
     public function isDigestible(): bool
     {
         return match ($this) {
-            self::AssignmentGraded, self::AttemptGraded, self::CertificateIssued, self::CourseAnnouncement, self::AssignmentReturned => true,
+            self::AssignmentGraded, self::AttemptGraded, self::CertificateIssued, self::CourseAnnouncement,
+            self::CourseUpdated, self::AssignmentReturned => true,
             default => false,
         };
     }

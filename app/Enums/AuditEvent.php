@@ -43,6 +43,12 @@ enum AuditEvent: string
     case CurriculumRequirementChanged = 'curriculum.requirement_changed';
     case CurriculumGradeWeightChanged = 'curriculum.counts_toward_grade_changed';
 
+    // Change safety (Section 16) — editing a course students are already on.
+    case CurriculumItemHidden = 'curriculum.item_hidden';
+    case CurriculumItemRestored = 'curriculum.item_restored';
+    case CurriculumDeleteBlocked = 'curriculum.delete_blocked';
+    case CourseChangedWithEnrollments = 'course.changed_with_enrollments';
+
     // Assessment & assignment authoring.
     case AssessmentUpdated = 'assessment.updated';
     case AssessmentPublished = 'assessment.published';
@@ -135,6 +141,10 @@ enum AuditEvent: string
             self::CurriculumReordered => 'Reordered the curriculum',
             self::CurriculumRequirementChanged => 'Changed whether an item is required',
             self::CurriculumGradeWeightChanged => 'Changed whether an item counts toward the grade',
+            self::CurriculumItemHidden => 'Hid an item from students',
+            self::CurriculumItemRestored => 'Made an item visible again',
+            self::CurriculumDeleteBlocked => 'Blocked a delete that held student work',
+            self::CourseChangedWithEnrollments => 'Changed a course students are taking',
 
             self::AssessmentUpdated => 'Updated an assessment',
             self::AssessmentPublished => 'Published an assessment',

@@ -13,6 +13,7 @@ use App\Models\Course;
 use App\Models\GradeScale;
 use App\Models\Submission;
 use App\Models\User;
+use App\Support\Curriculum\CompletionSnapshot;
 use App\Support\Grades\GradebookItem;
 use App\Support\Grades\GradebookSummary;
 use Illuminate\Support\Collection;
@@ -33,11 +34,18 @@ use Illuminate\Support\Collection;
 class GradebookService
 {
     /**
+     * A student's gradebook items.
+     *
+     * When $frozen is given (a completed student's snapshot), the items are the ones that
+     * counted at the moment they finished — so a course edited afterwards can't restate a
+     * grade that was already earned. Without it, the live course is used, which is right
+     * for everyone still working through it.
+     *
      * @return Collection<int, GradebookItem>
      */
-    public function itemsFor(User $user, Course $course): Collection
+    public function itemsFor(User $user, Course $course, ?CompletionSnapshot $frozen = null): Collection
     {
-        [$assessments, $assignments] = $this->requiredItems($course);
+        [$assessments, $assignments] = $this->requiredItems($course, $frozen);
 
         return $assessments
             ->map(fn (Assessment $a) => $this->buildAssessmentItem($a, $this->bestAttempt($user, $a)))
@@ -100,9 +108,9 @@ class GradebookService
      *
      * @param  Collection<int, GradebookItem>|null  $items
      */
-    public function summaryFor(User $user, Course $course, GradeScale $scale, ?Collection $items = null): GradebookSummary
+    public function summaryFor(User $user, Course $course, GradeScale $scale, ?Collection $items = null, ?CompletionSnapshot $frozen = null): GradebookSummary
     {
-        $items ??= $this->itemsFor($user, $course);
+        $items ??= $this->itemsFor($user, $course, $frozen);
 
         return $this->summarize($items, $scale);
     }
@@ -127,16 +135,61 @@ class GradebookService
     }
 
     /**
+     * The ids of the items a grade is currently computed from, as [assessments, assignments].
+     *
+     * Exposed so LearningService can freeze exactly this set into a student's completion
+     * snapshot without re-deriving the filter — the two rules drifting apart is precisely
+     * what the snapshot exists to prevent.
+     *
+     * @return array{0: array<int, int>, 1: array<int, int>}
+     */
+    public function gradedItemIds(Course $course): array
+    {
+        [$assessments, $assignments] = $this->requiredItems($course);
+
+        return [$assessments->pluck('id')->all(), $assignments->pluck('id')->all()];
+    }
+
+    /**
+     * The items a grade is computed from: published, required, counting toward the grade —
+     * and visible. An item hidden from students (or sitting inside a hidden module) has
+     * been withdrawn from the course, so it stops counting for everyone still working
+     * through it; the attempts and grades already recorded against it survive untouched
+     * and stay visible to staff.
+     *
      * @return array{0: Collection<int, Assessment>, 1: Collection<int, Assignment>}
      */
-    private function requiredItems(Course $course): array
+    private function requiredItems(Course $course, ?CompletionSnapshot $frozen = null): array
     {
-        $course->loadMissing(['assessments', 'assignments']);
+        $course->loadMissing(['assessments', 'assignments', 'modules']);
+
+        // A completed student is measured against the set recorded at completion, exactly
+        // as it was — including items since hidden or made optional, and excluding ones
+        // added afterwards. Order still comes from the live course so the transcript reads
+        // sensibly.
+        if ($frozen !== null) {
+            return [
+                $course->assessments
+                    ->whereIn('id', $frozen->gradedAssessmentIds)
+                    ->sortBy('position')
+                    ->values(),
+                $course->assignments
+                    ->whereIn('id', $frozen->gradedAssignmentIds)
+                    ->sortBy('position')
+                    ->values(),
+            ];
+        }
+
+        $hiddenModules = $course->modules->whereNotNull('hidden_at')->pluck('id')->all();
+
+        $visible = fn (Assessment|Assignment $item): bool => $item->hidden_at === null
+            && ! ($item->module_id !== null && \in_array($item->module_id, $hiddenModules, true));
 
         $assessments = $course->assessments
             ->where('status', AssessmentStatus::Published)
             ->where('is_required', true)
             ->where('counts_toward_grade', true)
+            ->filter($visible)
             ->sortBy('position')
             ->values();
 
@@ -144,6 +197,7 @@ class GradebookService
             ->where('status', AssignmentStatus::Published)
             ->where('is_required', true)
             ->where('counts_toward_grade', true)
+            ->filter($visible)
             ->sortBy('position')
             ->values();
 

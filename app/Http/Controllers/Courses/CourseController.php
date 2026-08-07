@@ -14,6 +14,7 @@ use App\Models\Department;
 use App\Models\GradeScale;
 use App\Models\Programme;
 use App\Services\Courses\CoursePublishingService;
+use App\Services\Courses\CurriculumImpactService;
 use App\Services\Courses\EnrollmentService;
 use App\Services\Media\MediaUploadService;
 use App\Support\Slug;
@@ -188,9 +189,21 @@ class CourseController extends Controller
             ->with('status', 'Course settings saved.');
     }
 
-    public function destroy(Course $course): RedirectResponse
+    /**
+     * A course anyone has ever enrolled on is never deleted — archiving is the way to
+     * take it out of circulation while its students keep their records and access.
+     *
+     * This is also what keeps the restrictOnDelete backstop on the student-data foreign
+     * keys from ever being reached: with no enrolments there is no progress, attempt or
+     * submission beneath the course for the cascade to run into.
+     */
+    public function destroy(Course $course, CurriculumImpactService $impact): RedirectResponse
     {
         $this->authorize('delete', $course);
+
+        if ($impact->courseHasEnrollments($course)) {
+            return back()->with('error', 'Students have enrolled on this course, so it can’t be deleted. Archive it instead — it leaves the catalogue and existing students keep their access and records.');
+        }
 
         $title = $course->title;
         $course->delete();

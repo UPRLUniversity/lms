@@ -1354,3 +1354,170 @@ Recorded as an accepted risk with its revisit conditions, not an oversight — s
 `docs/hardening-report.md`. In short: a policy loose enough for TinyMCE and Alpine buys
 very little, the XSS exposure is already closed at the source by server-side sanitization
 on every rich field, and a CSP that breaks the editor in production is worse than none.
+
+## Section 16 — Curriculum Change Safety (2026-08-06)
+
+The question that prompted this: *what happens when a lecturer or admin edits a course
+students have already registered for or completed?* The honest answer was "whatever the
+edit says, immediately, with no record and no protection" — and nothing in this file had
+ever considered it. Three defects followed from that, and each layer below closes one.
+
+Notification alone was explicitly rejected as the fix. Telling a student their submission
+was deleted does not give it back; the record has to be protected first, and the message
+is the last layer, not the first.
+
+### Deleting curriculum that holds student work is refused, not confirmed
+
+Every `destroy()` was a bare `->delete()` over cascading foreign keys, so removing a module
+took its lessons, every `LessonProgress` on them, its assessments and every `Attempt`; and
+removing an assignment took every `Submission` and `Grade`. One click, no recovery, no
+soft-deletes anywhere in that chain.
+
+`CurriculumImpactService` reduces any of the four curriculum types to three id sets and
+counts what hangs off them, so the guard, the confirm dialog and the audit entry all quote
+the same numbers. It throws a `DomainException`, following the `QuestionBankService::delete()`
+precedent, and each controller surfaces it in its own idiom — 422 JSON for the builder's
+async endpoints, a flash for the redirecting ones.
+
+**Hiding replaces deleting.** A hidden item leaves the learner's outline and stops counting
+toward completion and grades, while every attempt, submission and grade stays intact and
+legible to staff. Deliberately NOT `SoftDeletes`: soft-deleting would also remove it from
+the builder and the gradebook's historical view, which is the opposite of what is wanted.
+
+Hiding a module hides everything inside it **by derivation**, not by cascading the flag onto
+children — cascading would lose track of what was already individually hidden, and make
+restoring ambiguous.
+
+### The database refuses too, but only in production
+
+The four student-data foreign keys (`lesson_progress.lesson_id`, `attempts.assessment_id`,
+`submissions.assignment_id`, `grades.submission_id`) are now `RESTRICT`. It never fires in
+normal use — the application guard blocks those deletes first, and a course with no
+enrolments has no student rows beneath it — but a future code path cannot quietly bypass it.
+
+Only the CONTENT side is restricted. The `user_id` keys stay `cascade`: deleting a person is
+a deliberate erasure (a data-protection request) and should still take their rows.
+
+**SQLite cannot alter a foreign key without rebuilding the table, so the migration skips it
+there.** The test suite runs on SQLite and therefore exercises the application guard rather
+than the constraint. This is a real divergence between test and production schema, accepted
+because the guard is the thing users meet and the thing tests assert; the constraint is
+defence in depth for the one case tests cannot reach — a future bug.
+
+### A student is measured against the curriculum they finished
+
+Progress and grades were derived entirely live: "every published, required item **as it
+exists right now**". So a student who completed in June was silently re-measured against
+August's curriculum whenever anything recomputed. An item added months later could restate
+a finished grade through admin recompute, and re-triggering `recalculate()` could flip a
+`Completed` enrollment back to `Active` because the course had moved.
+
+`Enrollment.completion_snapshot` records the item set that counted, once, when the
+enrollment reaches Completed — write-once guarded on the model, the same stance as
+`Certificate.snapshot` and `AuditActivity`.
+
+**Both the completion set and the graded set are stored.** Completion counts every
+published, required item; the transcript counts only those that also feed the grade. The
+two rules were never the same, and freezing one while re-deriving the other would
+reintroduce exactly the drift this exists to prevent.
+
+**The freeze covers the curriculum, not the student's own progress.** This distinction cost
+a rewrite: the first cut short-circuited recalculation entirely for a completed enrollment,
+which broke two existing tests that were right — returning a graded submission for
+resubmission genuinely *does* un-finish a course. A completed student's own work still
+counts live against their frozen set, so undoing it reopens the course; the course gaining
+a required item cannot touch them.
+
+The frozen set applies **whenever a snapshot exists**, not only while the status is
+Completed. Otherwise a student who reopened the course by un-ticking one lesson would
+suddenly be held to requirements added after they finished. Re-completing keeps the
+original snapshot rather than adopting today's curriculum.
+
+Frozen items are read **without** the published/visible filters. They counted when the
+student finished, so they keep counting for that student even if the course has since
+unpublished or hidden them — otherwise their denominator would shrink, which is the same
+drift in the other direction.
+
+### `max_points` cannot move out from under recorded grades
+
+`Grade.points_total` stores absolute points and the gradebook derives percentages live, so
+changing the denominator after marking silently restates every grade already recorded — a
+student marked 18/20 becomes 18/40 without anyone touching their work. Refused with the
+count and a pointer to re-grading. The rejected value is put back on the model before
+throwing, so a refused save leaves nothing dirty behind for a later save to pick up.
+
+### Material vs cosmetic, so the bell stays worth reading
+
+A change is **material** when it moves a deadline, changes what is graded, or changes what a
+learner can reach. Wording, media and presentation are **cosmetic** — recorded for staff,
+never announced. If every typo fix pinged eighteen people the bell would be ignored within
+a week, and the one change that mattered would be lost in it.
+
+Titles switch category by context: renaming a lesson is cosmetic, renaming an assessment or
+assignment is material, because that name reaches a transcript the student must recognise
+later.
+
+The summary sentence is written **once**, in `CurriculumChangeClassifier`, in the words a
+student reads — so the change history, the notification and the audit entry cannot describe
+the same edit three different ways. `describeSettingsChange()` runs the same fill against a
+throwaway copy of the model, so the description can never disagree with the save it
+precedes.
+
+`CourseChangeService::record()` is called **once per controller action** with everything
+that changed, so a save that moves a deadline *and* makes an item required produces one
+notification, not two.
+
+### `course_changes` is a narrative, the audit log is forensic
+
+They deliberately co-exist. The audit trail carries full before/after payloads for every
+audited model and is administrator-only; `course_changes` is one readable sentence per
+change, shown to instructors in full and to learners filtered to material changes made
+since they enrolled — edits predating their enrolment are simply how the course has always
+been, and are noise to them.
+
+Insert-only, like `AuditActivity`: a record of what moved is only worth anything if it
+cannot be tidied up afterwards.
+
+### The backfill is explicitly best-effort
+
+`courses:backfill-completion-snapshots` stamps completions that predate this section. What
+those students were *actually* measured against was never recorded and cannot be recovered;
+the command freezes them against today's curriculum, which stops further drift but does not
+undo drift that already happened. Snapshots written this way carry a `backfilled` flag so
+the distinction stays visible rather than being quietly forgotten.
+
+### Defects found outside this section's scope, and what was done about them
+
+Four bugs surfaced while building and driving Section 16. All are fixed; none were
+introduced by it, and two had been live for months.
+
+**`confirm.js` rendered its affirmative button invisibly.** The non-danger branch styled it
+`bg-green`, but the Tailwind token is named for its role — `success` — so the class resolved
+to nothing and the button was white text on white. Latent since the UI foundations: every
+caller until now passed `danger: true` and hit the crimson branch, so the path was never
+rendered. Section 16's "Hide from students" offer is the first non-danger confirm, which is
+why it appeared now. **A second caller was affected too** — the administrator's "Re-issue
+this certificate?" dialog has had an unreadable confirm button in production all along, and
+is repaired by the same one-word fix.
+
+Found by looking at a screenshot, not the DOM: the accessibility tree reported both buttons
+present and correctly labelled. No test in the suite could have caught it — it is a CSS
+class resolving to nothing, in a JavaScript file, visible only when rendered.
+
+A sweep for the same defect class across `resources/` (colour utilities naming a token that
+does not exist) found no other instance. A lint-style guard against undefined brand tokens
+would be worth having, but it is real tooling — which classes, which files, how to handle
+dynamically composed names — and deserves its own consideration rather than being bolted
+onto the end of an unrelated section.
+
+**The assignment builder's danger zone described behaviour this section removed.** It still
+promised that deleting would take "all student submissions and grades" with it, which is
+exactly what the guard now refuses. Copy that lies about a destructive action is worse than
+no copy. It was also a dead end — the refusal tells the instructor to hide the assignment,
+and that page had no way to — so the hide control now lives there too, above delete.
+
+**Two defects in this section's own code, caught by driving it rather than by tests.** The
+`max_points` refusal left the rejected value dirty on the model, so a later save on the same
+instance would have carried it through; and the impact summary reported progress *rows* as
+though they were *students* (36 against a real 14) because a module holds one row per
+student per lesson.

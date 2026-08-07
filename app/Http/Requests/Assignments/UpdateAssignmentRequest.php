@@ -41,6 +41,10 @@ class UpdateAssignmentRequest extends FormRequest
                 Rule::exists('modules', 'id')->where('course_id', $course->id),
             ],
             'rubric_id' => ['nullable', 'integer', 'exists:rubrics,id'],
+
+            // Optional message that rides along with the "this course changed"
+            // notification, when the save turns out to be material (Section 16).
+            'student_note' => ['nullable', 'string', 'max:500'],
         ];
     }
 

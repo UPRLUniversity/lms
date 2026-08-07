@@ -10,6 +10,8 @@ use App\Models\Course;
 use App\Models\Media;
 use App\Models\Rubric;
 use App\Services\Assignments\AssignmentBuilderService;
+use App\Services\Courses\CourseChangeService;
+use App\Services\Courses\CurriculumImpactService;
 use App\Services\Media\PrivateFileService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +28,7 @@ class AssignmentController extends Controller
     public function __construct(
         private readonly AssignmentBuilderService $builder,
         private readonly PrivateFileService $privateFiles,
+        private readonly CourseChangeService $changes,
     ) {}
 
     /**
@@ -88,7 +91,20 @@ class AssignmentController extends Controller
     {
         $this->assertBelongs($course, $assignment);
 
-        $this->builder->updateSettings($assignment, $request->validated());
+        $validated = $request->validated();
+
+        try {
+            // Classified before save, while the model still knows what moved; recorded
+            // after, so a refused save leaves no trace of a change that never happened.
+            $described = $this->builder->describeSettingsChange($assignment, $validated);
+            $this->builder->updateSettings($assignment, $validated);
+        } catch (\DomainException $e) {
+            // Moving max_points under already-recorded grades — refused with the reason
+            // against the field itself, so the form shows it where the change was made.
+            return back()->withInput()->withErrors(['max_points' => $e->getMessage()]);
+        }
+
+        $this->changes->record($course, $described, $validated['student_note'] ?? null);
 
         return redirect()
             ->route('assignments.edit', [$course, $assignment])
@@ -120,10 +136,21 @@ class AssignmentController extends Controller
         return back()->with('status', 'Assignment unpublished — students can no longer open it.');
     }
 
-    public function destroy(Course $course, Assignment $assignment): RedirectResponse
+    /**
+     * An assignment students have handed work into is refused rather than deleted — the
+     * submissions and any grades against them are academic record. Hiding it is offered
+     * instead.
+     */
+    public function destroy(Course $course, Assignment $assignment, CurriculumImpactService $impact): RedirectResponse
     {
         $this->assertBelongs($course, $assignment);
         $this->authorize('manage', $assignment);
+
+        try {
+            $impact->assertDeletable($assignment);
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         $assignment->delete();
 
