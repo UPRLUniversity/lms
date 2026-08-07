@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * The gradebook: a student's own "Grades" tab and the instructor's per-course matrix.
@@ -141,7 +142,7 @@ class GradebookController extends Controller
      * xlsx/csv/pdf as the report centre rather than a bespoke CSV writer. Format defaults
      * to CSV to preserve the old link's behaviour.
      */
-    public function export(Request $request, Course $course, ReportExporter $exporter): \Symfony\Component\HttpFoundation\Response
+    public function export(Request $request, Course $course, ReportExporter $exporter): Response
     {
         $this->authorize('viewGradebookMatrix', $course);
 
@@ -167,13 +168,14 @@ class GradebookController extends Controller
                 $summary?->percent !== null ? round($summary->percent).'%' : '',
                 $summary?->gradeLabel() ?? '',
                 $summary?->gradePoint() !== null ? number_format($summary->gradePoint(), 1) : '',
+                $summary?->outcomeLabel() ?? '',
                 $summary === null || ! $summary->hasItems() ? 'No gradable items' : ($summary->provisional ? 'Provisional' : 'Final'),
             ];
         })->all();
 
         return $exporter->downloadRows(
             'Gradebook · '.$course->title,
-            ['Name', 'Email', 'Percentage', 'Grade', 'Grade point', 'Status'],
+            ['Name', 'Email', 'Percentage', 'Grade', 'Grade point', 'Outcome', 'Status'],
             $rows,
             $format,
             'gradebook-'.$course->slug.'-'.now()->format('Ymd').'.'.$format,

@@ -39,12 +39,20 @@
                                 <p class="mt-1 text-xs text-ink/50">
                                     {{ $scale->bands->count() }} {{ Str::plural('band', $scale->bands->count()) }} ·
                                     limit {{ rtrim(rtrim(number_format((float) $scale->scale_limit, 2), '0'), '.') }} ·
+                                    @if ($scale->passMark() !== null)
+                                        pass mark {{ $scale->passMark() }}% ·
+                                    @endif
                                     {{ $scale->courses_count }} {{ Str::plural('course', $scale->courses_count) }} using it
                                 </p>
                                 @if ($scale->bands->isNotEmpty())
                                     <div class="mt-2 flex flex-wrap gap-1.5">
                                         @foreach ($scale->bands as $band)
-                                            <x-ui.badge :variant="$band->color">{{ $band->label }} {{ $band->min_percent }}–{{ $band->max_percent }}%</x-ui.badge>
+                                            <x-ui.badge :variant="$band->color">
+                                                {{ $band->label }} {{ $band->min_percent }}–{{ $band->max_percent }}%
+                                                @unless ($band->is_pass)
+                                                    <span class="text-crimson" title="This band is a fail">·&nbsp;fail</span>
+                                                @endunless
+                                            </x-ui.badge>
                                         @endforeach
                                     </div>
                                 @endif

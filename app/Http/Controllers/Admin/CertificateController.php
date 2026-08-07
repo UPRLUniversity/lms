@@ -6,11 +6,13 @@ use App\Enums\EnrollmentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Certificate;
 use App\Models\Course;
+use App\Models\CourseGradeRecord;
 use App\Models\Enrollment;
 use App\Models\User;
 use App\Services\Certificates\CertificateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -60,8 +62,37 @@ class CertificateController extends Controller
         return view('admin.certificates.index', [
             'certificates' => $certificates,
             'missing' => $missing,
+            'outcomes' => $this->outcomesFor($missing),
             'search' => $search,
         ]);
+    }
+
+    /**
+     * The recorded pass/fail verdict for each row of the "completed, not yet issued"
+     * queue, keyed "userId:courseId". One query for the whole list.
+     *
+     * Shown, not enforced: a completed course still earns a certificate whatever the final
+     * band says, exactly as before. But an admin about to issue one by hand should be able
+     * to see that the student's recorded grade is a fail before they click, rather than
+     * discovering it from the certificate.
+     *
+     * @param  Collection<int, Enrollment>  $missing
+     * @return Collection<string, bool>
+     */
+    private function outcomesFor(Collection $missing): Collection
+    {
+        if ($missing->isEmpty()) {
+            return collect();
+        }
+
+        return CourseGradeRecord::query()
+            ->whereIn('user_id', $missing->pluck('user_id')->unique())
+            ->whereIn('course_id', $missing->pluck('course_id')->unique())
+            ->current()
+            ->get()
+            ->mapWithKeys(fn (CourseGradeRecord $record) => [
+                $record->user_id.':'.$record->course_id => $record->isPass(),
+            ]);
     }
 
     public function issue(Request $request): RedirectResponse
