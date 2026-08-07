@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Notifications\Concerns\RetriesTransientMailFailures;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,6 +18,7 @@ use Illuminate\Notifications\Notification;
 class DailyDigestNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+    use RetriesTransientMailFailures;
 
     /**
      * @param  array<int, array{title: string, body: string, url: string|null}>  $items
