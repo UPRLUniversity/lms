@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\UserInvitation;
+use App\Notifications\Concerns\RetriesTransientMailFailures;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\URL;
 class UserInvitationNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+    use RetriesTransientMailFailures;
 
     public function __construct(
         protected UserInvitation $invitation,

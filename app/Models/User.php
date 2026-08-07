@@ -6,6 +6,8 @@ use App\Enums\MediaPurpose;
 use App\Enums\NotificationType;
 use App\Models\Concerns\HasMedia;
 use App\Models\Concerns\LogsAuditActivity;
+use App\Notifications\Auth\QueuedResetPassword;
+use App\Notifications\Auth\QueuedVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
@@ -190,6 +192,24 @@ class User extends Authenticatable implements MustVerifyEmail
     public function notifiesByEmail(NotificationType $type): bool
     {
         return (bool) data_get($this->learning_preferences, "notifications.{$type->value}.email", true);
+    }
+
+    /**
+     * Send the verification mail on the queue instead of inside the registration
+     * request. See App\Notifications\Auth\QueuedVerifyEmail for why.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new QueuedVerifyEmail);
+    }
+
+    /**
+     * Send the reset link on the queue instead of inside the "forgot password"
+     * request. See App\Notifications\Auth\QueuedResetPassword for why.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new QueuedResetPassword($token));
     }
 
     /**
