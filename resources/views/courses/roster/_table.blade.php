@@ -77,6 +77,18 @@
                                         </form>
                                     @endif
 
+                                    {{-- Reach this student directly. Sharing the course is exactly
+                                         what MessagingService::canMessage asks for, so an instructor
+                                         looking at their own roster always qualifies. --}}
+                                    @if ($enrollment->user->isNot(auth()->user()) && auth()->user()->can('useMessaging'))
+                                        <form method="POST" action="{{ route('messages.start', $enrollment->user) }}">
+                                            @csrf
+                                            <x-ui.button size="sm" variant="ghost" type="submit">
+                                                <x-ui.icon name="chat" class="h-4 w-4" /> Message
+                                            </x-ui.button>
+                                        </form>
+                                    @endif
+
                                     @if ($canManage && in_array($enrollment->status, [EnrollmentStatus::Active, EnrollmentStatus::Pending, EnrollmentStatus::Waitlisted], true))
                                         <form method="POST" action="{{ route('courses.roster.withdraw', [$course, $enrollment]) }}" data-ajax
                                               data-confirm="Withdraw {{ $enrollment->user->name }}?" data-confirm-action="Yes, withdraw">

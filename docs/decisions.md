@@ -1521,3 +1521,68 @@ and that page had no way to — so the hide control now lives there too, above d
 instance would have carried it through; and the impact summary reported progress *rows* as
 though they were *students* (36 against a real 14) because a module holds one row per
 student per lesson.
+
+## Signature upload & admin messaging (2026-08-07)
+
+Two defects reported from the browser, both the same shape underneath: **a rule was
+enforced in one place and contradicted in another, and the UI reported the contradiction
+as a generic failure.**
+
+**The signature upload never told anyone why it refused.** `certificate-template-editor.js`
+did `if (!res.ok) throw new Error('Upload failed')` and caught everything into one
+hardcoded toast, "Could not upload the signature image." The server was answering
+perfectly well — 422 with a specific message — and the client threw it away. The two
+things an administrator actually reaches for are both refused by the Signatures purpose in
+`config/media.php`: a JPG scan (PNG/WebP only) and anything over 1MB (a phone photo of a
+signed page is several). So the commonest attempts failed invisibly.
+
+The endpoint had **no test at all**, which is how it shipped. It has four now.
+
+The fix is deliberately in three layers rather than one, because each catches a different
+class of failure: the browser pre-checks type and size (instant, names the actual size),
+the controller validates with messages that say what to supply instead of Laravel's
+default wording, and `failureMessage()` surfaces whatever the server says for everything
+else — including 419/403/413, which have specific causes worth naming. The file input also
+carries a visible requirements line now, so the constraint is legible before you try.
+
+The allow-list was left at **PNG/WebP, 1MB** rather than widened. A signature sits over
+printed certificate artwork, so transparency is the point, and JPEG cannot carry it — the
+right answer is to tell the administrator to re-save, not to accept a file that will print
+with a white box around it.
+
+Fixing this also exposed that the file input was `display:none`, which cannot be tabbed
+to. It was the only control on the page a keyboard could not reach. Now `sr-only` with a
+`focus-within` ring on the label.
+
+**`/messages/create` showed an admin "No one to message yet" on a permission that was
+actually unlimited.** `canMessage` grants admin/super-admin the right to message anyone;
+`contactsFor` only ever returned people you share a course with, and had no admin branch.
+An administrator who teaches nothing and is enrolled in nothing therefore got an empty
+composer while the store endpoint would have happily accepted any of those same people.
+
+Messaging **does** belong in the admin area — a registrar chasing a student about their
+registration is exactly the case — so the fix is to make the picker agree with the
+permission, not to remove the screen. Both branches now route through one private
+`reachesEveryone()` predicate so they cannot drift apart again.
+
+Rendering the whole directory as `<option>`s does not scale, so `contactsFor` caps at 200
+and `contactsAreCapped()` tells the view to switch to a searching combobox backed by
+`messages.contacts`. That endpoint runs the *same* reachability rule, so it cannot be used
+as a directory scrape by someone whose reach is their coursemates — pinned by a test.
+Below the cap the native `<select>` stays: smaller, faster, accessible for free.
+
+"Message" buttons were then wired onto the **people list** and the **course roster**. The
+`messages.start` route already existed and had exactly one caller in the entire app (the
+forum's lead-instructor link), so the feature was effectively unreachable in context.
+
+**A third instance of the same bug, found by a test that should have passed.**
+`Course::members()` read only the `course_instructor` pivot, while `isTaughtBy`,
+`isMember` and the `forInstructor` scope all *also* count `created_by`. A course owner who
+was never added to the pivot could message their students but never appeared in those
+students' contact lists. `members()` now includes the owner.
+
+**`APP_URL` is pinned in `phpunit.xml`.** The suite was inheriting whatever the developer's
+`.env` held; an ngrok https tunnel left over from email testing made every generated URL
+secure, which flipped `SecurityHeaders` into sending HSTS and failed the "HSTS is not sent
+over plain http" assertion — a red suite with nothing wrong with the code. Verified as
+pre-existing on clean `main` before pinning.
