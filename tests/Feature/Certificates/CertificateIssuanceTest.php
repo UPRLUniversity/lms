@@ -16,6 +16,7 @@ use App\Models\Lesson;
 use App\Models\Module;
 use App\Services\Certificates\CertificateService;
 use App\Services\Courses\LearningService;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -32,8 +33,8 @@ class CertificateIssuanceTest extends TestCase
     {
         $scale = GradeScale::factory()->default()->create(['scale_limit' => 5.0]);
         $scale->bands()->createMany([
-            ['label' => 'A', 'grade_point' => 5.0, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
-            ['label' => 'F', 'grade_point' => 0.0, 'min_percent' => 0, 'max_percent' => 69, 'color' => 'crimson', 'position' => 1],
+            ['label' => 'A', 'grade_point' => 5.0, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
+            ['label' => 'F', 'grade_point' => 0.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 69, 'color' => 'crimson', 'position' => 1],
         ]);
 
         return $scale;
@@ -88,7 +89,7 @@ class CertificateIssuanceTest extends TestCase
         $this->assertMatchesRegularExpression('/^UPRL-\d{4}-[A-Z0-9]{6}$/', $certificate->serial);
 
         // A duplicate serial can never be persisted (DB-level unique index).
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
         Certificate::factory()->create(['serial' => $certificate->serial]);
     }
 
@@ -159,7 +160,7 @@ class CertificateIssuanceTest extends TestCase
         // Rewrite every band so 90% would now map to F instead of A.
         $scale = GradeScale::query()->default()->firstOrFail();
         $scale->bands()->delete();
-        $scale->bands()->create(['label' => 'F', 'grade_point' => 0.0, 'min_percent' => 0, 'max_percent' => 100, 'color' => 'crimson', 'position' => 0]);
+        $scale->bands()->create(['label' => 'F', 'grade_point' => 0.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 100, 'color' => 'crimson', 'position' => 0]);
 
         $certificate->refresh();
         $this->assertSame($originalGrade, $certificate->snapshot['grade']);

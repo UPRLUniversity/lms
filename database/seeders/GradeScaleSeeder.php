@@ -36,21 +36,24 @@ class GradeScaleSeeder extends Seeder
 {
     public function run(): void
     {
+        // Pass marks: 40% on the NUC 5-point scale (E is the lowest pass), 50% on the
+        // 4-point scale (D). Stated per band rather than derived, so a registrar can move
+        // the bar without the grade points having to follow it.
         $nuc = $this->upsertScale('NUC Standard (5.0)', 5.00, true, [
-            ['label' => 'A', 'grade_point' => 5.00, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
-            ['label' => 'B', 'grade_point' => 4.00, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
-            ['label' => 'C', 'grade_point' => 3.00, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
-            ['label' => 'D', 'grade_point' => 2.00, 'min_percent' => 45, 'max_percent' => 49, 'color' => 'neutral'],
-            ['label' => 'E', 'grade_point' => 1.00, 'min_percent' => 40, 'max_percent' => 44, 'color' => 'neutral'],
-            ['label' => 'F', 'grade_point' => 0.00, 'min_percent' => 0, 'max_percent' => 39, 'color' => 'crimson'],
+            ['label' => 'A', 'grade_point' => 5.00, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
+            ['label' => 'B', 'grade_point' => 4.00, 'is_pass' => true, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
+            ['label' => 'C', 'grade_point' => 3.00, 'is_pass' => true, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
+            ['label' => 'D', 'grade_point' => 2.00, 'is_pass' => true, 'min_percent' => 45, 'max_percent' => 49, 'color' => 'neutral'],
+            ['label' => 'E', 'grade_point' => 1.00, 'is_pass' => true, 'min_percent' => 40, 'max_percent' => 44, 'color' => 'neutral'],
+            ['label' => 'F', 'grade_point' => 0.00, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 39, 'color' => 'crimson'],
         ]);
 
         $this->upsertScale('4.0 Scale', 4.00, false, [
-            ['label' => 'A', 'grade_point' => 4.00, 'min_percent' => 80, 'max_percent' => 100, 'color' => 'success'],
-            ['label' => 'B', 'grade_point' => 3.00, 'min_percent' => 70, 'max_percent' => 79, 'color' => 'gold'],
-            ['label' => 'C', 'grade_point' => 2.00, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'ink'],
-            ['label' => 'D', 'grade_point' => 1.00, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'neutral'],
-            ['label' => 'F', 'grade_point' => 0.00, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson'],
+            ['label' => 'A', 'grade_point' => 4.00, 'is_pass' => true, 'min_percent' => 80, 'max_percent' => 100, 'color' => 'success'],
+            ['label' => 'B', 'grade_point' => 3.00, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 79, 'color' => 'gold'],
+            ['label' => 'C', 'grade_point' => 2.00, 'is_pass' => true, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'ink'],
+            ['label' => 'D', 'grade_point' => 1.00, 'is_pass' => true, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'neutral'],
+            ['label' => 'F', 'grade_point' => 0.00, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson'],
         ]);
 
         // Only ever one default.
@@ -104,22 +107,23 @@ class GradeScaleSeeder extends Seeder
             return;
         }
 
-        // Two students not already enrolled in this course, so this demo never collides
-        // with the assessment/assignment seeders' own cast of students.
+        // Students not already enrolled in this course, so this demo never collides with
+        // the assessment/assignment seeders' own cast of students.
         $enrolledIds = $course->enrollments()->pluck('user_id');
-        $spares = User::role('student')->whereNotIn('id', $enrolledIds)->orderBy('id')->take(2)->get();
+        $spares = User::role('student')->whereNotIn('id', $enrolledIds)->orderBy('id')->take(3)->get();
         if ($spares->count() < 2) {
             return;
         }
         [$completer, $provisional] = [$spares[0], $spares[1]];
+        $struggling = $spares->count() > 2 ? $spares[2] : null;
 
         $instructor = $course->creator ?? $course->instructors()->first() ?? User::role('instructor')->first();
         $learning = app(LearningService::class);
         $lessons = $learning->sequence($course);
         $assessmentIds = $requiredAssessments->pluck('id');
 
-        // Idempotent reset of this seeder's own slice of data for both demo students.
-        foreach ([$completer, $provisional] as $student) {
+        // Idempotent reset of this seeder's own slice of data for every demo student.
+        foreach (array_filter([$completer, $provisional, $struggling]) as $student) {
             Attempt::where('user_id', $student->id)->whereIn('assessment_id', $assessmentIds)->delete();
             if ($requiredAssignment) {
                 Submission::where('user_id', $student->id)->where('assignment_id', $requiredAssignment->id)->delete();
@@ -190,6 +194,38 @@ class GradeScaleSeeder extends Seeder
         }
 
         $learning->recalculate($provisional, $course->fresh(['modules.lessons', 'assessments', 'assignments']));
+
+        // ---- The struggling student (Section 18): part-way through, and what IS graded
+        // sits in a failing band — so the gradebook reads "Provisional · Fail" and both
+        // outcomes are visible in the demo.
+        //
+        // Deliberately NOT a completed fail: completion requires every required assessment
+        // to be PASSED at its own pass mark (50–60% here), which already clears the course
+        // pass mark of 40%, so a completed student on this curriculum cannot fail. That is
+        // a property of the seeded data, not of the feature — a course whose assessments
+        // pass at 30%, or one carrying a heavy assignment, reaches a failing final grade
+        // through exactly the same path.
+        if ($struggling === null || $requiredAssessments->isEmpty()) {
+            return;
+        }
+
+        Enrollment::create([
+            'user_id' => $struggling->id,
+            'course_id' => $course->id,
+            'status' => EnrollmentStatus::Active->value,
+            'source' => EnrollmentSource::Self->value,
+            'enrolled_at' => now()->subDays(4),
+            'progress_percent' => 0,
+        ]);
+
+        // The first lesson only, and one required assessment sat badly — the rest pending.
+        if ($lessons->isNotEmpty()) {
+            $learning->markComplete($struggling, $lessons->first());
+        }
+
+        $this->passAssessment($requiredAssessments->first(), $struggling, 22);
+
+        $learning->recalculate($struggling, $course->fresh(['modules.lessons', 'assessments', 'assignments']));
     }
 
     private function passAssessment(Assessment $assessment, User $student, int $percent): void

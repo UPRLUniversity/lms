@@ -19,6 +19,7 @@ class GradeBandFactory extends Factory
             'grade_scale_id' => GradeScale::factory(),
             'label' => 'A',
             'grade_point' => 5.00,
+            'is_pass' => true,
             'min_percent' => 70,
             'max_percent' => 100,
             'color' => 'success',

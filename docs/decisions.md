@@ -1661,3 +1661,67 @@ question was rejected as having no correct answer. Only null means "no cell" now
 
 Both are the kind of defect that would have looked like "the import just doesn't work"
 in a bug report, with nothing in the logs.
+
+## Section 18 — Pass/fail on grade bands (2026-08-07)
+
+Phase 0 of `docs/plans/prerequisites.md`. A grade scale could say what a mark is called
+and what it is worth, but not whether the student **passed** — so "must pass CPR112" was
+not expressible anywhere. Progression (Section 19) is built directly on top of this.
+
+### `is_pass` is a column, not `grade_point > 0`
+
+The backfill uses `grade_point > 0`, because both seeded scales put the fail band — and
+only the fail band — at 0.00, so it reproduces the existing intent exactly for every scale
+in the system. That is a derivation of the current data, not a guess about it.
+
+Leaving it computed would have been wrong, though. An institution may legitimately award
+0.5 for a near-miss that is still a fail, and a progression rule silently treating that as
+a pass is the kind of defect nobody spots for a year. The column lets the registrar say so,
+and a test asserts a 0.5 band can be saved as a fail.
+
+### NOT NULL, no default
+
+Every band must make the choice rather than inherit one. A band created without stating it
+is an error, not a pass. The cost is real and deliberate: every factory, seeder and test
+fixture that creates a band had to be updated to say which outcome it is.
+
+### The verdict is read from `scale_snapshot`, never the live scale
+
+`CourseGradeRecord` already freezes the whole scale at completion. `isPass()` reads the
+frozen copy, so re-cutting a boundary in 2027 cannot retroactively fail a student who
+graduated in 2026 — and progression cannot start refusing someone it has already let
+through. Records stamped before this section carry no `is_pass` in their snapshot; those
+fall back to `grade_point > 0`, the same rule the migration used, so a historical record
+reads identically whether it was written before or after.
+
+### Two new scale invariants
+
+A scale must have at least one passing band **and** at least one failing band — otherwise
+it cannot express an outcome at all.
+
+Passing bands must also be the **top** of the scale. This one is not in the plan and is an
+addition: the editor shows "Pass mark: 40%", derived from the lowest passing band, and the
+gradebook, the student's grade page and the matrix all quote it. The moment a middle band
+is marked a fail while a lower one passes, that sentence stops being true everywhere it
+appears. Refusing the configuration is cheaper than teaching five screens to describe an
+interleaved scale.
+
+### Certificates: shown, not enforced
+
+The admin "completed, not yet issued" queue now flags a student whose recorded grade is a
+fail, so issuing one by hand is an informed act. Issuance behaviour is **unchanged** —
+completion still earns a certificate whatever the band says.
+
+Blocking was tempting and was deliberately not done: certificates are issued automatically
+from the completion event, so a hard gate would silently withhold them from students, and
+whether UPRL wants that is a policy decision the plan never settled. Flagged for the human
+rather than decided here.
+
+### A finding from the demo data
+
+A *completed* fail is unreachable on the seeded curriculum. Completing a course requires
+passing every required assessment at its own pass mark (50–60% here), which already clears
+the course pass mark of 40%. So the demo's third student is one who is part-way through and
+currently failing ("Provisional · Fail") rather than a completed fail — honest, and it still
+puts both outcomes on screen. A course whose assessments pass at 30%, or one carrying a
+heavy assignment, reaches a failing final grade through exactly the same path.

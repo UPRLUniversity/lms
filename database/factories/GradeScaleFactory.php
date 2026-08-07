@@ -33,16 +33,16 @@ class GradeScaleFactory extends Factory
     }
 
     /**
-     * A standard 4-band A/B/C/F scale, e.g. for quick test/demo setup.
+     * A standard 4-band A/B/C/F scale, e.g. for quick test/demo setup. Pass mark 50%.
      */
     public function withBands(): static
     {
         return $this->afterCreating(function (GradeScale $scale) {
             $bands = [
-                ['label' => 'A', 'grade_point' => (float) $scale->scale_limit, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
-                ['label' => 'B', 'grade_point' => (float) $scale->scale_limit * 0.8, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
-                ['label' => 'C', 'grade_point' => (float) $scale->scale_limit * 0.6, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
-                ['label' => 'F', 'grade_point' => 0, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson'],
+                ['label' => 'A', 'grade_point' => (float) $scale->scale_limit, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
+                ['label' => 'B', 'grade_point' => (float) $scale->scale_limit * 0.8, 'is_pass' => true, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
+                ['label' => 'C', 'grade_point' => (float) $scale->scale_limit * 0.6, 'is_pass' => true, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
+                ['label' => 'F', 'grade_point' => 0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson'],
             ];
 
             foreach ($bands as $position => $band) {
