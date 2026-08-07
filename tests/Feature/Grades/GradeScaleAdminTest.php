@@ -27,10 +27,10 @@ class GradeScaleAdminTest extends TestCase
             'separator' => '/',
             'is_default' => true,
             'bands' => [
-                ['label' => 'A', 'grade_point' => 5.0, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
-                ['label' => 'B', 'grade_point' => 4.0, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
-                ['label' => 'C', 'grade_point' => 3.0, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
-                ['label' => 'F', 'grade_point' => 0.0, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson'],
+                ['label' => 'A', 'grade_point' => 5.0, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
+                ['label' => 'B', 'grade_point' => 4.0, 'is_pass' => true, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
+                ['label' => 'C', 'grade_point' => 3.0, 'is_pass' => true, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
+                ['label' => 'F', 'grade_point' => 0.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson'],
             ],
         ], $overrides);
     }
@@ -41,9 +41,9 @@ class GradeScaleAdminTest extends TestCase
 
         $payload = $this->validPayload([
             'bands' => [
-                ['label' => 'A', 'grade_point' => 5.0, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
-                ['label' => 'B', 'grade_point' => 4.0, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
-                ['label' => 'C', 'grade_point' => 3.0, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
+                ['label' => 'A', 'grade_point' => 5.0, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
+                ['label' => 'B', 'grade_point' => 4.0, 'is_pass' => true, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
+                ['label' => 'C', 'grade_point' => 3.0, 'is_pass' => true, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
             ],
         ]);
 
@@ -74,8 +74,8 @@ class GradeScaleAdminTest extends TestCase
 
         $payload = $this->validPayload([
             'bands' => [
-                ['label' => 'A', 'grade_point' => 3.0, 'min_percent' => 80, 'max_percent' => 100, 'color' => 'success'],
-                ['label' => 'B', 'grade_point' => 4.0, 'min_percent' => 0, 'max_percent' => 79, 'color' => 'gold'],
+                ['label' => 'A', 'grade_point' => 3.0, 'is_pass' => true, 'min_percent' => 80, 'max_percent' => 100, 'color' => 'success'],
+                ['label' => 'B', 'grade_point' => 4.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 79, 'color' => 'gold'],
             ],
         ]);
 
@@ -107,8 +107,8 @@ class GradeScaleAdminTest extends TestCase
             'scale_limit' => 4.0,
             'is_default' => false,
             'bands' => [
-                ['label' => 'A', 'grade_point' => 4.0, 'min_percent' => 80, 'max_percent' => 100, 'color' => 'success'],
-                ['label' => 'F', 'grade_point' => 0.0, 'min_percent' => 0, 'max_percent' => 79, 'color' => 'crimson'],
+                ['label' => 'A', 'grade_point' => 4.0, 'is_pass' => true, 'min_percent' => 80, 'max_percent' => 100, 'color' => 'success'],
+                ['label' => 'F', 'grade_point' => 0.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 79, 'color' => 'crimson'],
             ],
         ]));
         $fourPointO = GradeScale::where('name', '4.0 Scale')->firstOrFail();

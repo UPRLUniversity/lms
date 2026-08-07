@@ -24,8 +24,8 @@ class GradebookAccessTest extends TestCase
     {
         $scale = GradeScale::factory()->default()->create();
         $scale->bands()->createMany([
-            ['label' => 'A', 'grade_point' => 5.0, 'min_percent' => 50, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
-            ['label' => 'F', 'grade_point' => 0.0, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson', 'position' => 1],
+            ['label' => 'A', 'grade_point' => 5.0, 'is_pass' => true, 'min_percent' => 50, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
+            ['label' => 'F', 'grade_point' => 0.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson', 'position' => 1],
         ]);
 
         return Course::factory()->published()->create();

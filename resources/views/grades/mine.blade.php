@@ -34,12 +34,21 @@
             <div class="rounded-2xl border border-line bg-card p-5 shadow-sm">
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <div class="flex items-center gap-2">
+                        <div class="flex flex-wrap items-center gap-2">
                             <p class="text-sm text-ink/60">Overall grade</p>
                             @if ($record)
                                 <x-ui.badge variant="success">Final</x-ui.badge>
                             @elseif ($summary->provisional)
                                 <x-ui.badge variant="gold">Provisional</x-ui.badge>
+                            @endif
+
+                            @php
+                                // The recorded verdict comes from the scale the student was
+                                // measured under; before completion it's the live one.
+                                $isPass = $record ? $record->isPass() : $summary->isPass();
+                            @endphp
+                            @if ($isPass !== null)
+                                <x-ui.badge :variant="$isPass ? 'success' : 'crimson'">{{ $isPass ? 'Pass' : 'Fail' }}</x-ui.badge>
                             @endif
                         </div>
                         <p class="mt-1 font-display text-2xl font-semibold text-ink">
@@ -108,7 +117,10 @@
                 </div>
             </div>
 
-            <p class="text-xs text-ink/40">Displayed as {{ $scale->name }} · limit {{ $fmtNum($scale->scale_limit) }}. Per-item grades are informational and never averaged directly — the overall grade is points-weighted across all coursework.</p>
+            <p class="text-xs text-ink/40">
+                Displayed as {{ $scale->name }} · limit {{ $fmtNum($scale->scale_limit) }}@if ($scale->passMark() !== null) · pass mark {{ $scale->passMark() }}%@endif.
+                Per-item grades are informational and never averaged directly — the overall grade is points-weighted across all coursework.
+            </p>
         @endif
     </div>
 </x-app-layout>

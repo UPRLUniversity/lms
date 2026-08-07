@@ -32,8 +32,8 @@ class CourseGradeRecordTest extends TestCase
     {
         $scale = GradeScale::factory()->default()->create(['scale_limit' => 5.0]);
         $scale->bands()->createMany([
-            ['label' => 'A', 'grade_point' => 5.0, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
-            ['label' => 'F', 'grade_point' => 0.0, 'min_percent' => 0, 'max_percent' => 69, 'color' => 'crimson', 'position' => 1],
+            ['label' => 'A', 'grade_point' => 5.0, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
+            ['label' => 'F', 'grade_point' => 0.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 69, 'color' => 'crimson', 'position' => 1],
         ]);
 
         return $scale;
@@ -96,7 +96,7 @@ class CourseGradeRecordTest extends TestCase
         // Now edit the scale's bands so 75% would map to F instead of A.
         $scale->bands()->delete();
         $scale->bands()->createMany([
-            ['label' => 'F', 'grade_point' => 0.0, 'min_percent' => 0, 'max_percent' => 100, 'color' => 'crimson', 'position' => 0],
+            ['label' => 'F', 'grade_point' => 0.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 100, 'color' => 'crimson', 'position' => 0],
         ]);
         // (A single all-covering band is invalid for a real save via GradeScaleService,
         // but here we're proving the RECORD doesn't re-read the scale at all.)

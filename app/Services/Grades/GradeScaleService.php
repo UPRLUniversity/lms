@@ -53,6 +53,7 @@ class GradeScaleService
                 $scale->bands()->create([
                     'label' => trim((string) $band['label']),
                     'grade_point' => (float) $band['grade_point'],
+                    'is_pass' => filter_var($band['is_pass'] ?? false, FILTER_VALIDATE_BOOLEAN),
                     'min_percent' => (int) $band['min_percent'],
                     'max_percent' => (int) $band['max_percent'],
                     'color' => $band['color'] ?? 'neutral',

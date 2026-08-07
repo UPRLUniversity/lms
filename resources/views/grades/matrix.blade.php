@@ -19,7 +19,9 @@
             <div class="mt-2 flex flex-wrap items-end justify-between gap-3">
                 <div>
                     <h2 class="font-display text-2xl font-semibold text-ink">Gradebook</h2>
-                    <p class="mt-1 text-ink/70">{{ $course->title }} · {{ $course->code }} · {{ $scale?->name ?? 'No grade scale' }}</p>
+                    <p class="mt-1 text-ink/70">
+                        {{ $course->title }} · {{ $course->code }} · {{ $scale?->name ?? 'No grade scale' }}@if ($scale?->passMark() !== null) · pass mark {{ $scale->passMark() }}%@endif
+                    </p>
                 </div>
                 <x-ui.button variant="secondary" :href="route('courses.gradebook.export', $course)">
                     <x-ui.icon name="download" class="h-5 w-5" /> Export CSV
@@ -121,6 +123,11 @@
                                             </td>
                                         @endforeach
                                         <td class="px-5 py-4 whitespace-nowrap">
+                                            @php
+                                                // Recorded students are judged by the scale they completed under;
+                                                // everyone else by where the live scale puts them right now.
+                                                $isPass = $row['record'] ? $row['record']->isPass() : $summary?->isPass();
+                                            @endphp
                                             @if ($row['record'])
                                                 <span class="inline-flex items-center gap-1.5 font-medium text-ink">{{ $row['record']->formatResult() }}</span>
                                             @elseif ($summary?->percent !== null)
@@ -132,6 +139,9 @@
                                                 </span>
                                             @else
                                                 <span class="text-ink/30">—</span>
+                                            @endif
+                                            @if ($isPass !== null)
+                                                <x-ui.badge :variant="$isPass ? 'success' : 'crimson'" class="ml-1.5">{{ $isPass ? 'Pass' : 'Fail' }}</x-ui.badge>
                                             @endif
                                         </td>
                                         @if ($canRecompute)

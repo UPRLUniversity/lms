@@ -23,6 +23,7 @@ class GradeBand extends Model
         'grade_scale_id',
         'label',
         'grade_point',
+        'is_pass',
         'min_percent',
         'max_percent',
         'color',
@@ -33,6 +34,7 @@ class GradeBand extends Model
     {
         return [
             'grade_point' => 'decimal:2',
+            'is_pass' => 'boolean',
             'min_percent' => 'integer',
             'max_percent' => 'integer',
             'position' => 'integer',
@@ -52,14 +54,20 @@ class GradeBand extends Model
         return $percent >= $this->min_percent && $percent <= $this->max_percent;
     }
 
+    public function outcomeLabel(): string
+    {
+        return $this->is_pass ? 'Pass' : 'Fail';
+    }
+
     /**
-     * @return array{label: string, grade_point: float, min_percent: int, max_percent: int, color: string}
+     * @return array{label: string, grade_point: float, is_pass: bool, min_percent: int, max_percent: int, color: string}
      */
     public function toSnapshot(): array
     {
         return [
             'label' => $this->label,
             'grade_point' => (float) $this->grade_point,
+            'is_pass' => (bool) $this->is_pass,
             'min_percent' => $this->min_percent,
             'max_percent' => $this->max_percent,
             'color' => $this->color,

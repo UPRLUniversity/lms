@@ -27,10 +27,10 @@ class GradebookServiceTest extends TestCase
     {
         $scale = GradeScale::factory()->default()->create(['scale_limit' => 5.0]);
         $scale->bands()->createMany([
-            ['label' => 'A', 'grade_point' => 5.0, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
-            ['label' => 'B', 'grade_point' => 4.0, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold', 'position' => 1],
-            ['label' => 'C', 'grade_point' => 3.0, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink', 'position' => 2],
-            ['label' => 'F', 'grade_point' => 0.0, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson', 'position' => 3],
+            ['label' => 'A', 'grade_point' => 5.0, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
+            ['label' => 'B', 'grade_point' => 4.0, 'is_pass' => true, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold', 'position' => 1],
+            ['label' => 'C', 'grade_point' => 3.0, 'is_pass' => true, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink', 'position' => 2],
+            ['label' => 'F', 'grade_point' => 0.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson', 'position' => 3],
         ]);
 
         return $scale->fresh('bands');

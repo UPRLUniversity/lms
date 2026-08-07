@@ -20,10 +20,16 @@
                 <p class="mt-1 text-xs text-ink/60">Students who finished a course but have no certificate yet (a rare gap — issuance normally happens automatically).</p>
                 <ul class="mt-3 divide-y divide-line">
                     @foreach ($missing as $enrollment)
+                        @php $outcome = $outcomes->get($enrollment->user_id.':'.$enrollment->course_id); @endphp
                         <li class="flex flex-wrap items-center justify-between gap-2 py-2.5">
-                            <div class="text-sm">
+                            <div class="flex flex-wrap items-center gap-2 text-sm">
                                 <span class="font-medium text-ink">{{ $enrollment->user->name }}</span>
                                 <span class="text-ink/50"> · {{ $enrollment->course->title }}</span>
+                                @if ($outcome === false)
+                                    <x-ui.badge variant="crimson" title="Their recorded course grade falls in a failing band">Recorded a fail</x-ui.badge>
+                                @elseif ($outcome === true)
+                                    <x-ui.badge variant="success">Pass</x-ui.badge>
+                                @endif
                             </div>
                             <form method="POST" action="{{ route('admin.certificates.issue') }}">
                                 @csrf

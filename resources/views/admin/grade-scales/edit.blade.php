@@ -6,15 +6,16 @@
         ? $scale->bands->map(fn ($b) => [
             'label' => $b->label,
             'grade_point' => (float) $b->grade_point,
+            'is_pass' => (bool) $b->is_pass,
             'min_percent' => $b->min_percent,
             'max_percent' => $b->max_percent,
             'color' => $b->color,
         ])->values()->all()
         : [
-            ['label' => 'A', 'grade_point' => 5, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
-            ['label' => 'B', 'grade_point' => 4, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
-            ['label' => 'C', 'grade_point' => 3, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
-            ['label' => 'F', 'grade_point' => 0, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson'],
+            ['label' => 'A', 'grade_point' => 5, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success'],
+            ['label' => 'B', 'grade_point' => 4, 'is_pass' => true, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold'],
+            ['label' => 'C', 'grade_point' => 3, 'is_pass' => true, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink'],
+            ['label' => 'F', 'grade_point' => 0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 49, 'color' => 'crimson'],
         ];
 
     $colors = ['success' => 'Green', 'gold' => 'Gold', 'crimson' => 'Crimson', 'ink' => 'Ink', 'neutral' => 'Neutral'];
@@ -31,12 +32,19 @@
             tryScore: 75,
 
             addBand() {
-                if (this.bands.length < 15) this.bands.push({ label: '', grade_point: 0, min_percent: 0, max_percent: 0, color: 'neutral' });
+                if (this.bands.length < 15) this.bands.push({ label: '', grade_point: 0, is_pass: false, min_percent: 0, max_percent: 0, color: 'neutral' });
             },
             removeBand(i) { if (this.bands.length > 2) this.bands.splice(i, 1); },
 
             sortedAsc() {
                 return [...this.bands].sort((a, b) => (Number(a.min_percent) || 0) - (Number(b.min_percent) || 0));
+            },
+
+            // The pass mark is DERIVED from the lowest passing band, never stored — so it
+            // can't drift from the bands it describes. Null while no band passes.
+            passMark() {
+                const passing = this.bands.filter(b => b.is_pass);
+                return passing.length ? Math.min(...passing.map(b => Number(b.min_percent) || 0)) : null;
             },
 
             // Compressed coverage runs across 0–100 for the visual bar: 'ok' (one band),
@@ -82,6 +90,22 @@
                 this.bands.forEach(b => {
                     if ((Number(b.grade_point) || 0) > (Number(this.scaleLimit) || 0)) {
                         msgs.push(`“${b.label || '?'}”'s grade point exceeds the scale limit.`);
+                    }
+                });
+
+                // Pass invariants — mirrors GradeBandValidator server-side.
+                if (!this.bands.some(b => b.is_pass)) {
+                    msgs.push('Mark at least one band as a pass — otherwise no student on this scale could ever pass.');
+                }
+                if (!this.bands.some(b => !b.is_pass)) {
+                    msgs.push('Mark at least one band as a fail — otherwise no student on this scale could ever fail.');
+                }
+
+                let seenPass = false;
+                sorted.forEach(b => {
+                    if (b.is_pass) { seenPass = true; return; }
+                    if (seenPass) {
+                        msgs.push(`“${b.label || '?'}” is marked as a fail but a lower band passes. Passing bands must be the top of the scale.`);
                     }
                 });
 
@@ -220,21 +244,32 @@
 
             {{-- Band grid --}}
             <x-ui.card :padding="false">
-                <div class="flex items-center justify-between px-5 py-4">
-                    <h3 class="font-display font-semibold text-ink">Bands</h3>
+                <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+                    <div>
+                        <h3 class="font-display font-semibold text-ink">Bands</h3>
+                        <p class="mt-1 text-sm text-ink/60">
+                            <template x-if="passMark() !== null">
+                                <span><span class="font-medium text-ink">Pass mark:</span> <span x-text="passMark() + '%'"></span> — the lowest band marked as a pass.</span>
+                            </template>
+                            <template x-if="passMark() === null">
+                                <span class="text-crimson">No band is marked as a pass, so nobody on this scale can pass.</span>
+                            </template>
+                        </p>
+                    </div>
                     <button type="button" @click="addBand()" x-show="bands.length < 15"
                             class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-line px-3 py-1.5 text-sm font-medium text-ink/60 hover:border-crimson/40 hover:text-crimson focus-ring">
                         <x-ui.icon name="plus" class="h-4 w-4" /> Add band
                     </button>
                 </div>
                 <div class="overflow-x-auto border-t border-line">
-                    <table class="w-full min-w-[720px] text-sm">
+                    <table class="w-full min-w-[820px] text-sm">
                         <thead>
                             <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/50">
                                 <th class="px-4 py-2.5">Label</th>
                                 <th class="px-4 py-2.5">Min %</th>
                                 <th class="px-4 py-2.5">Max %</th>
                                 <th class="px-4 py-2.5">Grade point</th>
+                                <th class="px-4 py-2.5">Pass</th>
                                 <th class="px-4 py-2.5">Colour</th>
                                 <th class="px-4 py-2.5"><span class="sr-only">Remove</span></th>
                             </tr>
@@ -257,6 +292,19 @@
                                     <td class="px-4 py-2.5">
                                         <input x-model.number="band.grade_point" :name="`bands[${i}][grade_point]`" type="number" min="0" max="100" step="0.1" required
                                                class="block w-20 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                                    </td>
+                                    <td class="px-4 py-2.5">
+                                        {{-- A hidden field carries the value so an unticked box still posts "0";
+                                             the checkbox itself is unnamed and drives it through Alpine. --}}
+                                        <input type="hidden" :name="`bands[${i}][is_pass]`" :value="band.is_pass ? 1 : 0">
+                                        <label class="inline-flex items-center gap-2">
+                                            <input type="checkbox" x-model="band.is_pass"
+                                                   :aria-label="`${band.label || 'This band'} is a pass`"
+                                                   class="rounded border-line text-success focus:ring-success">
+                                            <span class="text-xs font-medium"
+                                                  :class="band.is_pass ? 'text-success' : 'text-ink/40'"
+                                                  x-text="band.is_pass ? 'Pass' : 'Fail'"></span>
+                                        </label>
                                     </td>
                                     <td class="px-4 py-2.5">
                                         <select x-model="band.color" :name="`bands[${i}][color]`"
@@ -288,6 +336,11 @@
                            class="block w-28 rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                     <span class="text-sm text-ink/50">%</span>
                     <span class="font-display text-lg font-semibold text-crimson" x-text="previewLine(tryScore)"></span>
+                    <template x-if="bandFor(tryScore)">
+                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+                              :class="bandFor(tryScore).is_pass ? 'bg-success/10 text-success' : 'bg-crimson/10 text-crimson'"
+                              x-text="bandFor(tryScore).is_pass ? 'Pass' : 'Fail'"></span>
+                    </template>
                 </div>
             </x-ui.card>
 

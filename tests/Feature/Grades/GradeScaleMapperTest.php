@@ -26,12 +26,12 @@ class GradeScaleMapperTest extends TestCase
         ]);
 
         $scale->bands()->createMany([
-            ['label' => 'A', 'grade_point' => 5.0, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
-            ['label' => 'B', 'grade_point' => 4.0, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold', 'position' => 1],
-            ['label' => 'C', 'grade_point' => 3.0, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink', 'position' => 2],
-            ['label' => 'D', 'grade_point' => 2.0, 'min_percent' => 45, 'max_percent' => 49, 'color' => 'neutral', 'position' => 3],
-            ['label' => 'E', 'grade_point' => 1.0, 'min_percent' => 40, 'max_percent' => 44, 'color' => 'neutral', 'position' => 4],
-            ['label' => 'F', 'grade_point' => 0.0, 'min_percent' => 0, 'max_percent' => 39, 'color' => 'crimson', 'position' => 5],
+            ['label' => 'A', 'grade_point' => 5.0, 'is_pass' => true, 'min_percent' => 70, 'max_percent' => 100, 'color' => 'success', 'position' => 0],
+            ['label' => 'B', 'grade_point' => 4.0, 'is_pass' => true, 'min_percent' => 60, 'max_percent' => 69, 'color' => 'gold', 'position' => 1],
+            ['label' => 'C', 'grade_point' => 3.0, 'is_pass' => true, 'min_percent' => 50, 'max_percent' => 59, 'color' => 'ink', 'position' => 2],
+            ['label' => 'D', 'grade_point' => 2.0, 'is_pass' => true, 'min_percent' => 45, 'max_percent' => 49, 'color' => 'neutral', 'position' => 3],
+            ['label' => 'E', 'grade_point' => 1.0, 'is_pass' => true, 'min_percent' => 40, 'max_percent' => 44, 'color' => 'neutral', 'position' => 4],
+            ['label' => 'F', 'grade_point' => 0.0, 'is_pass' => false, 'min_percent' => 0, 'max_percent' => 39, 'color' => 'crimson', 'position' => 5],
         ]);
 
         return $scale->fresh('bands');
