@@ -12,7 +12,6 @@ import { attemptRunner } from './attempt';
 import { assignmentSubmit } from './assignment-submit';
 import certificateStatus from './certificate-status';
 import { certificateTemplateEditor } from './certificate-template-editor';
-import { contactPicker } from './contact-picker';
 import notificationBell from './notification-bell';
 
 window.Alpine = Alpine;
@@ -44,10 +43,6 @@ Alpine.data('assignmentSubmit', assignmentSubmit);
 // Certificates cards); a no-op when it's already ready.
 Alpine.data('certificateStatus', certificateStatus);
 Alpine.data('certificateTemplateEditor', certificateTemplateEditor);
-
-// Messaging: recipient type-ahead, used when the reachable list is too big to
-// render inline (an admin may message the whole directory).
-Alpine.data('contactPicker', contactPicker);
 
 // The topbar bell (Section 8): polls for unread count + recent items.
 Alpine.data('notificationBell', notificationBell);

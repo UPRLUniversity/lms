@@ -119,23 +119,13 @@ class CertificateTemplateController extends Controller
      * AJAX signature-image upload — returns the Media id + a preview URL. Never
      * base64-inlined; goes through the canonical MediaUploadService (purpose
      * Signatures, a public image like an avatar/cover).
-     *
-     * The rules mirror the Signatures purpose in config/media.php rather than accepting
-     * any `image` and letting MediaUploadService refuse it later: a JPG signature scan is
-     * the commonest thing an admin reaches for, so it deserves a message that says what
-     * to supply instead. (MediaUploadService still re-validates — this is the friendlier
-     * of two gates, not the only one.)
      */
     public function uploadSignature(Request $request, MediaUploadService $media): JsonResponse
     {
         $this->authorize('create', CertificateTemplate::class);
 
         $request->validate([
-            'file' => ['required', 'file', 'mimetypes:image/png,image/webp', 'max:1024'],
-        ], [
-            'file.mimetypes' => 'The signature must be a PNG or WebP image. A JPG scan will not be accepted — re-save it as a PNG.',
-            'file.max' => 'The signature image must be smaller than 1MB. Try resizing it to about 600px wide.',
-            'file.required' => 'Choose a signature image to upload.',
+            'file' => ['required', 'file', 'image', 'max:1024'],
         ]);
 
         $uploaded = $media->upload($request->file('file'), MediaPurpose::Signatures);

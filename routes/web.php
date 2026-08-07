@@ -302,9 +302,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // before the {conversation} catch.
     Route::get('messages', [ConversationController::class, 'index'])->name('messages.index');
     Route::get('messages/create', [ConversationController::class, 'create'])->name('messages.create');
-    // Recipient type-ahead for the composer. Throttled: it is a search over people.
-    Route::get('messages/contacts', [ConversationController::class, 'contacts'])
-        ->middleware('throttle:60,1')->name('messages.contacts');
     Route::post('messages', [ConversationController::class, 'store'])
         ->middleware('throttle:30,1')->name('messages.store');
     Route::get('messages/{conversation}', [ConversationController::class, 'show'])->name('messages.show');

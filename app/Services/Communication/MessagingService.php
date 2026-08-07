@@ -25,12 +25,6 @@ use Illuminate\Support\Facades\DB;
  */
 class MessagingService
 {
-    /**
-     * How many people the composer renders inline before it switches to server-side
-     * search. Only ever reached by admins (everyone else's list is their coursemates).
-     */
-    private const CONTACT_LIST_CAP = 200;
-
     public function __construct(private readonly PrivateFileService $files) {}
 
     /**
@@ -221,7 +215,7 @@ class MessagingService
             return false;
         }
 
-        if ($this->reachesEveryone($actor)) {
+        if ($actor->hasAnyRole([Role::Admin->value, Role::SuperAdmin->value])) {
             return true;
         }
 
@@ -232,29 +226,13 @@ class MessagingService
     }
 
     /**
-     * The people a given user may start a direct conversation with. This MUST agree with
-     * canMessage or the composer offers a list that the store endpoint then refuses (or,
-     * as it did before this fix, offers nothing at all to an admin who canMessage says may
-     * reach everyone — the composer showed "No one to message yet" on a permission that
-     * was actually unlimited).
-     *
-     * Students and instructors get everyone they share a course with. Admins get the
-     * whole active directory, capped: beyond the cap the picker searches server-side
-     * rather than rendering thousands of <option>s (see searchContacts).
+     * The people a given user may start a direct conversation with: everyone they share
+     * a course with (classmates + that course's instructors), minus themselves.
      *
      * @return Collection<int, User>
      */
     public function contactsFor(User $user): Collection
     {
-        if ($this->reachesEveryone($user)) {
-            return User::query()
-                ->active()
-                ->whereKeyNot($user->id)
-                ->orderBy('name')
-                ->limit(self::CONTACT_LIST_CAP)
-                ->get();
-        }
-
         $courseIds = $this->membershipCourseIds($user);
 
         if ($courseIds->isEmpty()) {
@@ -270,61 +248,6 @@ class MessagingService
             ->reject(fn (User $u) => $u->id === $user->id)
             ->sortBy('name')
             ->values();
-    }
-
-    /**
-     * Whether the viewer's contact list is capped — i.e. there are more people they may
-     * message than contactsFor returned, so the composer must offer search.
-     */
-    public function contactsAreCapped(User $user): bool
-    {
-        if (! $this->reachesEveryone($user)) {
-            return false;
-        }
-
-        return User::query()->active()->whereKeyNot($user->id)->count() > self::CONTACT_LIST_CAP;
-    }
-
-    /**
-     * Type-ahead over the people the viewer may message. Runs the SAME reachability rule
-     * as contactsFor — an admin searches the directory, everyone else searches only their
-     * coursemates — so search can never surface someone store would then reject.
-     *
-     * @return Collection<int, User>
-     */
-    public function searchContacts(User $user, string $term, int $limit = 20): Collection
-    {
-        $term = trim($term);
-
-        if ($this->reachesEveryone($user)) {
-            return User::query()
-                ->active()
-                ->whereKeyNot($user->id)
-                ->when($term !== '', fn ($q) => $q->where(function ($q) use ($term) {
-                    $q->where('name', 'like', "%{$term}%")
-                        ->orWhere('email', 'like', "%{$term}%");
-                }))
-                ->orderBy('name')
-                ->limit($limit)
-                ->get();
-        }
-
-        return $this->contactsFor($user)
-            ->when($term !== '', fn (Collection $c) => $c->filter(
-                fn (User $u) => str_contains(mb_strtolower($u->name), mb_strtolower($term))
-                    || str_contains(mb_strtolower($u->email), mb_strtolower($term))
-            ))
-            ->take($limit)
-            ->values();
-    }
-
-    /**
-     * Admins and super-admins may message anyone — the mirror of canMessage's admin
-     * branch, kept as one private predicate so the two can never drift apart again.
-     */
-    private function reachesEveryone(User $user): bool
-    {
-        return $user->hasAnyRole([Role::Admin->value, Role::SuperAdmin->value]);
     }
 
     /**

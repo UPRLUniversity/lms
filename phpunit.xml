@@ -19,11 +19,6 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
-        <!-- Pinned so the suite does not inherit whatever APP_URL the developer's .env
-             currently holds. An https value (an ngrok tunnel, say) makes every generated
-             URL secure, which flipped the "HSTS is not sent over plain http" assertion
-             and failed a test that has nothing to do with the change being run. -->
-        <env name="APP_URL" value="http://localhost"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
