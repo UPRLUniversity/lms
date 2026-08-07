@@ -1,7 +1,67 @@
 # Plan — Course prerequisites & part progression
 
-**Status:** proposed, not started. Awaiting three decisions (§7).
+**Status:** DECIDED, ready to build. See §0 for the settled answers.
 **Written:** 2026-08-07, after investigating the current state at the human's request.
+**Decisions taken:** 2026-08-07.
+
+---
+
+## 0. Settled decisions
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | Which model? | **Part-level progression.** Per-course prerequisites deferred to a later, separate section |
+| 2 | Unlock bar? | **All compulsory courses passed, AND — where the part states one — its `credit_target` in earned credits.** Two bars, both shown (§3) |
+| 3 | Waitlists? | **Refused.** A waitlist place you cannot use is a false promise, and promotion is automatic (§6.4) |
+| 4 | Pass/fail? | **Yes — build it.** `grade_bands.is_pass`, backfilled as `grade_point > 0` (§6.1) |
+| 5 | Gate Part I on the entry fee? | **NO.** It would deadlock the funnel — see §0.1. This one I am overruling |
+
+### 0.1 Why Part I must not be gated on the entry fee
+
+The proposal was reasonable on its face and I checked it before answering. It cannot
+work, for a structural reason:
+
+`PricingService::entryFeeLinesFor` charges a programme's registration and administration
+fees **only when the cart already contains a paid course from that programme**. There is
+no other way to pay them — no standalone "join CPR" purchase exists.
+
+So gating Part I on "entry fee already paid" produces:
+
+```
+student cannot buy CPR112       ← because the entry fee is unpaid
+entry fee is only charged        ← when buying a CPR course
+                                 ⇒ nobody can ever start CPR
+```
+
+A hard deadlock closing the entire commercial funnel.
+
+**The first part of a programme is therefore always open**, and the entry fee stays
+enforced where it already is: in the cart, at checkout, at the moment money moves. That
+is the correct place for it — it is a pricing rule, not a progression rule, and this plan
+should not move it.
+
+If UPRL ever wants a genuine "register for the programme first" step, that is a different
+feature — a standalone programme-registration purchase — and it would need its own
+design.
+
+### 0.2 On choosing the unlock bar
+
+The suggestion was "all compulsory courses". That is most of the answer, but on its own
+it lets a student skip every *required elective* and still progress — and required
+electives count toward the published total (`CourseRequirement::countsTowardTarget()`),
+so that student arrives at the end of the programme short of credits, having been told
+all along they were on track. Discovering that at graduation is the worst possible time.
+
+Conversely, using `credit_target` alone is not enough either: it would let a student
+reach 24 credits on electives while skipping a core paper, and it is simply unavailable
+for parts that state no target — which is most of them (CPR Part II, and all three NPV
+parts, are `null` in the seeder).
+
+**So: both.** All compulsory passed is the primary bar and always applies; the credit
+target is an additional bar that applies only where the part states one. It degrades
+gracefully, it matches what a registrar actually enforces, and the UI can show both:
+
+> ✅ 8 of 8 compulsory courses passed  ·  ⚠️ 21 of 24 credits
 
 ---
 
@@ -91,21 +151,26 @@ somebody has to make before the table can be filled in.
 A student may enrol in a course placed in **part P** of programme **G** when:
 
 ```
-G.progression_rule = 'open'                          → always allowed
-OR P is the first part of G (position = lowest)      → always allowed
-OR student's earned credits in EVERY earlier part of G ≥ that part's unlock bar
+G.progression_rule = 'open'                     → always allowed
+OR P is the first part of G (lowest position)   → always allowed  (§0.1)
+OR EVERY earlier part of G is CLEARED
 ```
 
-**Earned credits in part P** = sum of `credit_load` over that student's
-`Completed` enrolments on courses placed in P.
+A part is **cleared** when both bars are met:
 
-**A part's unlock bar** = `programme_parts.unlock_credits` when set, else
-`credit_target`, else "all compulsory courses in the part completed".
+| Bar | Applies | Definition |
+|---|---|---|
+| Compulsory | always | every course placed in the part with `requirement = compulsory` has been **passed** |
+| Credits | only when the part states a `credit_target` | sum of `credit_load` over the student's **passed** courses in that part ≥ `credit_target` |
 
-Rationale for using `credit_target`: it is already the authoritative published figure,
-and it is deliberately *lower* than the sum of listed credits (CPR Part I prints 24
-against 28 listed) precisely because pure electives are optional. That gap is the
-student's choice, and the bar should respect it rather than demand everything.
+**Passed** = an enrolment with status `Completed` **and** a `CourseGradeRecord` whose
+grade band is a passing band (§6.1). An ungraded completion counts as passed — some
+courses have no assessment, and refusing them would gate on data that will never arrive.
+
+`programme_parts.unlock_credits` overrides `credit_target` for the credit bar, for the
+case where the registrar wants a progression bar different from the published total.
+
+See §0.2 for why both bars, rather than either alone.
 
 ### 3.1 Courses in more than one programme
 
@@ -145,6 +210,33 @@ backwards would ship a feature that never fires.
 
 ## 5. Implementation
 
+### Phase 0 — pass/fail (its own section, merged first)
+
+Progression asks "has this student *passed* the compulsory papers", and the system cannot
+currently answer that (§6.1). So this ships first, on its own, and is useful on its own —
+a gradebook that distinguishes pass from fail is worth having whether or not progression
+ever lands.
+
+0.1 Migration `add_is_pass_to_grade_bands` — `is_pass` boolean, **no default**, backfilled
+    in the same migration as `grade_point > 0` for every existing band. No default,
+    because every band must make a deliberate choice rather than inherit one.
+0.2 `GradeBand::$fillable` + cast; `GradeScale` validation — a scale must have **at least
+    one** passing band and at least one failing band, or it cannot express an outcome
+0.3 Grade-scale editor — a "Pass" toggle per band row, with the boundary shown plainly
+    ("Pass mark: 40%") derived from the lowest passing band
+0.4 `CourseGradeRecord::isPass()` — reads the frozen `scale_snapshot`, so a historical
+    record keeps the verdict it was awarded under even if the scale is later re-cut
+0.5 Show pass/fail in the gradebook, the student's grade view and the certificate
+    eligibility check
+0.6 Tests: the backfill reproduces existing intent for both seeded scales; a snapshot
+    keeps its verdict when the live scale changes; a scale with no failing band is refused
+
+**`scale_snapshot` is the subtle part.** `CourseGradeRecord` already freezes the whole
+scale at computation time precisely so a later edit never rewrites a recorded grade. The
+pass verdict must be read from that snapshot, not from the live scale — otherwise
+re-cutting a grade boundary in 2027 would retroactively fail students who graduated in
+2026, and progression would start refusing people it had already let through.
+
 ### Phase 1 — the rule (no behaviour change)
 
 1. **Migration** `add_progression_rule_to_programmes`
@@ -159,21 +251,26 @@ backwards would ship a feature that never fires.
 
 3. **`App\Services\Courses\ProgressionService`**
    ```php
-   creditsEarnedIn(User, ProgrammePart): int
-   unlockBarFor(ProgrammePart): int
-   isPartUnlocked(User, ProgrammePart): bool
-   check(User, Course): ProgressionVerdict   // allowed + reason + progress numbers
-   coursesBlockedFor(User, Collection<Course>): Collection  // bulk, for the catalogue
+   passedCoursesIn(User, ProgrammePart): Collection
+   compulsoryOutstanding(User, ProgrammePart): Collection   // bar 1
+   creditsEarnedIn(User, ProgrammePart): int                // bar 2
+   creditBarFor(ProgrammePart): ?int                        // unlock_credits ?? credit_target
+   isPartCleared(User, ProgrammePart): bool
+   check(User, Course): ProgressionVerdict
+   verdictsFor(User, Collection<Course>): Collection        // bulk, for the catalogue
    ```
-   `coursesBlockedFor` exists so the catalogue can render 40 cards without 40 queries.
+   `verdictsFor` exists so the catalogue can render 40 cards without 40 round trips —
+   the same reason `PricingService` batches.
 
-4. **`App\Support\Courses\ProgressionVerdict`** — `allowed`, `partName`, `earned`,
-   `required`, `message`. A value object, so the same sentence appears in the exception,
-   the toast, the cart error and the catalogue badge.
+4. **`App\Support\Courses\ProgressionVerdict`** — `allowed`, `blockingPart`,
+   `outstandingCompulsory`, `creditsEarned`, `creditsRequired`, `message`. A value
+   object, so one sentence serves the exception, the toast, the cart error and the
+   catalogue badge, and they can never word it differently.
 
-5. **Tests** for the service alone: multi-programme courses, unplaced courses, first
-   part, `open` programmes, a part with no target, credits from withdrawn enrolments not
-   counting.
+5. **Tests** for the service alone: a course in two programmes unlocked via either;
+   unplaced courses; the first part; `open` programmes; a part with no `credit_target`
+   (compulsory bar only); withdrawn and failed enrolments not counting; an ungraded
+   completion counting.
 
 ### Phase 2 — enforcement
 
@@ -188,55 +285,68 @@ backwards would ship a feature that never fires.
     the safe behaviour.
 11. Migration `add_prerequisite_override_to_enrollments` — `prerequisite_override_by`,
     `prerequisite_override_reason`, so an exception is auditable
+12. **Waitlisting** — the gate runs before the full-course branch in `selfEnroll`, so a
+    blocked student is refused rather than queued (§6.4)
 
 ### Phase 3 — the UI
 
-12. **Course page** (`catalogue/_enrol.blade.php`) — a locked state before the buy path:
+13. **Course page** (`catalogue/_enrol.blade.php`) — a locked state before the buy path:
     > 🔒 **Complete CPR Part I first**
     > You have 12 of 24 credits. [See CPR Part I →]
 
     Locked, not hidden. A student must be able to see what they are working toward.
-13. **Catalogue cards** — a small lock chip, fed by `coursesBlockedFor`
-14. **Programme page** — parts rendered locked/unlocked with a progress bar
-15. **Cart** — refuse on add with the reason as a toast; if a rule changes while an item
+14. **Catalogue cards** — a small lock chip, fed by `verdictsFor`
+15. **Programme page** — parts rendered locked/unlocked with a progress bar
+16. **Cart** — refuse on add with the reason as a toast; if a rule changes while an item
     sits in the cart, flag the line rather than silently dropping it
-16. **Admin enrol form** — when the student fails the check, an explicit
+17. **Admin enrol form** — when the student fails the check, an explicit
     "Enrol anyway (records an override)" with a required reason
-17. **Bulk import preview** — a `prerequisite_not_met` row problem, imported anyway,
+18. **Bulk import preview** — a `prerequisite_not_met` row problem, imported anyway,
     consistent with the Section 17 preview vocabulary
 
 ### Phase 4 — admin control
 
-18. Programme edit form — a `progression_rule` selector with plain-language help
-19. Programme part form — optional `unlock_credits` override
-20. **Backfill command** `php artisan progression:audit` — lists students currently
+19. Programme edit form — a `progression_rule` selector with plain-language help
+20. Programme part form — optional `unlock_credits` override
+21. **Backfill command** `php artisan progression:audit` — lists students currently
     enrolled in a course they would now be blocked from, so switching a programme to
     `sequential` is an informed decision rather than a surprise
 
 ### Phase 5 (optional, separate section) — per-course prerequisites
 
-21. `course_prerequisites` table: `course_id`, `required_course_id`, unique pair
-22. Cycle detection on save (A requires B requires A must be refused at authoring time)
-23. An additional gate inside `ProgressionService::check`, needing no change to any
+22. `course_prerequisites` table: `course_id`, `required_course_id`, unique pair
+23. Cycle detection on save (A requires B requires A must be refused at authoring time)
+24. An additional gate inside `ProgressionService::check`, needing no change to any
     caller
 
 ---
 
 ## 6. Problems that need deciding, not just coding
 
-### 6.1 There is no pass/fail concept
+### 6.1 Pass/fail does not exist yet — build it first
 
-`GradeBand` has a label, grade point and percentage range — but **nothing marks a band
-as passing**. So "must PASS CPR112" is not expressible today; only "must COMPLETE
-CPR112" is.
+`GradeBand` has a label, grade point and percentage range, but **nothing marks a band as
+passing**. So "must PASS CPR112" is not expressible today; only "must COMPLETE" it is.
 
-Today a student who completes a course with the lowest possible grade counts as having
-earned its credits. If UPRL needs a genuine pass bar, that is a **prerequisite of this
-prerequisite work**: add `grade_bands.is_pass`, backfill it, and only then can the rule
-say "earned" rather than "completed".
+UPRL has confirmed a genuine pass bar is wanted, so this becomes **Phase 0** — a
+prerequisite of the prerequisite work, shipped and merged before progression is built on
+top of it.
 
-**Recommendation:** ship on `Completed` first. Add `is_pass` as its own small piece of
-work if the registrar confirms it is needed. Do not conflate them.
+**The backfill is unambiguous.** Both seeded scales put the fail band, and only the fail
+band, at `grade_point = 0.00`:
+
+| Scale | Bands | Fail |
+|---|---|---|
+| 5-point | A 5.0 · B 4.0 · C 3.0 · D 2.0 · E 1.0 · F 0.0 | F |
+| 4-point | A 4.0 · B 3.0 · C 2.0 · D 1.0 · F 0.0 | F |
+
+So `is_pass = grade_point > 0` reproduces the existing intent exactly, for every scale in
+the system. It is a derivation of current data, not a guess about it.
+
+Making it an explicit **column** rather than leaving it as `grade_point > 0` computed at
+read time matters: a scale could legitimately award a non-zero point to a failing band
+(some institutions give 0.5 for a near-miss), and a progression rule silently treating
+that as a pass would be very hard to spot. The column lets the registrar say so.
 
 ### 6.2 "Which programme is this student in?" has no stored answer
 
@@ -259,12 +369,19 @@ The gate applies at **enrolment time only** — an existing `Active` enrolment i
 re-evaluated. `progression:audit` (step 20) exists to make the consequences visible
 before the switch, not to enforce anything retroactively.
 
-### 6.4 Waitlists
+### 6.4 Waitlists — refused
 
-A student may currently join a waitlist for a course they cannot yet enrol in. The gate
-should apply to waitlisting too — otherwise they are promoted into a course they are not
-entitled to. **Decide:** refuse the waitlist, or allow it and re-check at promotion?
-I lean toward refusing, because a waitlist place they cannot use is a false promise.
+**Decided: the gate applies to waitlisting.**
+
+Promotion off the waitlist is automatic (`EnrollmentService::promote`, triggered when a
+seat frees). Allowing a blocked student onto the waitlist would therefore mean the system
+eventually enrols them *past the gate*, with no human in the loop — the rule would leak
+through the one path nobody is watching.
+
+Re-checking at promotion instead was the alternative, and it is worse: the student holds
+a queue position for weeks, gets skipped when their turn arrives, and the seat has to
+cascade to the next person. A place you cannot use is a false promise, and refusing up
+front is both honest and simpler to reason about.
 
 ### 6.5 Refunds
 
@@ -273,32 +390,44 @@ recalculates. Out of scope — noting it so it is not discovered as a surprise.
 
 ---
 
-## 7. Three decisions needed before starting
+## 7. Decisions — all settled
 
-1. **Option A or B?** (§2) — my recommendation is A, with B as a later, separate section.
-2. **What is the unlock bar?** (§3) — `credit_target` (recommended), all-compulsory, or
-   all-courses.
-3. **Waitlists** (§6.4) — refuse, or allow and re-check at promotion?
+See §0. In summary: part-level progression; two bars (all compulsory passed, plus the
+credit target where stated); waitlists refused; pass/fail built first as Phase 0; the
+first part of a programme always open.
 
-Two more worth answering, though they need not block a start:
-
-4. Does UPRL need a real **pass/fail** bar (§6.1), or is completion sufficient?
-5. Should **Part I itself** ever be gated — e.g. by having paid the programme entry
-   fee — or is the first part always open?
+Nothing is outstanding. The one item deliberately deferred is per-course prerequisites
+(Phase 5), which needs curriculum decisions rather than code.
 
 ---
 
-## 8. Sizing
+## 8. Sizing and sequencing
 
-| Phase | Scope | Rough weight |
-|---|---|---|
-| 1 — rule + service + tests | no behaviour change | small |
-| 2 — enforcement at 6 call sites | the risky part | **medium-large** |
-| 3 — UI in 6 places | mostly presentation | medium |
-| 4 — admin control + audit command | small | small |
-| 5 — per-course prerequisites | separate section | medium |
+| Phase | Scope | Weight | Ships as |
+|---|---|---|---|
+| 0 — pass/fail on grade bands | useful alone | small-medium | **its own section, merged first** |
+| 1 — rule + service + tests | no behaviour change | small | Section N |
+| 2 — enforcement at 7 call sites | the risky part | **medium-large** | Section N |
+| 3 — UI in 6 places | mostly presentation | medium | Section N |
+| 4 — admin control + audit command | small | small | Section N |
+| 5 — per-course prerequisites | needs curriculum input | medium | later, separate |
 
-Phases 1–4 are one section. Phase 5 is its own.
+**Two sections, in order.** Phase 0 first and alone, because progression is built on top
+of a pass verdict that does not exist yet, and because a gradebook that knows pass from
+fail is worth having on its own merits. Phases 1–4 then form the progression section.
+
+The risk is concentrated entirely in Phase 2: seven call sites, **three of which must
+deliberately NOT enforce**. The deliverable that makes it safe is a test per call site —
+including the three that allow, because those are the ones a future change would silently
+break.
+
+### The order that matters most
+
+Build **Phase 1 with no enforcement at all** and merge it. A service that can answer "is
+this student allowed?" — with the audit command from step 21 able to report what *would*
+be blocked — lets the registrar look at real numbers against real students before a
+single door is closed. Switching a programme to `sequential` is then a decision made with
+evidence, rather than a change nobody can predict the blast radius of.
 
 The risk is concentrated entirely in Phase 2: six call sites, three of which must
 *deliberately not* enforce. A test per call site asserting the intended behaviour —
