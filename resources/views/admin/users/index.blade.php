@@ -12,7 +12,10 @@
             </div>
 
             @if ($canManage)
-                <div class="flex items-center gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <x-ui.button variant="ghost" :href="route('admin.imports.create', ['import' => 'users'])">
+                        <x-ui.icon name="document-text" class="h-5 w-5" /> Import a list
+                    </x-ui.button>
                     <x-ui.button variant="secondary" :href="route('admin.invitations.index')">
                         <x-ui.icon name="mail" class="h-5 w-5" /> Invitations
                     </x-ui.button>

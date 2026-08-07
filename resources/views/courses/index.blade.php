@@ -14,9 +14,14 @@
             </div>
 
             @can('create', \App\Models\Course::class)
-                <x-ui.button :href="route('courses.create')">
-                    <x-ui.icon name="plus" class="h-5 w-5" /> New course
-                </x-ui.button>
+                <div class="flex flex-wrap items-center gap-2">
+                    <x-ui.button variant="ghost" :href="route('admin.imports.create', ['import' => 'courses'])">
+                        <x-ui.icon name="document-text" class="h-5 w-5" /> Import from a file
+                    </x-ui.button>
+                    <x-ui.button :href="route('courses.create')">
+                        <x-ui.icon name="plus" class="h-5 w-5" /> New course
+                    </x-ui.button>
+                </div>
             @endcan
         </div>
 
