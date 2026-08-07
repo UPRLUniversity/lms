@@ -1,8 +1,24 @@
 # Plan — Course prerequisites & part progression
 
-**Status:** DECIDED, ready to build. See §0 for the settled answers.
+**Status:** DECIDED and approved by the human (2026-08-07). Ready to build — see §0.
 **Written:** 2026-08-07, after investigating the current state at the human's request.
-**Decisions taken:** 2026-08-07.
+
+> **Starting from a cold session? Read this box first.**
+>
+> Everything needed is in this file — no prior conversation is required. Section 17
+> (bulk imports) was the last section merged, so:
+>
+> | Build | Branch | Covers |
+> |---|---|---|
+> | **next** | `section/18-pass-fail` | Phase 0 only (§5) |
+> | then | `section/19-progression` | Phases 1–4 (§5) |
+> | later | — | Phase 5, needs curriculum input first |
+>
+> Follow CLAUDE.md as always: branch from a fresh `main`, one section at a time,
+> `php artisan test` green before reporting, then STOP.
+>
+> **Phase 0 must merge before Phase 1 starts.** Progression asks "has this student
+> *passed*?", and the system cannot answer that until Phase 0 exists (§6.1).
 
 ---
 
