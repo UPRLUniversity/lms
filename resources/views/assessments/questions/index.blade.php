@@ -13,8 +13,13 @@
             </div>
 
             <div class="flex items-center gap-2" x-data="{ open: false }">
-                <x-ui.button variant="secondary" :href="route('questions.import.form', $course)">
-                    <x-ui.icon name="download" class="h-4 w-4" /> Import
+                {{-- Two different imports now, so neither may just say "Import":
+                     copying from another course, and loading a spreadsheet. --}}
+                <x-ui.button variant="ghost" :href="route('questions.import.form', $course)">
+                    <x-ui.icon name="download" class="h-4 w-4" /> Copy from a course
+                </x-ui.button>
+                <x-ui.button variant="secondary" :href="route('admin.imports.create', ['import' => 'questions', 'scopeId' => $course->id])">
+                    <x-ui.icon name="document-text" class="h-4 w-4" /> Import from a file
                 </x-ui.button>
                 <div class="relative">
                     <x-ui.button @click="open = !open" aria-haspopup="true" ::aria-expanded="open">

@@ -1586,3 +1586,78 @@ students' contact lists. `members()` now includes the owner.
 secure, which flipped `SecurityHeaders` into sending HSTS and failed the "HSTS is not sent
 over plain http" assertion — a red suite with nothing wrong with the code. Verified as
 pre-existing on clean `main` before pinning.
+
+## Section 17 — Bulk imports (2026-08-07)
+
+Four importers were asked for — questions, people, courses, marks. Writing four
+importers would have been the wrong answer: the enrolment CSV importer from Section 3
+already established the flow (template → upload → preview → confirm, queued past a
+threshold), and that flow is identical whatever is being imported. So the section builds
+the flow ONCE in `App\Support\Import` and each importer supplies only what differs.
+
+**One controller, one job, two views, four definitions.** `ImportController` handles
+every import; `{import}` selects the definition from `ImportRegistry`. Adding a fifth
+importer is one line in `AppServiceProvider` plus a definition class — no controller, no
+routes, no views. The preview screen renders its own guidance from the definition's
+column list, so the "what this file needs" table cannot drift out of step with what the
+reader actually accepts.
+
+**Columns are matched by HEADING, not position.** People reorder columns; a positional
+reader silently imports emails into the name field when they do, and nothing about the
+result looks wrong until much later. Matching is case- and separator-insensitive
+("Course code" = `course_code` = `COURSE-CODE`) because a template that has been through
+Excel and a human never comes back byte-identical.
+
+**xlsx as well as csv**, via PhpSpreadsheet directly rather than maatwebsite's Importable
+machinery — the flow needs the rows, not a framework, and maatwebsite is already carrying
+the export side.
+
+**Preview writes nothing; confirm re-judges.** An admin can upload, look and walk away
+having changed nothing. On confirm the staged file is re-read and re-validated rather
+than trusting the preview, because minutes may have passed and someone else may have
+created the very account the file is about to create.
+
+### Decisions inside the individual importers
+
+**No password column in the people import.** A spreadsheet of passwords is a spreadsheet
+that gets emailed, printed, and left on a desk. Each account is created with a random
+32-character password and a set-password link is sent, so the file never holds a
+credential at any point. The privilege-escalation guard from `StoreUserRequest` applies
+per row: an admin importing a file that tries to mint super-admins gets those rows
+refused and the rest imported.
+
+**Imported courses are always DRAFT.** A spreadsheet is a planning document, not an
+editorial decision — nothing bulk-created should reach students until somebody opened it
+and published it deliberately.
+
+**Matching and scenario questions are not importable, and say so.** Expressing a
+scenario's nested sub-questions in a flat grid produces a format nobody can fill in
+correctly. A half-working import of the hardest type is worse than a clear refusal
+pointing at the editor.
+
+**Rubric-graded assignments refuse a marks file outright**, at the file level rather than
+per row. A rubric's total is derived from the level chosen against each criterion;
+accepting a bare total would produce a grade whose criterion breakdown contradicts it,
+and the student would open feedback showing levels that do not add up to their mark.
+
+**A score above the maximum is refused, not clamped.** 95 against a maximum of 50 means
+the sheet is out of step with the assignment. Silently recording 50 hides that from
+whoever eventually has to answer for the grade.
+
+### Two defects the tests caught before the browser did
+
+**The queued path would have refused every row of a people import.** `UserImport` checked
+the role-escalation guard with `Gate::denies(...)`, which asks about the *authenticated*
+user — and a queue worker has no authenticated user, so every row would have failed as
+"only a super-admin may grant this role". Caught by a test asserting a definition's own
+template round-trips through its own reader, which ran without an authenticated user and
+scored 0 of 3 valid. The actor now travels explicitly through `prepare()`, and the
+contract documents why.
+
+**The literal word "false" was being silently emptied.** PhpSpreadsheet casts the text
+`false` to a boolean, and `stringify()` treated boolean false as "no cell" — so the
+answer column of every false answer in a true/false question sheet arrived blank, and the
+question was rejected as having no correct answer. Only null means "no cell" now.
+
+Both are the kind of defect that would have looked like "the import just doesn't work"
+in a bug report, with nothing in the logs.

@@ -53,6 +53,26 @@
             </div>
         </form>
 
+        {{-- A marks sheet is always ABOUT one assignment, so this only appears once the
+             filter has narrowed to one — there is nothing sensible to upload against
+             "all assignments". --}}
+        @php
+            $selectedAssignment = request('assignment')
+                ? $assignments->firstWhere('id', (int) request('assignment'))
+                : null;
+        @endphp
+        @if ($selectedAssignment && auth()->user()->can('grade', $selectedAssignment))
+            <div class="flex items-center justify-between gap-3 rounded-xl border border-line bg-card px-4 py-3">
+                <p class="text-sm text-ink/70">
+                    Marked <span class="font-medium text-ink">{{ $selectedAssignment->title }}</span> offline?
+                </p>
+                <x-ui.button size="sm" variant="secondary"
+                             :href="route('admin.imports.create', ['import' => 'grades', 'scopeId' => $selectedAssignment->id])">
+                    <x-ui.icon name="document-text" class="h-4 w-4" /> Upload marks
+                </x-ui.button>
+            </div>
+        @endif
+
         @if ($queue->isEmpty())
             <x-ui.empty-state icon="check-circle" title="All caught up"
                 description="No submissions match these filters — nothing is waiting on you here." />

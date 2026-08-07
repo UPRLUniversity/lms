@@ -5,6 +5,10 @@ namespace App\Providers;
 use App\Enums\Permission;
 use App\Enums\Role;
 use App\Events\CourseCompleted;
+use App\Imports\CourseImport;
+use App\Imports\GradeImport;
+use App\Imports\QuestionImport;
+use App\Imports\UserImport;
 use App\Listeners\IssueCertificateOnCompletion;
 use App\Listeners\MergeGuestCart;
 use App\Listeners\RecordAuthActivity;
@@ -16,6 +20,7 @@ use App\Policies\ForumPolicy;
 use App\Policies\GradebookPolicy;
 use App\Policies\MessagingPolicy;
 use App\Policies\UserPolicy;
+use App\Support\Import\ImportRegistry;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Logout;
@@ -33,7 +38,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // The bulk-import registry: one line per importer, and adding one needs no new
+        // controller, routes or views (see App\Support\Import\ImportDefinition).
+        $this->app->singleton(ImportRegistry::class, function ($app) {
+            $registry = new ImportRegistry($app);
+
+            $registry->register('questions', QuestionImport::class);
+            $registry->register('users', UserImport::class);
+            $registry->register('courses', CourseImport::class);
+            $registry->register('grades', GradeImport::class);
+
+            return $registry;
+        });
     }
 
     /**
