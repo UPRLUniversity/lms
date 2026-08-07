@@ -72,12 +72,6 @@ class SpreadsheetReader
         return $rows->values();
     }
 
-    /** Whether the reader truncated the file at MAX_ROWS. */
-    public function wasTruncated(string $path): bool
-    {
-        return count($this->toArray($path)) > self::MAX_ROWS + 1;
-    }
-
     /**
      * The template body for a definition — header plus its sample rows, as CSV. CSV
      * rather than xlsx deliberately: it opens in Excel, Sheets, Numbers and a text

@@ -1586,6 +1586,7 @@ students' contact lists. `members()` now includes the owner.
 secure, which flipped `SecurityHeaders` into sending HSTS and failed the "HSTS is not sent
 over plain http" assertion — a red suite with nothing wrong with the code. Verified as
 pre-existing on clean `main` before pinning.
+
 ## Section 17 — Bulk imports (2026-08-07)
 
 Four importers were asked for — questions, people, courses, marks. Writing four

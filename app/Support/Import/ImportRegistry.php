@@ -35,20 +35,4 @@ class ImportRegistry
 
         return $this->container->make($this->definitions[$key]);
     }
-
-    /**
-     * @return array<int, ImportDefinition>
-     */
-    public function all(): array
-    {
-        return array_map(fn (string $class) => $this->container->make($class), array_values($this->definitions));
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public function keys(): array
-    {
-        return array_keys($this->definitions);
-    }
 }
