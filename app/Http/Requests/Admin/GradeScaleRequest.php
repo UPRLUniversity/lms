@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\GradeDisplayMode;
+use App\Models\GradeScale;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
 
@@ -18,7 +19,7 @@ class GradeScaleRequest extends FormRequest
     {
         $scale = $this->route('gradeScale');
 
-        return $scale ? Gate::allows('update', $scale) : Gate::allows('create', \App\Models\GradeScale::class);
+        return $scale ? Gate::allows('update', $scale) : Gate::allows('create', GradeScale::class);
     }
 
     /**
@@ -37,6 +38,10 @@ class GradeScaleRequest extends FormRequest
             'bands' => ['required', 'array', 'min:2', 'max:15'],
             'bands.*.label' => ['required', 'string', 'max:50'],
             'bands.*.grade_point' => ['required', 'numeric', 'min:0', 'max:100'],
+            // Required, not nullable: a band must state whether it passes. The editor
+            // always posts it (hidden field alongside the toggle), so an absent value
+            // means a hand-rolled request, which should be refused rather than defaulted.
+            'bands.*.is_pass' => ['required', 'boolean'],
             'bands.*.min_percent' => ['required', 'integer', 'min:0', 'max:100'],
             'bands.*.max_percent' => ['required', 'integer', 'min:0', 'max:100'],
             'bands.*.color' => ['nullable', 'in:success,gold,crimson,ink,neutral'],

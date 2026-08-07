@@ -2,6 +2,7 @@
 
 namespace App\Support\Grades;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -10,11 +11,15 @@ use Illuminate\Validation\ValidationException;
  * gate — nothing else may write bands). Named after the flawed example scale from the
  * team discussion that violated all three: contiguous 0–100 coverage, strictly
  * decreasing grade points from the top band down, and nothing above the scale limit.
+ *
+ * Section 18 adds the pass invariants: a scale must be able to express BOTH outcomes, and
+ * passing bands must sit at the top, so "pass mark: 40%" is always a true statement about
+ * the scale rather than a label over an interleaved mess.
  */
 class GradeBandValidator
 {
     /**
-     * @param  array<int, array{label: string, grade_point: float|int|string, min_percent: int|string, max_percent: int|string}>  $bands
+     * @param  array<int, array{label: string, grade_point: float|int|string, is_pass?: bool|int|string, min_percent: int|string, max_percent: int|string}>  $bands
      */
     public static function validate(array $bands, float $scaleLimit): void
     {
@@ -24,9 +29,13 @@ class GradeBandValidator
             ]);
         }
 
+        // A band that doesn't state `is_pass` is not treated as a pass — and the
+        // at-least-one-passing-band rule below turns that into a loud error rather than a
+        // scale that quietly passes nobody.
         $rows = collect($bands)->map(fn (array $b) => [
             'label' => trim((string) $b['label']),
             'grade_point' => (float) $b['grade_point'],
+            'is_pass' => filter_var($b['is_pass'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'min_percent' => (int) $b['min_percent'],
             'max_percent' => (int) $b['max_percent'],
         ])->values();
@@ -94,6 +103,46 @@ class GradeBandValidator
             if ($row['grade_point'] > $scaleLimit) {
                 throw ValidationException::withMessages([
                     'bands' => "“{$row['label']}”'s grade point ({$row['grade_point']}) exceeds the scale limit ({$scaleLimit}).",
+                ]);
+            }
+        }
+
+        self::validatePassOutcomes($sorted);
+    }
+
+    /**
+     * A scale must be able to express both outcomes, and passing must be the TOP of the
+     * scale. Without the second rule "pass mark: 40%" stops being true the moment somebody
+     * marks a middle band as a fail, and every screen quoting it would be lying.
+     *
+     * @param  Collection<int, array{label: string, is_pass: bool}>  $sorted  ascending by min_percent
+     */
+    private static function validatePassOutcomes(Collection $sorted): void
+    {
+        if (! $sorted->contains(fn (array $r) => $r['is_pass'])) {
+            throw ValidationException::withMessages([
+                'bands' => 'Mark at least one band as a pass — otherwise no student on this scale could ever pass.',
+            ]);
+        }
+
+        if (! $sorted->contains(fn (array $r) => ! $r['is_pass'])) {
+            throw ValidationException::withMessages([
+                'bands' => 'Mark at least one band as a fail — otherwise no student on this scale could ever fail.',
+            ]);
+        }
+
+        // Walking bottom → top, once a band passes every band above it must pass too.
+        $seenPass = false;
+        foreach ($sorted as $row) {
+            if ($row['is_pass']) {
+                $seenPass = true;
+
+                continue;
+            }
+
+            if ($seenPass) {
+                throw ValidationException::withMessages([
+                    'bands' => "“{$row['label']}” is marked as a fail but a lower band passes. Passing bands must be the top of the scale.",
                 ]);
             }
         }

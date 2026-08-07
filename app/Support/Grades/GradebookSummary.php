@@ -52,6 +52,21 @@ class GradebookSummary
         return $this->band !== null ? (float) $this->band->grade_point : null;
     }
 
+    /**
+     * The pass verdict of the band this result currently falls in, or null when nothing is
+     * graded yet. While `provisional` is true this is "where they stand", not a settled
+     * outcome — every screen showing it also shows the Provisional chip.
+     */
+    public function isPass(): ?bool
+    {
+        return $this->band?->is_pass;
+    }
+
+    public function outcomeLabel(): ?string
+    {
+        return $this->band?->outcomeLabel();
+    }
+
     public function formatted(): ?string
     {
         return $this->percent === null ? null : $this->scale->formatResult($this->percent, $this->band);

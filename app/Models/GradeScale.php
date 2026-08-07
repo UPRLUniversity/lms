@@ -95,6 +95,18 @@ class GradeScale extends Model
     }
 
     /**
+     * The lowest percentage that still passes — the scale's pass mark, derived from the
+     * lowest passing band rather than stored, so it can never contradict the bands.
+     * Null only for a scale with no passing band, which GradeBandValidator refuses.
+     */
+    public function passMark(): ?int
+    {
+        $bands = $this->relationLoaded('bands') ? $this->bands : $this->bands()->get();
+
+        return $bands->where('is_pass', true)->min('min_percent');
+    }
+
+    /**
      * The whole scale, frozen for a completion snapshot: never re-derived from the live
      * scale afterwards, so editing bands later can't rewrite a recorded grade.
      *
