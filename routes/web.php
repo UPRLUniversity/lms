@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FacultyController;
 use App\Http\Controllers\Admin\ForumReportController;
 use App\Http\Controllers\Admin\GradeScaleController;
+use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\PaymentMethodController;
@@ -356,6 +357,37 @@ Route::middleware(['auth', 'verified', 'permission:users.view'])
         Route::post('invitations/{invitation}/resend', [InvitationController::class, 'resend'])->name('invitations.resend');
         Route::delete('invitations/{invitation}', [InvitationController::class, 'destroy'])->name('invitations.destroy');
     });
+
+/*
+|--------------------------------------------------------------------------
+| Bulk imports (Section 17)
+|--------------------------------------------------------------------------
+| ONE set of routes for every importer. {import} selects the definition from the
+| registry (App\Support\Import\ImportRegistry); the optional {scopeId} is the course a
+| question bank belongs to, or the assignment a marks sheet is for. Authorization is
+| the definition's own — an instructor reaches their course's question import, only an
+| admin reaches the people import — so no permission middleware here would be right for
+| all four. `auth` + `verified` is the floor; ImportController::resolve does the rest.
+|
+| Adding an importer is one line in AppServiceProvider and a definition class. Nothing
+| here changes.
+*/
+Route::middleware(['auth', 'verified'])
+    ->prefix('admin/imports')
+    ->name('admin.imports.')
+    ->group(function () {
+        // Literal segment FIRST, optional scope last. An optional parameter in the
+        // middle of a URI ({import}/{scopeId?}/template) leaves a double slash when the
+        // scope is absent, so the verb is what distinguishes these, not position.
+        Route::get('{import}/template/{scopeId?}', [ImportController::class, 'template'])->name('template');
+        Route::post('{import}/preview/{scopeId?}', [ImportController::class, 'preview'])->name('preview');
+        Route::post('{import}/confirm/{scopeId?}', [ImportController::class, 'store'])->name('store');
+
+        // Declared last so "questions/template" can never be read as scope "template".
+        Route::get('{import}/{scopeId?}', [ImportController::class, 'create'])->name('create');
+    })
+    ->whereIn('import', ['questions', 'users', 'courses', 'grades'])
+    ->whereNumber('scopeId');
 
 /*
 |--------------------------------------------------------------------------
