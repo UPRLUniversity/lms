@@ -106,6 +106,17 @@
                             <td class="px-5 py-3">
                                 @can('update', $person)
                                     <div class="flex items-center justify-end gap-2">
+                                        {{-- Opens (or reuses) the direct thread with this person. Not
+                                             shown against your own row: you can't message yourself. --}}
+                                        @if ($person->isNot(auth()->user()) && auth()->user()->can('useMessaging'))
+                                            <form method="POST" action="{{ route('messages.start', $person) }}">
+                                                @csrf
+                                                <x-ui.button size="sm" variant="ghost" type="submit">
+                                                    <x-ui.icon name="chat" class="h-4 w-4" /> Message
+                                                </x-ui.button>
+                                            </form>
+                                        @endif
+
                                         <x-ui.button size="sm" variant="ghost" :href="route('admin.users.edit', $person)">
                                             <x-ui.icon name="pencil" class="h-4 w-4" /> Edit
                                         </x-ui.button>

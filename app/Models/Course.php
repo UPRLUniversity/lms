@@ -300,7 +300,17 @@ class Course extends Model
      */
     public function members(): Collection
     {
+        // The owner counts even when they were never added to the course_instructor
+        // pivot — isTaughtBy, isMember and the forInstructor scope all treat created_by
+        // as teaching this course, and members() disagreeing with them meant an owner
+        // could message their students while never appearing in those students' own
+        // contact lists.
+        $owner = $this->created_by
+            ? User::query()->whereKey($this->created_by)->get()
+            : collect();
+
         return $this->instructors()->get()
+            ->concat($owner)
             ->concat($this->enrolledStudents())
             ->unique('id')
             ->values();

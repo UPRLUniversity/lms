@@ -10,6 +10,7 @@ use App\Models\Conversation;
 use App\Models\Course;
 use App\Models\User;
 use App\Services\Communication\MessagingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -52,7 +53,33 @@ class ConversationController extends Controller
         return view('messages.create', [
             'conversations' => $this->conversationList($user),
             'contacts' => $this->messaging->contactsFor($user),
+            'contactsAreCapped' => $this->messaging->contactsAreCapped($user),
             'canCreateGroup' => $request->user()->can('createGroupConversation'),
+        ]);
+    }
+
+    /**
+     * Type-ahead for the composer's recipient picker. Only reachable people are returned
+     * (MessagingService::searchContacts runs the same rule as canMessage), so this cannot
+     * be used as a user-directory scrape by someone whose reach is their coursemates.
+     */
+    public function contacts(Request $request): JsonResponse
+    {
+        $this->authorizeMessaging($request);
+
+        $request->validate(['q' => ['nullable', 'string', 'max:100']]);
+
+        $matches = $this->messaging->searchContacts(
+            $request->user(),
+            (string) $request->query('q', ''),
+        );
+
+        return response()->json([
+            'results' => $matches->map(fn (User $u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+            ])->values(),
         ]);
     }
 
