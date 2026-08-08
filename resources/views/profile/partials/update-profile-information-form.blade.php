@@ -66,7 +66,7 @@
         <div>
             <x-input-label for="bio" :value="__('Bio')" />
             <textarea id="bio" name="bio" rows="4"
-                      class="mt-1 block w-full rounded-xl border-line bg-card text-ink shadow-sm placeholder:text-ink/40 focus:border-crimson focus:ring-crimson"
+                      class="mt-1 block w-full rounded-xl border-line bg-card text-ink shadow-sm placeholder:text-ink/65 focus:border-crimson focus:ring-crimson"
                       placeholder="{{ __('A short introduction (up to 1000 characters).') }}">{{ old('bio', $user->bio) }}</textarea>
             <x-input-error class="mt-2" :messages="$errors->get('bio')" />
         </div>

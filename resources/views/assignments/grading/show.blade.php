@@ -32,7 +32,7 @@
 
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
-                <a href="{{ route('grading.assignments.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+                <a href="{{ route('grading.assignments.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
                     <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to queue
                 </a>
                 <div class="mt-1 flex flex-wrap items-center gap-3">
@@ -42,13 +42,13 @@
                     @endif
                     <x-ui.badge :variant="$submission->status->badge()">{{ $submission->status->label() }}</x-ui.badge>
                 </div>
-                <p class="mt-1 text-sm text-ink/60">
+                <p class="mt-1 text-sm text-ink/65">
                     {{ $submission->user->name }} · version {{ $submission->version }} of {{ $versionCount }}
                     · submitted {{ $submission->submitted_at->isoFormat('D MMM YYYY, HH:mm') }}
                     · {{ $assignment->course->title }}
                 </p>
             </div>
-            <p class="text-sm text-ink/55">{{ $queueCount }} in queue</p>
+            <p class="text-sm text-ink/65">{{ $queueCount }} in queue</p>
         </div>
 
         @if ($submission->isReturned())
@@ -77,9 +77,9 @@
                                 @php $media = $file['media']; @endphp
                                 <li class="overflow-hidden rounded-xl border border-line">
                                     <div class="flex items-center gap-2.5 bg-surface/40 px-3 py-2.5">
-                                        <x-ui.icon name="document" class="h-4 w-4 shrink-0 text-ink/40" />
+                                        <x-ui.icon name="document" class="h-4 w-4 shrink-0 text-ink/65" />
                                         <span class="min-w-0 flex-1 truncate text-sm font-medium text-ink">{{ $media->original_name }}</span>
-                                        <span class="shrink-0 text-xs text-ink/45">{{ number_format($media->size_bytes / 1024) }} KB</span>
+                                        <span class="shrink-0 text-xs text-ink/65">{{ number_format($media->size_bytes / 1024) }} KB</span>
                                         <a href="{{ route('media.download', $media) }}" class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
                                             <x-ui.icon name="download" class="h-4 w-4" /> Download
                                         </a>
@@ -112,26 +112,26 @@
                         <div class="flex items-center justify-between">
                             <h3 class="font-display text-lg font-semibold text-ink">{{ $hasRubric ? $rubric->name : 'Score' }}</h3>
                             <div class="text-right">
-                                <p class="text-xs text-ink/50">Total</p>
+                                <p class="text-xs text-ink/65">Total</p>
                                 @if ($hasRubric)
                                     <p class="font-display text-xl font-semibold text-crimson">
-                                        <span x-text="fmt(total())"></span><span class="text-sm text-ink/40"> / {{ $fmtPts($assignment->max_points) }}</span>
+                                        <span x-text="fmt(total())"></span><span class="text-sm text-ink/65"> / {{ $fmtPts($assignment->max_points) }}</span>
                                     </p>
                                 @else
-                                    <p class="font-display text-xl font-semibold text-ink/40">/ {{ $fmtPts($assignment->max_points) }}</p>
+                                    <p class="font-display text-xl font-semibold text-ink/65">/ {{ $fmtPts($assignment->max_points) }}</p>
                                 @endif
                             </div>
                         </div>
 
                         @if ($hasRubric)
-                            <p class="mt-1 text-xs text-ink/50">Click one level per criterion — the total is computed for you (and re-checked on the server).</p>
+                            <p class="mt-1 text-xs text-ink/65">Click one level per criterion — the total is computed for you (and re-checked on the server).</p>
 
                             <div class="mt-4 space-y-4">
                                 @foreach ($rubric->criteria as $i => $criterion)
                                     <fieldset>
                                         <legend class="text-sm font-semibold text-ink">{{ $criterion->title }}</legend>
                                         @if ($criterion->description)
-                                            <p class="mt-0.5 text-xs text-ink/55">{{ $criterion->description }}</p>
+                                            <p class="mt-0.5 text-xs text-ink/65">{{ $criterion->description }}</p>
                                         @endif
                                         @php
                                             // Literal class names so Tailwind's scanner sees them.
@@ -152,10 +152,10 @@
                                                     <span class="flex items-center justify-between gap-2">
                                                         <span class="text-sm font-medium text-ink">{{ $level['label'] ?? '' }}</span>
                                                         <span class="shrink-0 text-xs font-semibold"
-                                                              :class="criteria[{{ $i }}].selected === {{ $j }} ? 'text-crimson' : 'text-ink/45'">{{ $fmtPts($level['points'] ?? 0) }} pts</span>
+                                                              :class="criteria[{{ $i }}].selected === {{ $j }} ? 'text-crimson' : 'text-ink/65'">{{ $fmtPts($level['points'] ?? 0) }} pts</span>
                                                     </span>
                                                     @if (! empty($level['description']))
-                                                        <span class="mt-1 text-xs leading-snug text-ink/60">{{ $level['description'] }}</span>
+                                                        <span class="mt-1 text-xs leading-snug text-ink/65">{{ $level['description'] }}</span>
                                                     @endif
                                                 </label>
                                             @endforeach
@@ -170,7 +170,7 @@
                                     <input id="points" name="points" type="number" min="0" max="{{ $assignment->max_points }}" step="0.5"
                                            value="{{ old('points', $grade ? $fmtPts($grade->points_total) : '') }}" @disabled(! $canGrade) required
                                            class="block w-32 rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
-                                    <span class="text-sm text-ink/50">of {{ $fmtPts($assignment->max_points) }}</span>
+                                    <span class="text-sm text-ink/65">of {{ $fmtPts($assignment->max_points) }}</span>
                                 </div>
                             </div>
                         @endif

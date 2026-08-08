@@ -1865,3 +1865,69 @@ be exactly the "while I'm here" the constitution forbids. It wants its own pass.
 
 Everything still failing on those screens is the faded-text pattern above, plus one
 account-menu button in the app layout whose `aria-label` does not match its visible text.
+
+## Section 20 — Contrast floors across the app (2026-08-08)
+
+The follow-up flagged during the Section 18/19 accessibility pass, settled. 667 text
+utilities across 141 view files were below WCAG AA, plus two more instances of the base-gold
+misuse the badge component had.
+
+### The floors are measured, not chosen
+
+Ink text is faded with an opacity, and below a certain step it stops being quiet and becomes
+unreadable. Against BOTH light backgrounds the app uses:
+
+| opacity | on `#FFFFFF` | on `#FAF9F6` | AA (4.5:1) |
+|---|---|---|---|
+| /50 | 3.35 | 3.31 | fail |
+| /55 | 3.93 | 3.84 | fail |
+| /60 | 4.58 | **4.49** | fail — passes on white, fails on the app's own background |
+| **/65** | **5.40** | **5.33** | **PASS** |
+
+`/60` is the interesting one: it passes on pure white and fails on `--uprl-surface`, which
+is the background almost every page actually uses. Testing against white alone would have
+declared it fine.
+
+Same exercise for the other foregrounds: white on crimson needs **`/85`** (4.53:1; `/80` is
+4.13:1); faded crimson never passes below `/90`, so faded crimson text is simply out —
+use the solid colour; `text-gold-ink` needs `bg-gold/10` (4.68:1) rather than `/15` (4.48:1).
+
+### One tier, not a graded scale
+
+Everything below `/65` became `/65` rather than being shifted up proportionally. Opacity
+was carrying visual hierarchy — `/40` for the quietest meta, `/50`, `/60` for secondary —
+and preserving that spread would have meant pushing the darker tiers to `/75` and beyond,
+making "secondary" text nearly as heavy as body copy.
+
+Hierarchy that cannot be read is not hierarchy. It now comes from SIZE (`text-xs` vs
+`text-sm`) and weight, which is a more honest device than a contrast difference a third of
+readers cannot perceive.
+
+### Base gold, again
+
+`x-ui.stat` carried the same `bg-gold/15 text-gold` pairing the badge did, and three icon
+chips used base gold as a foreground. Base gold is 2.1:1 on white — it fails even the 3:1
+bar that non-text elements get. All now `text-gold-ink`.
+
+### A guard, because a sweep does not stay swept
+
+`tests/Unit/Brand/TextContrastTest.php` greps the views and fails on anything below the
+floors. A source-level check rather than a rendered one on purpose: it runs in
+milliseconds, and it catches the mistake when somebody types it rather than after a
+Lighthouse run somebody has to remember to do. Verified by planting a deliberate regression
+and watching it fail.
+
+### Result
+
+Lighthouse accessibility, measured in a real browser:
+
+| Screen | Before | After |
+|---|---|---|
+| Homepage | 96 | **100** |
+| Programme ladder | 96 | **100** |
+| Locked course page | 96 | **100** |
+| Grade-scale editor | 86 | **100** |
+| Student dashboard | — | **100** |
+| Instructor gradebook | — | **100** |
+
+The floors are now recorded in CLAUDE.md so they are a rule rather than a memory.

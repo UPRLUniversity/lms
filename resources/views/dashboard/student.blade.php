@@ -44,12 +44,12 @@
                             </span>
                             <div class="min-w-0 flex-1">
                                 <p class="truncate font-medium text-ink">{{ $course->title }}</p>
-                                <p class="truncate text-xs text-ink/60">{{ $course->code }} · {{ $course->department?->name ?? 'No department' }}</p>
+                                <p class="truncate text-xs text-ink/65">{{ $course->code }} · {{ $course->department?->name ?? 'No department' }}</p>
                                 <div class="mt-1.5 flex items-center gap-2">
                                     <div class="h-1 w-full max-w-[12rem] overflow-hidden rounded-full bg-ink/5">
                                         <div class="h-full rounded-full bg-crimson" style="width: {{ $percent }}%"></div>
                                     </div>
-                                    <span class="text-[11px] font-medium text-ink/50">{{ $percent }}%</span>
+                                    <span class="text-[11px] font-medium text-ink/65">{{ $percent }}%</span>
                                 </div>
                             </div>
                             <x-ui.button size="sm" variant="secondary" :href="route('learn.resume', $course)">Continue</x-ui.button>
@@ -69,13 +69,13 @@
             @forelse ($upcoming as $assignment)
                 @php $due = $assignment->due_at; $soon = $due->diffInDays(now()) <= 3; @endphp
                 <div class="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0 {{ ! $loop->last ? 'border-b border-line' : '' }}">
-                    <span class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {{ $soon ? 'bg-crimson/10 text-crimson' : 'bg-ink/5 text-ink/60' }}">
+                    <span class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg {{ $soon ? 'bg-crimson/10 text-crimson' : 'bg-ink/5 text-ink/65' }}">
                         <x-ui.icon name="clock" class="h-4 w-4" />
                     </span>
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-medium text-ink">{{ $assignment->title }}</p>
-                        <p class="truncate text-xs text-ink/60">{{ $assignment->course?->title }}</p>
-                        <p class="mt-0.5 text-xs {{ $soon ? 'font-medium text-crimson' : 'text-ink/55' }}">
+                        <p class="truncate text-xs text-ink/65">{{ $assignment->course?->title }}</p>
+                        <p class="mt-0.5 text-xs {{ $soon ? 'font-medium text-crimson' : 'text-ink/65' }}">
                             Due {{ $due->diffForHumans() }} · {{ $due->format('j M') }}
                         </p>
                     </div>
@@ -98,7 +98,7 @@
                 <div class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0 {{ ! $loop->last ? 'border-b border-line' : '' }}">
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-medium text-ink">{{ $grade['title'] }}</p>
-                        <p class="truncate text-xs text-ink/60">{{ $grade['course'] }}</p>
+                        <p class="truncate text-xs text-ink/65">{{ $grade['course'] }}</p>
                     </div>
                     <span class="shrink-0 text-sm font-semibold text-ink/80">{{ $grade['percent'] }}%</span>
                     @if ($grade['label'])
@@ -126,12 +126,12 @@
         <div class="p-5">
             @forelse ($certificates as $certificate)
                 <div class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0 {{ ! $loop->last ? 'border-b border-line' : '' }}">
-                    <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-gold-ink">
+                    <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10 text-gold-ink">
                         <x-ui.icon name="certificate" class="h-4 w-4" />
                     </span>
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-medium text-ink">{{ $certificate->course?->title }}</p>
-                        <p class="truncate text-xs text-ink/60">Issued {{ $certificate->issued_at?->format('j M Y') }}</p>
+                        <p class="truncate text-xs text-ink/65">Issued {{ $certificate->issued_at?->format('j M Y') }}</p>
                     </div>
                     <x-ui.button size="sm" variant="ghost" :href="route('certificates.download', $certificate)">View</x-ui.button>
                 </div>

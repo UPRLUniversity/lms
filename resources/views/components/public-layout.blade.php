@@ -115,7 +115,7 @@
                     </nav>
                 </div>
 
-                <p class="mt-8 border-t border-line pt-6 text-center text-xs text-ink/50">
+                <p class="mt-8 border-t border-line pt-6 text-center text-xs text-ink/65">
                     &copy; {{ date('Y') }} {{ config('brand.university') }}. {{ __('common.all_rights_reserved') }}
                 </p>
             </div>

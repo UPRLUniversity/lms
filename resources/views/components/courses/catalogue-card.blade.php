@@ -68,7 +68,7 @@
                     <span class="inline-flex items-center gap-1 rounded-lg bg-crimson/8 px-2 py-0.5 text-[11px] font-medium text-crimson">
                         {{ $placement->programme->code }} · {{ $placement->name }}
                         @if ($placement->pivot->credit_load)
-                            <span class="text-crimson/60">{{ $placement->pivot->credit_load }}cr</span>
+                            <span class="text-crimson">{{ $placement->pivot->credit_load }}cr</span>
                         @endif
                     </span>
                 @endforeach
@@ -76,7 +76,7 @@
         @endif
 
         @if ($course->department)
-            <p class="mt-3 text-xs text-ink/50">{{ $course->department->name }}</p>
+            <p class="mt-3 text-xs text-ink/65">{{ $course->department->name }}</p>
         @endif
 
         <div class="mt-auto flex items-center justify-between gap-3 pt-4">
@@ -89,7 +89,7 @@
                 <span></span>
             @endif
 
-            <div class="flex items-center gap-3 text-xs text-ink/50">
+            <div class="flex items-center gap-3 text-xs text-ink/65">
                 <span class="inline-flex items-center gap-1">
                     <x-ui.icon name="book" class="h-4 w-4" />
                     {{ $course->lessons_count ?? $course->lessons()->count() }}

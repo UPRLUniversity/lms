@@ -48,7 +48,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[820px] text-sm">
                         <thead>
-                            <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/50">
+                            <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/65">
                                 <th scope="col" class="px-5 py-3.5">Course</th>
                                 <th scope="col" class="px-5 py-3.5">Enrolled</th>
                                 <th scope="col" class="px-5 py-3.5 w-48">Progress</th>
@@ -81,7 +81,7 @@
                                             </span>
                                             <div class="min-w-0">
                                                 <p class="truncate font-medium text-ink">{{ $course->title }}</p>
-                                                <p class="truncate text-xs text-ink/50">{{ $course->code }}</p>
+                                                <p class="truncate text-xs text-ink/65">{{ $course->code }}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -91,7 +91,7 @@
                                             <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-ink/5">
                                                 <div class="h-full rounded-full {{ $percent >= 100 ? 'bg-success' : 'bg-crimson' }}" style="width: {{ $percent }}%"></div>
                                             </div>
-                                            <span class="w-9 text-right text-xs font-medium text-ink/60">{{ $percent }}%</span>
+                                            <span class="w-9 text-right text-xs font-medium text-ink/65">{{ $percent }}%</span>
                                         </div>
                                     </td>
                                     <td class="px-5 py-4 text-ink/70">{{ $fmtTime($seconds) }}</td>
@@ -104,14 +104,14 @@
                                         @elseif ($withdrawn)
                                             <x-ui.badge variant="crimson">Withdrawn</x-ui.badge>
                                         @else
-                                            <span class="text-ink/40">In progress</span>
+                                            <span class="text-ink/65">In progress</span>
                                         @endif
                                     </td>
                                     {{-- Section 5: pre/post knowledge-gain per module. --}}
                                     <td class="px-5 py-4">
                                         @php $gains = $gainsByCourse[$course->id] ?? collect(); @endphp
                                         @if ($gains->isEmpty())
-                                            <span class="text-ink/30">—</span>
+                                            <span class="text-ink/65">—</span>
                                         @else
                                             <div class="space-y-1">
                                                 @foreach ($gains as $gain)
@@ -128,7 +128,7 @@
                                     <td class="px-5 py-4">
                                         @php $gradedAssignments = $assignmentsByCourse[$course->id] ?? collect(); @endphp
                                         @if ($gradedAssignments->isEmpty())
-                                            <span class="text-ink/30">—</span>
+                                            <span class="text-ink/65">—</span>
                                         @else
                                             <div class="space-y-1">
                                                 @foreach ($gradedAssignments as $graded)
@@ -154,14 +154,14 @@
                                                 {{ $record->formatResult() }}
                                             </span>
                                         @else
-                                            <span class="text-ink/30">—</span>
+                                            <span class="text-ink/65">—</span>
                                         @endif
                                     </td>
                                     {{-- Section 7: the issued certificate, if any. --}}
                                     <td class="px-5 py-4">
                                         @php $certificate = $certificateByCourse[$course->id] ?? null; @endphp
                                         @if (! $certificate)
-                                            <span class="text-ink/30">—</span>
+                                            <span class="text-ink/65">—</span>
                                         @elseif ($certificate->isRevoked())
                                             <x-ui.badge variant="crimson">Revoked</x-ui.badge>
                                         @elseif ($certificate->isReady())
@@ -170,7 +170,7 @@
                                                 <x-ui.icon name="download" class="h-3 w-3" /> {{ $certificate->serial }}
                                             </a>
                                         @else
-                                            <span class="inline-flex items-center gap-1 text-xs text-ink/40">
+                                            <span class="inline-flex items-center gap-1 text-xs text-ink/65">
                                                 <x-ui.icon name="clock" class="h-3 w-3" /> Preparing…
                                             </span>
                                         @endif

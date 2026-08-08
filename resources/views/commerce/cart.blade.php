@@ -12,7 +12,7 @@
     <div class="mx-auto max-w-7xl px-6 py-10 lg:px-8">
 
         <nav class="mb-6 text-sm">
-            <a href="{{ route('catalogue.index') }}" class="inline-flex items-center gap-1.5 text-ink/60 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('catalogue.index') }}" class="inline-flex items-center gap-1.5 text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Keep browsing
             </a>
         </nav>
@@ -68,7 +68,7 @@
                                            class="font-display font-semibold leading-snug text-ink hover:text-crimson focus-ring rounded">
                                             {{ $course->title }}
                                         </a>
-                                        <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/55">
+                                        <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/65">
                                             <span>{{ $course->level->label() }}</span>
                                             @foreach ($course->programmeParts as $part)
                                                 <span aria-hidden="true">·</span>
@@ -92,7 +92,7 @@
                                             @if ($item)
                                                 <form method="POST" action="{{ route('cart.destroy', $item) }}">
                                                     @csrf @method('DELETE')
-                                                    <button type="submit" class="rounded text-xs font-medium text-ink/50 hover:text-crimson focus-ring">
+                                                    <button type="submit" class="rounded text-xs font-medium text-ink/65 hover:text-crimson focus-ring">
                                                         Remove
                                                     </button>
                                                 </form>
@@ -115,7 +115,7 @@
                                     <x-ui.icon name="academic-cap" class="h-4 w-4 text-gold-ink" />
                                     One-off programme fees
                                 </h2>
-                                <p class="mt-1 text-xs text-ink/60">
+                                <p class="mt-1 text-xs text-ink/65">
                                     Charged once when you join a programme — never again on later papers.
                                 </p>
                                 <ul class="mt-3 space-y-1.5">
@@ -134,7 +134,7 @@
                         <form method="POST" action="{{ route('cart.clear') }}" x-data
                               @submit.prevent="if (await window.uprlConfirm({ title: 'Empty your cart?', confirmText: 'Yes, empty it', danger: true })) $el.submit()">
                             @csrf @method('DELETE')
-                            <button type="submit" class="rounded text-xs text-ink/45 hover:text-crimson focus-ring">Empty cart</button>
+                            <button type="submit" class="rounded text-xs text-ink/65 hover:text-crimson focus-ring">Empty cart</button>
                         </form>
                     </div>
                 </div>
@@ -148,7 +148,7 @@
 
                             <dl class="mt-4 space-y-2.5 text-sm">
                                 <div class="flex items-baseline justify-between gap-3">
-                                    <dt class="text-ink/60">Subtotal</dt>
+                                    <dt class="text-ink/65">Subtotal</dt>
                                     <dd class="font-medium text-ink">{{ $totals->formattedSubtotal() }}</dd>
                                 </div>
                                 @if ($totals->hasDiscount())
@@ -172,11 +172,11 @@
                                     <div class="flex items-center justify-between gap-2 rounded-xl bg-success/10 px-3 py-2">
                                         <p class="min-w-0 text-sm">
                                             <span class="font-medium text-success">{{ $totals->coupon->code }}</span>
-                                            <span class="block text-xs text-ink/60">{{ $totals->coupon->describe() }}</span>
+                                            <span class="block text-xs text-ink/65">{{ $totals->coupon->describe() }}</span>
                                         </p>
                                         <form method="POST" action="{{ route('cart.coupon.remove') }}">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="rounded text-xs text-ink/50 hover:text-crimson focus-ring">Remove</button>
+                                            <button type="submit" class="rounded text-xs text-ink/65 hover:text-crimson focus-ring">Remove</button>
                                         </form>
                                     </div>
                                 @else
@@ -205,7 +205,7 @@
                                     <x-ui.button class="w-full" :href="route('login')">
                                         Log in to check out
                                     </x-ui.button>
-                                    <p class="mt-2 text-center text-xs text-ink/60">
+                                    <p class="mt-2 text-center text-xs text-ink/65">
                                         New here?
                                         <a href="{{ route('register') }}" class="text-crimson hover:underline focus-ring rounded">Create an account</a>.
                                         Your cart will be waiting.
@@ -214,7 +214,7 @@
                             </div>
                         </div>
 
-                        <p class="mt-3 px-1 text-center text-xs text-ink/45">
+                        <p class="mt-3 px-1 text-center text-xs text-ink/65">
                             Prices in {{ Money::currency() }}. You will be able to review everything before paying.
                         </p>
                     </div>

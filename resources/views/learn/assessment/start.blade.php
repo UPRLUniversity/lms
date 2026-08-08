@@ -2,7 +2,7 @@
 
 <x-learn-layout :title="$assessment->title">
     <div class="mx-auto min-h-screen max-w-2xl px-4 py-10 sm:py-16">
-        <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-crimson focus-ring rounded">
+        <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to course
         </a>
 
@@ -15,7 +15,7 @@
                     {{-- Placement is derived from where the quiz sits in the curriculum
                          (Section 14), so surfacing it here would tell a student nothing
                          the outline hasn't already shown — and could contradict a title. --}}
-                    <p class="text-xs font-medium uppercase tracking-wide text-ink/50">Quiz</p>
+                    <p class="text-xs font-medium uppercase tracking-wide text-ink/65">Quiz</p>
                     <h1 class="font-display text-2xl font-semibold text-ink">{{ $assessment->title }}</h1>
                 </div>
             </div>
@@ -27,19 +27,19 @@
             {{-- Meta grid --}}
             <dl class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <div class="rounded-xl bg-surface p-3">
-                    <dt class="text-xs text-ink/50">Questions</dt>
+                    <dt class="text-xs text-ink/65">Questions</dt>
                     <dd class="mt-0.5 font-display text-lg font-semibold text-ink">{{ $assessment->questionCount() }}</dd>
                 </div>
                 <div class="rounded-xl bg-surface p-3">
-                    <dt class="text-xs text-ink/50">Time limit</dt>
+                    <dt class="text-xs text-ink/65">Time limit</dt>
                     <dd class="mt-0.5 font-display text-lg font-semibold text-ink">{{ $assessment->isTimed() ? $assessment->time_limit_minutes.' min' : 'None' }}</dd>
                 </div>
                 <div class="rounded-xl bg-surface p-3">
-                    <dt class="text-xs text-ink/50">Pass mark</dt>
+                    <dt class="text-xs text-ink/65">Pass mark</dt>
                     <dd class="mt-0.5 font-display text-lg font-semibold text-ink">{{ $assessment->passing_score }}%</dd>
                 </div>
                 <div class="rounded-xl bg-surface p-3">
-                    <dt class="text-xs text-ink/50">Attempts</dt>
+                    <dt class="text-xs text-ink/65">Attempts</dt>
                     <dd class="mt-0.5 font-display text-lg font-semibold text-ink">
                         {{ $attemptsLeft === null ? 'Unlimited' : $attemptsLeft.' left' }}
                     </dd>
@@ -74,10 +74,10 @@
                         </x-ui.button>
                     </form>
                     @if ($assessment->isTimed())
-                        <p class="mt-2 text-xs text-ink/50">The timer starts as soon as you begin and keeps running if you leave.</p>
+                        <p class="mt-2 text-xs text-ink/65">The timer starts as soon as you begin and keeps running if you leave.</p>
                     @endif
                 @else
-                    <p class="rounded-xl bg-surface p-3 text-sm text-ink/60">
+                    <p class="rounded-xl bg-surface p-3 text-sm text-ink/65">
                         @if ($attemptsLeft !== null && $attemptsLeft <= 0)
                             You've used all your attempts.
                         @else

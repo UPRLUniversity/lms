@@ -28,7 +28,7 @@
             <div class="sm:col-span-2">
                 <label for="q" class="sr-only">Search courses</label>
                 <div class="relative">
-                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/40">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/65">
                         <x-ui.icon name="search" class="h-5 w-5" />
                     </span>
                     <x-ui.input id="q" name="q" type="search" value="{{ $filters['search'] }}"
@@ -56,7 +56,7 @@
                 <select id="part" name="part" x-model="params.part" @change="filter()"
                         aria-controls="catalogue-results"
                         :disabled="params.programme === ''"
-                        class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink/40">
+                        class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson disabled:cursor-not-allowed disabled:bg-surface disabled:text-ink/65">
                     <option value="">All parts</option>
                     @foreach ($programmes as $p)
                         <optgroup label="{{ $p->code }}" x-show="params.programme === @js($p->slug)">
@@ -127,7 +127,7 @@
         </form>
 
         {{-- Loading hint --}}
-        <div class="mt-4 flex items-center gap-2 text-sm text-ink/50" x-show="loading" x-cloak>
+        <div class="mt-4 flex items-center gap-2 text-sm text-ink/65" x-show="loading" x-cloak>
             <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>

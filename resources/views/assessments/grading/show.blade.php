@@ -20,11 +20,11 @@
 
 <x-app-layout :title="'Grade — '.$attempt->assessment->title">
     <div class="mx-auto max-w-3xl">
-        <a href="{{ route('grading.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+        <a href="{{ route('grading.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to queue
         </a>
         <h2 class="mt-2 font-display text-2xl font-semibold text-ink">{{ $attempt->assessment->title }}</h2>
-        <p class="mt-1 text-sm text-ink/60">{{ $attempt->user->name }} · attempt {{ $attempt->attempt_number }}</p>
+        <p class="mt-1 text-sm text-ink/65">{{ $attempt->user->name }} · attempt {{ $attempt->attempt_number }}</p>
 
         @if ($items->isEmpty())
             <div class="mt-6">
@@ -39,22 +39,22 @@
                     @php $answer = $item['answer']; $question = $item['question']; @endphp
                     <x-ui.card>
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold uppercase tracking-wide text-ink/45">{{ $question->type->label() }}</span>
-                            <span class="text-sm text-ink/50">out of {{ rtrim(rtrim(number_format($item['max'], 2), '0'), '.') }} pts</span>
+                            <span class="text-xs font-semibold uppercase tracking-wide text-ink/65">{{ $question->type->label() }}</span>
+                            <span class="text-sm text-ink/65">out of {{ rtrim(rtrim(number_format($item['max'], 2), '0'), '.') }} pts</span>
                         </div>
 
                         <x-ui.prose class="mt-2 text-sm" :html="$question->prompt" />
 
                         @if ($question->essayGuidance())
                             <div class="mt-3 rounded-lg border-l-2 border-gold/40 bg-gold/5 p-3 text-sm">
-                                <p class="text-xs font-medium text-ink/50">Your grading guidance</p>
+                                <p class="text-xs font-medium text-ink/65">Your grading guidance</p>
                                 <p class="mt-1 text-ink/75">{{ $question->essayGuidance() }}</p>
                             </div>
                         @endif
 
                         {{-- Student's answer --}}
                         <div class="mt-4">
-                            <p class="text-xs font-medium text-ink/50">Student's answer</p>
+                            <p class="text-xs font-medium text-ink/65">Student's answer</p>
                             @if ($question->type->isScenario())
                                 @if ($item['objective_hint'])
                                     <p class="mt-1 text-xs text-success">Objective parts auto-scored {{ $item['objective_hint'][0] }} / {{ $item['objective_hint'][1] }} pts.</p>
@@ -63,7 +63,7 @@
                                     @foreach ($question->subQuestions() as $si => $sub)
                                         @php $subQ = $question->makeSubQuestion($sub); $subResp = ($item['response'][$sub['id']] ?? null); @endphp
                                         <div class="rounded-lg border border-line bg-surface/40 p-3 text-sm">
-                                            <p class="font-medium text-ink/70">Part {{ $si + 1 }} <span class="text-ink/40">({{ $subQ->type->shortLabel() }})</span></p>
+                                            <p class="font-medium text-ink/70">Part {{ $si + 1 }} <span class="text-ink/65">({{ $subQ->type->shortLabel() }})</span></p>
                                             <p class="mt-1 whitespace-pre-line text-ink">{{ $renderResponse($subQ, $subResp) ?: '— no answer —' }}</p>
                                         </div>
                                     @endforeach
@@ -82,7 +82,7 @@
                                        class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                             </div>
                             <div>
-                                <label for="feedback_{{ $answer->id }}" class="block text-sm font-medium text-ink">Feedback <span class="font-normal text-ink/40">(optional)</span></label>
+                                <label for="feedback_{{ $answer->id }}" class="block text-sm font-medium text-ink">Feedback <span class="font-normal text-ink/65">(optional)</span></label>
                                 <textarea id="feedback_{{ $answer->id }}" name="grades[{{ $answer->id }}][feedback]" rows="3"
                                           class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson"
                                           placeholder="What was strong, what to improve…"></textarea>

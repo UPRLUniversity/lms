@@ -21,7 +21,7 @@
             @if ($media)
                 <img src="{{ $media->url }}" alt="Current {{ strtolower($definition['label']) }}" class="max-h-full max-w-full object-contain">
             @else
-                <span class="text-[11px] font-medium uppercase tracking-wide text-ink/40">Packaged</span>
+                <span class="text-[11px] font-medium uppercase tracking-wide text-ink/65">Packaged</span>
             @endif
         </div>
 
@@ -42,7 +42,7 @@
                            class="h-4 w-4 rounded border-line text-crimson focus:ring-crimson focus-ring">
                     Remove and fall back to the packaged artwork
                 </label>
-                <p class="text-xs text-ink/50">{{ $media->original_name }}</p>
+                <p class="text-xs text-ink/65">{{ $media->original_name }}</p>
             @endif
         </div>
     </div>

@@ -27,7 +27,7 @@
 
 <div data-curriculum>
     {{-- Whole-course totals --}}
-    <div class="mb-3 flex items-center justify-between px-1 text-sm text-ink/60">
+    <div class="mb-3 flex items-center justify-between px-1 text-sm text-ink/65">
         <span>{{ $course->modules->count() }} {{ Str::plural('module', $course->modules->count()) }} · {{ $courseLessons }} {{ Str::plural('lesson', $courseLessons) }}</span>
         @if ($d = $fmt($courseMinutes))
             <span class="inline-flex items-center gap-1"><x-ui.icon name="clock" class="h-4 w-4" /> {{ $d }} total</span>
@@ -50,12 +50,12 @@
                     {{-- Module header --}}
                     <div class="flex items-center gap-2 border-b border-line bg-surface/40 px-3 py-3">
                         @if ($canManage)
-                            <button type="button" data-drag-module class="cursor-grab rounded-lg p-1.5 text-ink/30 hover:text-ink/60 focus-ring" aria-label="Drag to reorder module" title="Drag to reorder">
+                            <button type="button" data-drag-module class="cursor-grab rounded-lg p-1.5 text-ink/65 hover:text-ink/65 focus-ring" aria-label="Drag to reorder module" title="Drag to reorder">
                                 <x-ui.icon name="arrows-up-down" class="h-4 w-4" />
                             </button>
                         @endif
 
-                        <button type="button" data-action="toggle-module" class="rounded-lg p-1 text-ink/40 hover:text-ink focus-ring" aria-label="Collapse or expand module">
+                        <button type="button" data-action="toggle-module" class="rounded-lg p-1 text-ink/65 hover:text-ink focus-ring" aria-label="Collapse or expand module">
                             <x-ui.icon name="chevron-right" class="h-4 w-4 transition-transform" data-chevron />
                         </button>
 
@@ -66,13 +66,13 @@
                             >{{ $module->title }}</span>
                         </span>
 
-                        <span class="hidden shrink-0 text-xs text-ink/50 sm:inline">
+                        <span class="hidden shrink-0 text-xs text-ink/65 sm:inline">
                             {{ $items->count() }} {{ Str::plural('item', $items->count()) }}@if ($d = $fmt($moduleMinutes)) · {{ $d }} @endif
                         </span>
 
                         @if ($canManage)
                             <button type="button" data-action="delete-module" data-module-id="{{ $module->id }}"
-                                    class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Delete module">
+                                    class="rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Delete module">
                                 <x-ui.icon name="trash" class="h-4 w-4" />
                             </button>
                         @endif
@@ -84,7 +84,7 @@
                          hover like the ones between rows. --}}
                     <div data-module-body class="group/list">
                         @if ($module->description)
-                            <p class="px-4 pt-3 text-sm text-ink/60">{{ $module->description }}</p>
+                            <p class="px-4 pt-3 text-sm text-ink/65">{{ $module->description }}</p>
                         @endif
 
                         {{-- An empty bucket must render an element-EMPTY <ul>: that is the
@@ -103,7 +103,7 @@
                         </ul>
 
                         @if ($items->isEmpty())
-                            <p class="px-4 pb-1 text-sm text-ink/40">
+                            <p class="px-4 pb-1 text-sm text-ink/65">
                                 @if ($canManage)
                                     Nothing in this module yet — drag an item here, or use the + below.
                                 @else
@@ -137,12 +137,12 @@
     @if ($canManage || $courseLevel->isNotEmpty())
         <div class="group/list mt-3 overflow-hidden rounded-xl border border-dashed border-line bg-card">
             <div class="flex items-center gap-2 border-b border-line bg-surface/40 px-3 py-3">
-                <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ink/5 text-ink/50">
+                <span class="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ink/5 text-ink/65">
                     <x-ui.icon name="layers" class="h-4 w-4" />
                 </span>
                 <span class="min-w-0 flex-1">
                     <span class="block font-display font-semibold text-ink">Course level</span>
-                    <span class="block text-xs text-ink/50">Final exams and coursework that sit outside any module — shown at the end of the course.</span>
+                    <span class="block text-xs text-ink/65">Final exams and coursework that sit outside any module — shown at the end of the course.</span>
                 </span>
             </div>
 
@@ -157,7 +157,7 @@
             </ul>
 
             @if ($courseLevel->isEmpty())
-                <p class="px-4 pb-1 text-sm text-ink/40">
+                <p class="px-4 pb-1 text-sm text-ink/65">
                     @if ($canManage)
                         Nothing at course level — drag a quiz or assignment here, or use the + below.
                     @else

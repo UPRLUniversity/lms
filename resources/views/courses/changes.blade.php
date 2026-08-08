@@ -6,19 +6,19 @@
 <x-app-layout :title="'Change history · '.$course->title">
     <div class="mx-auto max-w-3xl space-y-6">
         <div>
-            <a href="{{ route('courses.curriculum', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('courses.curriculum', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to the builder
             </a>
             <div class="mt-3 flex items-center gap-3">
-                <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold/15 text-gold-ink">
+                <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold-ink">
                     <x-ui.icon name="arrow-path" class="h-5 w-5" />
                 </span>
                 <div>
                     <h2 class="font-display text-2xl font-semibold text-ink">Change history</h2>
-                    <p class="text-sm text-ink/60">{{ $course->title }} · {{ $course->code }}</p>
+                    <p class="text-sm text-ink/65">{{ $course->title }} · {{ $course->code }}</p>
                 </div>
             </div>
-            <p class="mt-3 text-sm text-ink/55">
+            <p class="mt-3 text-sm text-ink/65">
                 Every edit made to this course. Changes marked
                 <x-ui.badge variant="gold">Affects students</x-ui.badge>
                 were announced to everyone taking it.
@@ -39,7 +39,7 @@
                     </x-ui.badge>
                 </div>
 
-                <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink/50">
+                <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink/65">
                     @if ($change->author)
                         <span class="inline-flex items-center gap-1.5">
                             <x-ui.avatar :user="$change->author" size="xs" />

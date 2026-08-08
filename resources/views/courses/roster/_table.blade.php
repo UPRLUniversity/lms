@@ -7,11 +7,11 @@
     $canApprove ??= false;
 @endphp
 
-<div class="flex items-center justify-between gap-3 px-1 pb-3 text-sm text-ink/60">
+<div class="flex items-center justify-between gap-3 px-1 pb-3 text-sm text-ink/65">
     <p aria-live="polite">
         {{ $enrollments->total() }} {{ \Illuminate\Support\Str::plural('student', $enrollments->total()) }}
         @if ($search !== '' || $activeStatus !== '')
-            <span class="text-ink/40">· filtered</span>
+            <span class="text-ink/65">· filtered</span>
         @endif
     </p>
 </div>
@@ -27,7 +27,7 @@
     @else
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-                <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/50">
+                <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/65">
                     <tr>
                         <th scope="col" class="px-5 py-3 font-medium">Student</th>
                         <th scope="col" class="px-5 py-3 font-medium">Status</th>
@@ -46,7 +46,7 @@
                                     <x-ui.avatar :user="$enrollment->user" size="sm" />
                                     <div class="min-w-0">
                                         <p class="truncate font-medium text-ink">{{ $enrollment->user->name }}</p>
-                                        <p class="truncate text-xs text-ink/60">{{ $enrollment->user->email }}</p>
+                                        <p class="truncate text-xs text-ink/65">{{ $enrollment->user->email }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -59,8 +59,8 @@
                                     @endif
                                 </x-ui.badge>
                             </td>
-                            <td class="px-5 py-3 text-ink/60">{{ $enrollment->source->label() }}</td>
-                            <td class="px-5 py-3 text-ink/60">{{ $enrollment->enrolled_at?->isoFormat('D MMM YYYY') }}</td>
+                            <td class="px-5 py-3 text-ink/65">{{ $enrollment->source->label() }}</td>
+                            <td class="px-5 py-3 text-ink/65">{{ $enrollment->enrolled_at?->isoFormat('D MMM YYYY') }}</td>
                             <td class="px-5 py-3">
                                 <div class="flex items-center justify-end gap-2">
                                     @if ($canApprove && $enrollment->status === EnrollmentStatus::Pending)

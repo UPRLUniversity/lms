@@ -61,7 +61,7 @@
                  surface, not a marketing page — but the legal pages have to be
                  reachable from inside the app, not only from the public site. --}}
             <footer class="border-t border-line px-4 py-6 sm:px-6 lg:px-8">
-                <div class="flex flex-col items-center justify-between gap-3 text-xs text-ink/50 sm:flex-row">
+                <div class="flex flex-col items-center justify-between gap-3 text-xs text-ink/65 sm:flex-row">
                     <p>&copy; {{ date('Y') }} {{ config('brand.university') }}. {{ __('common.all_rights_reserved') }}</p>
 
                     <nav class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1" aria-label="Legal and support">

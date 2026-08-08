@@ -87,7 +87,7 @@
                         </span>
                         <div class="min-w-0">
                             <p class="truncate font-medium text-ink">{{ $file->original_name }}</p>
-                            <p class="text-xs text-ink/50">Audio lesson</p>
+                            <p class="text-xs text-ink/65">Audio lesson</p>
                         </div>
                     </div>
                     <audio controls preload="metadata" class="mt-4 w-full">
@@ -115,7 +115,7 @@
                         </span>
                         <div class="min-w-0">
                             <p class="truncate font-medium text-ink">{{ $file->original_name }}</p>
-                            <p class="text-xs text-ink/50">Downloadable document</p>
+                            <p class="text-xs text-ink/65">Downloadable document</p>
                         </div>
                     </div>
                     <x-ui.button :href="route('media.download', $file)" class="shrink-0">
@@ -136,7 +136,7 @@
                     </span>
                     <div class="min-w-0">
                         <p class="font-medium text-ink">External resource</p>
-                        <p class="mt-0.5 break-all text-sm text-ink/60">{{ $lesson->external_url }}</p>
+                        <p class="mt-0.5 break-all text-sm text-ink/65">{{ $lesson->external_url }}</p>
                     </div>
                 </div>
                 @if ($lesson->external_url)
@@ -145,7 +145,7 @@
                             Open resource <x-ui.icon name="arrow-right" class="h-5 w-5" />
                         </x-ui.button>
                     </div>
-                    <p class="mt-2 text-xs text-ink/50">Opens in a new tab. Return here and mark the lesson complete when you're done.</p>
+                    <p class="mt-2 text-xs text-ink/65">Opens in a new tab. Return here and mark the lesson complete when you're done.</p>
                 @endif
             </div>
             @break
@@ -159,7 +159,7 @@
             </span>
             <div>
                 <p class="font-medium text-ink">Have a question about this lesson?</p>
-                <p class="text-sm text-ink/60">Discuss it with your instructor and coursemates in the forum.</p>
+                <p class="text-sm text-ink/65">Discuss it with your instructor and coursemates in the forum.</p>
             </div>
         </div>
         <div class="flex shrink-0 gap-2">
@@ -175,15 +175,15 @@
     {{-- Lesson resources --}}
     @if ($resources->isNotEmpty())
         <section class="mt-8" aria-labelledby="resources-heading">
-            <h3 id="resources-heading" class="font-display text-sm font-semibold uppercase tracking-wide text-ink/60">Resources</h3>
+            <h3 id="resources-heading" class="font-display text-sm font-semibold uppercase tracking-wide text-ink/65">Resources</h3>
             <ul class="mt-3 space-y-2">
                 @foreach ($resources as $resource)
                     <li>
                         <a href="{{ route('media.download', $resource) }}"
                            class="group flex items-center gap-3 rounded-xl border border-line bg-card px-4 py-3 text-sm shadow-sm transition hover:border-crimson/40 hover:bg-surface focus-ring">
-                            <x-ui.icon name="document" class="h-5 w-5 shrink-0 text-ink/40 group-hover:text-crimson" />
+                            <x-ui.icon name="document" class="h-5 w-5 shrink-0 text-ink/65 group-hover:text-crimson" />
                             <span class="min-w-0 flex-1 truncate font-medium text-ink">{{ $resource->original_name }}</span>
-                            <x-ui.icon name="download" class="h-4 w-4 shrink-0 text-ink/40 group-hover:text-crimson" />
+                            <x-ui.icon name="download" class="h-4 w-4 shrink-0 text-ink/65 group-hover:text-crimson" />
                         </a>
                     </li>
                 @endforeach

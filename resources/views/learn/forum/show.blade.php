@@ -7,7 +7,7 @@
 
 <x-app-layout :title="$thread->title.' · '.$course->title">
     <div class="mx-auto max-w-3xl space-y-6">
-        <a href="{{ route('forum.index', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-crimson focus-ring rounded">
+        <a href="{{ route('forum.index', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to forum
         </a>
 
@@ -37,7 +37,7 @@
                     @if ($threadAuthorIsInstructor)
                         <x-ui.badge variant="gold" class="ml-1"><x-ui.icon name="academic-cap" class="h-3 w-3" /> Instructor</x-ui.badge>
                     @endif
-                    <span class="text-ink/45">· {{ $thread->created_at->diffForHumans() }}</span>
+                    <span class="text-ink/65">· {{ $thread->created_at->diffForHumans() }}</span>
                 </div>
             </div>
 
@@ -89,7 +89,7 @@
             @forelse ($thread->posts as $post)
                 @include('learn.forum._post', ['post' => $post, 'isReply' => false])
             @empty
-                <p class="rounded-2xl border border-dashed border-line bg-card px-5 py-8 text-center text-sm text-ink/55">
+                <p class="rounded-2xl border border-dashed border-line bg-card px-5 py-8 text-center text-sm text-ink/65">
                     No replies yet. @if ($canReply) Be the first to respond. @endif
                 </p>
             @endforelse
@@ -109,7 +109,7 @@
                 </form>
             </section>
         @elseif ($thread->isLocked())
-            <div class="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-line bg-surface px-5 py-6 text-sm text-ink/55">
+            <div class="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-line bg-surface px-5 py-6 text-sm text-ink/65">
                 <x-ui.icon name="lock" class="h-4 w-4" /> This thread is locked — no new replies.
             </div>
         @endif

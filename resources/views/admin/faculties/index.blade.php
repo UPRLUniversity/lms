@@ -40,9 +40,9 @@
                             <div class="min-w-0">
                                 <h3 class="font-display text-lg font-semibold text-ink">{{ $faculty->name }}</h3>
                                 @if ($faculty->description)
-                                    <p class="mt-0.5 text-sm text-ink/60">{{ $faculty->description }}</p>
+                                    <p class="mt-0.5 text-sm text-ink/65">{{ $faculty->description }}</p>
                                 @endif
-                                <p class="mt-1 text-xs text-ink/50">
+                                <p class="mt-1 text-xs text-ink/65">
                                     {{ $faculty->departments_count }} {{ Str::plural('department', $faculty->departments_count) }} ·
                                     {{ $faculty->courses_count }} {{ Str::plural('course', $faculty->courses_count) }}
                                 </p>
@@ -69,7 +69,7 @@
                                         <div class="min-w-0">
                                             <p class="truncate font-medium text-ink">{{ $department->name }}</p>
                                             @if ($department->description)
-                                                <p class="truncate text-xs text-ink/50">{{ $department->description }}</p>
+                                                <p class="truncate text-xs text-ink/65">{{ $department->description }}</p>
                                             @endif
                                         </div>
                                         @if ($canManage)
@@ -87,7 +87,7 @@
                                 @endforeach
                             </ul>
                         @else
-                            <p class="border-t border-line px-5 py-3 text-sm text-ink/40">No departments yet.</p>
+                            <p class="border-t border-line px-5 py-3 text-sm text-ink/65">No departments yet.</p>
                         @endif
                     </x-ui.card>
                 @endforeach

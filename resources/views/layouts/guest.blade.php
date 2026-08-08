@@ -42,12 +42,12 @@
                     <h2 class="font-display text-3xl font-semibold leading-tight text-white">
                         {{ config('brand.university') }}
                     </h2>
-                    <p class="mt-4 text-lg text-white/80">
+                    <p class="mt-4 text-lg text-white/85">
                         {{ config('brand.motto') }}
                     </p>
                 </div>
 
-                <p class="relative text-sm text-white/60">
+                <p class="relative text-sm text-white/85">
                     &copy; {{ date('Y') }} {{ config('brand.short') }}. A place to learn, grow and lead.
                 </p>
             </aside>

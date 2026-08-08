@@ -3,7 +3,7 @@
         {{-- Header --}}
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <a href="{{ route('reports.index') }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line text-ink/60 hover:bg-surface" aria-label="Back to report centre">
+                <a href="{{ route('reports.index') }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line text-ink/65 hover:bg-surface" aria-label="Back to report centre">
                     <x-ui.icon name="chevron-left" class="h-5 w-5" />
                 </a>
                 <div>
@@ -23,7 +23,7 @@
                         <x-ui.icon name="search" class="h-4 w-4" /> Run report
                     </x-ui.button>
                     @if ($applied)
-                        <a href="{{ route('reports.show', $report->key()) }}" class="text-sm text-ink/60 hover:text-crimson">Reset</a>
+                        <a href="{{ route('reports.show', $report->key()) }}" class="text-sm text-ink/65 hover:text-crimson">Reset</a>
                     @endif
                 </div>
             </form>
@@ -45,14 +45,14 @@
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div>
                             <h3 class="font-display text-lg font-semibold text-ink">Preview</h3>
-                            <p class="text-sm text-ink/60">{{ number_format($results->total()) }} {{ \Illuminate\Support\Str::plural('row', $results->total()) }} matched</p>
+                            <p class="text-sm text-ink/65">{{ number_format($results->total()) }} {{ \Illuminate\Support\Str::plural('row', $results->total()) }} matched</p>
                         </div>
 
                         {{-- Exports: one POST carrying the current filters; the clicked button picks the format --}}
                         <form method="POST" action="{{ route('reports.export', $report->key()) }}" class="flex flex-wrap items-center gap-2">
                             @csrf
                             @include('reports.partials.hidden-filters', ['filters' => $filters])
-                            <span class="text-sm text-ink/60">Export:</span>
+                            <span class="text-sm text-ink/65">Export:</span>
                             <x-ui.button type="submit" name="format" value="xlsx" size="sm" variant="secondary"><x-ui.icon name="download" class="h-4 w-4" /> Excel</x-ui.button>
                             <x-ui.button type="submit" name="format" value="csv" size="sm" variant="secondary"><x-ui.icon name="download" class="h-4 w-4" /> CSV</x-ui.button>
                             <x-ui.button type="submit" name="format" value="pdf" size="sm" variant="secondary"><x-ui.icon name="download" class="h-4 w-4" /> PDF</x-ui.button>

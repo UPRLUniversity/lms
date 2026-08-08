@@ -10,7 +10,7 @@
             </span>
             <div>
                 <h2 class="font-display text-2xl font-semibold text-ink">Reported posts</h2>
-                <p class="text-sm text-ink/60">{{ $openCount }} open {{ \Illuminate\Support\Str::plural('report', $openCount) }} awaiting review.</p>
+                <p class="text-sm text-ink/65">{{ $openCount }} open {{ \Illuminate\Support\Str::plural('report', $openCount) }} awaiting review.</p>
             </div>
         </div>
 
@@ -20,7 +20,7 @@
                 <article class="rounded-2xl border border-line bg-card p-5 shadow-sm">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div class="min-w-0">
-                            <p class="text-xs text-ink/55">
+                            <p class="text-xs text-ink/65">
                                 Reported by <span class="font-medium text-ink">{{ $report->reporter?->name ?? 'A member' }}</span>
                                 · {{ $report->created_at->diffForHumans() }}
                                 @if ($post?->thread?->course)
@@ -35,10 +35,10 @@
 
                     <div class="mt-3 rounded-xl border border-line bg-surface p-4">
                         @if ($post && ! $post->trashed())
-                            <p class="mb-1 text-xs font-medium text-ink/55">{{ $post->author?->name ?? 'A member' }} wrote:</p>
+                            <p class="mb-1 text-xs font-medium text-ink/65">{{ $post->author?->name ?? 'A member' }} wrote:</p>
                             <x-ui.prose class="text-sm" :html="$post->body" />
                         @else
-                            <p class="text-sm italic text-ink/45">This post has already been removed.</p>
+                            <p class="text-sm italic text-ink/65">This post has already been removed.</p>
                         @endif
                     </div>
 

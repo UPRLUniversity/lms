@@ -6,11 +6,11 @@
 
 {{-- Header --}}
 <div class="flex items-center gap-3 border-b border-line px-4 py-3">
-    <a href="{{ route('messages.index') }}" class="rounded-lg p-1.5 text-ink/50 hover:bg-ink/5 hover:text-ink focus-ring lg:hidden" aria-label="Back to conversations">
+    <a href="{{ route('messages.index') }}" class="rounded-lg p-1.5 text-ink/65 hover:bg-ink/5 hover:text-ink focus-ring lg:hidden" aria-label="Back to conversations">
         <x-ui.icon name="arrow-left" class="h-5 w-5" />
     </a>
     @if ($conversation->isGroup())
-        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold-ink">
+        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold-ink">
             <x-ui.icon name="chat-group" class="h-4 w-4" />
         </span>
     @else
@@ -18,7 +18,7 @@
     @endif
     <div class="min-w-0 flex-1">
         <h2 class="truncate font-display text-base font-semibold text-ink">{{ $conversation->titleFor($me) }}</h2>
-        <p class="truncate text-xs text-ink/55">
+        <p class="truncate text-xs text-ink/65">
             @if ($conversation->isGroup())
                 {{ $conversation->participants->count() }} participants
                 @if ($conversation->course) · {{ $conversation->course->code }} @endif
@@ -43,7 +43,7 @@
             @endunless
             <div @class(['max-w-[75%]', 'text-right' => $mine])>
                 @if ($conversation->isGroup() && ! $mine)
-                    <p class="mb-0.5 text-[11px] font-medium text-ink/55">{{ $message->sender?->name }}</p>
+                    <p class="mb-0.5 text-[11px] font-medium text-ink/65">{{ $message->sender?->name }}</p>
                 @endif
                 <div @class([
                     'inline-block rounded-2xl px-4 py-2.5 text-sm shadow-sm text-left',
@@ -65,11 +65,11 @@
                         </a>
                     @endif
                 </div>
-                <p class="mt-1 text-[11px] text-ink/40">{{ $message->created_at->diffForHumans(short: true) }}</p>
+                <p class="mt-1 text-[11px] text-ink/65">{{ $message->created_at->diffForHumans(short: true) }}</p>
             </div>
         </div>
     @empty
-        <p class="py-10 text-center text-sm text-ink/45">No messages yet — say hello.</p>
+        <p class="py-10 text-center text-sm text-ink/65">No messages yet — say hello.</p>
     @endforelse
 </div>
 
@@ -85,7 +85,7 @@
         @error('attachment') <p class="text-xs text-crimson">{{ $message }}</p> @enderror
 
         <div class="flex items-center justify-between gap-3">
-            <label class="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-ink/60 hover:text-crimson focus-within:text-crimson">
+            <label class="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-ink/65 hover:text-crimson focus-within:text-crimson">
                 <x-ui.icon name="link" class="h-4 w-4" />
                 <span x-text="fileName || 'Attach a file'"></span>
                 <input type="file" name="attachment" class="sr-only"

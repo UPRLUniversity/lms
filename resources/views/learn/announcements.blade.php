@@ -6,7 +6,7 @@
 <x-app-layout :title="'Announcements · '.$course->title">
     <div class="mx-auto max-w-2xl space-y-6">
         <div>
-            <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to course
             </a>
             <div class="mt-3 flex items-center gap-3">
@@ -15,7 +15,7 @@
                 </span>
                 <div>
                     <h2 class="font-display text-2xl font-semibold text-ink">Announcements</h2>
-                    <p class="text-sm text-ink/60">{{ $course->title }} · {{ $course->code }}</p>
+                    <p class="text-sm text-ink/65">{{ $course->title }} · {{ $course->code }}</p>
                 </div>
             </div>
         </div>
@@ -27,14 +27,14 @@
 
                 <div class="flex items-start justify-between gap-4">
                     <h3 class="font-display text-lg font-semibold leading-snug text-ink">{{ $announcement->title }}</h3>
-                    <time class="mt-1 shrink-0 text-xs text-ink/45" datetime="{{ $announcement->created_at->toIso8601String() }}">
+                    <time class="mt-1 shrink-0 text-xs text-ink/65" datetime="{{ $announcement->created_at->toIso8601String() }}">
                         {{ $announcement->created_at->diffForHumans() }}
                     </time>
                 </div>
 
                 <div class="mt-2 flex items-center gap-2">
                     <x-ui.avatar :user="$announcement->author" size="xs" />
-                    <span class="text-xs text-ink/55">{{ $announcement->author?->name ?? 'Instructor' }}</span>
+                    <span class="text-xs text-ink/65">{{ $announcement->author?->name ?? 'Instructor' }}</span>
                 </div>
 
                 <x-ui.prose class="mt-4" :html="$announcement->body" />

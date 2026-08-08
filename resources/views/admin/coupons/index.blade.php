@@ -59,7 +59,7 @@
                                     <p class="mt-1.5 text-sm text-ink/75">{{ $coupon->name }}</p>
                                 @endif
 
-                                <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/55">
+                                <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/65">
                                     <span>
                                         @switch($coupon->scope)
                                             @case(CouponScope::Course)

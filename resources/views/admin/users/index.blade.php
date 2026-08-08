@@ -33,7 +33,7 @@
             <div class="min-w-[16rem] flex-1">
                 <label for="search" class="sr-only">Search by name or email</label>
                 <div class="relative">
-                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/40">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/65">
                         <x-ui.icon name="search" class="h-5 w-5" />
                     </span>
                     <x-ui.input id="search" name="search" type="search" value="{{ $search }}"
@@ -62,7 +62,7 @@
             <x-ui.button type="button" variant="ghost" x-show="isFiltered" x-cloak @click="clearFilters()">Clear</x-ui.button>
 
             {{-- Subtle loading indicator --}}
-            <span x-show="loading" x-cloak class="inline-flex items-center gap-2 text-sm text-ink/50">
+            <span x-show="loading" x-cloak class="inline-flex items-center gap-2 text-sm text-ink/65">
                 <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>

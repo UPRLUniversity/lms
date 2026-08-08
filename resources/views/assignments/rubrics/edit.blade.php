@@ -45,12 +45,12 @@
 
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
-                <a href="{{ route('rubrics.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+                <a href="{{ route('rubrics.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
                     <x-ui.icon name="arrow-left" class="h-4 w-4" /> Rubrics
                 </a>
                 <h2 class="mt-1 font-display text-2xl font-semibold text-ink">{{ $isNew ? 'New rubric' : $rubric->name }}</h2>
                 @if (! $isNew && $rubric->assignments_count > 0)
-                    <p class="mt-1 text-sm text-ink/60">
+                    <p class="mt-1 text-sm text-ink/65">
                         Used by {{ $rubric->assignments_count }} {{ Str::plural('assignment', $rubric->assignments_count) }}.
                         Existing grades keep the breakdown they were scored with.
                     </p>
@@ -58,7 +58,7 @@
             </div>
             {{-- Live point math --}}
             <div class="rounded-xl border border-line bg-card px-4 py-2.5 text-right shadow-sm">
-                <p class="text-xs text-ink/50">Best possible score</p>
+                <p class="text-xs text-ink/65">Best possible score</p>
                 <p class="font-display text-xl font-semibold text-crimson" x-text="fmt(total()) + ' pts'"></p>
             </div>
         </div>
@@ -84,7 +84,7 @@
                 <div class="overflow-hidden rounded-2xl border border-line bg-card shadow-sm">
                     <div class="flex flex-wrap items-start gap-3 border-b border-line bg-surface/40 p-4">
                         <div class="min-w-0 flex-1">
-                            <label class="block text-xs font-medium text-ink/50" :for="`c_${i}_title`">Criterion <span x-text="i + 1"></span></label>
+                            <label class="block text-xs font-medium text-ink/65" :for="`c_${i}_title`">Criterion <span x-text="i + 1"></span></label>
                             <input :id="`c_${i}_title`" x-model="criterion.title" :name="`criteria[${i}][title]`" required maxlength="255"
                                    @disabled(! $canManage)
                                    class="mt-1 block w-full rounded-xl border-line bg-card font-medium text-ink shadow-sm focus:border-crimson focus:ring-crimson"
@@ -95,10 +95,10 @@
                                    placeholder="What this criterion looks at (optional)">
                         </div>
                         <div class="flex items-center gap-2 pt-5">
-                            <span class="text-sm text-ink/50">max <span class="font-semibold text-ink" x-text="fmt(criterionMax(criterion))"></span> pts</span>
+                            <span class="text-sm text-ink/65">max <span class="font-semibold text-ink" x-text="fmt(criterionMax(criterion))"></span> pts</span>
                             @if ($canManage)
                                 <button type="button" @click="removeCriterion(i)" x-show="criteria.length > 1"
-                                        class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove criterion">
+                                        class="rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove criterion">
                                     <x-ui.icon name="trash" class="h-4 w-4" />
                                 </button>
                             @endif
@@ -117,7 +117,7 @@
                                                placeholder="Level label">
                                         @if ($canManage)
                                             <button type="button" @click="removeLevel(criterion, j)" x-show="criterion.levels.length > 2"
-                                                    class="rounded p-1 text-ink/35 hover:text-crimson focus-ring" aria-label="Remove level">
+                                                    class="rounded p-1 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove level">
                                                 <x-ui.icon name="x" class="h-3.5 w-3.5" />
                                             </button>
                                         @endif
@@ -130,14 +130,14 @@
                                         <input x-model.number="level.points" :name="`criteria[${i}][levels][${j}][points]`" type="number" min="0" max="10000" step="0.5" required
                                                @disabled(! $canManage)
                                                class="block w-20 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
-                                        <span class="text-xs text-ink/50">pts</span>
+                                        <span class="text-xs text-ink/65">pts</span>
                                     </div>
                                 </div>
                             </template>
 
                             @if ($canManage)
                                 <button type="button" @click="addLevel(criterion)" x-show="criterion.levels.length < 8"
-                                        class="flex w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-line text-ink/40 transition hover:border-crimson/40 hover:text-crimson focus-ring">
+                                        class="flex w-24 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-line text-ink/65 transition hover:border-crimson/40 hover:text-crimson focus-ring">
                                     <x-ui.icon name="plus" class="h-5 w-5" />
                                     <span class="text-xs font-medium">Level</span>
                                 </button>
@@ -149,7 +149,7 @@
 
             @if ($canManage)
                 <button type="button" @click="addCriterion()" x-show="criteria.length < 20"
-                        class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-line px-4 py-2.5 text-sm font-medium text-ink/60 transition hover:border-crimson/40 hover:text-crimson focus-ring">
+                        class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-line px-4 py-2.5 text-sm font-medium text-ink/65 transition hover:border-crimson/40 hover:text-crimson focus-ring">
                     <x-ui.icon name="plus" class="h-4 w-4" /> Add criterion
                 </button>
 

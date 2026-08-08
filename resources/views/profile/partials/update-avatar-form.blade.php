@@ -31,7 +31,7 @@
                 <form method="POST" action="{{ route('profile.avatar.destroy') }}">
                     @csrf
                     @method('delete')
-                    <button type="submit" class="rounded text-sm text-ink/60 underline hover:text-crimson focus-ring">
+                    <button type="submit" class="rounded text-sm text-ink/65 underline hover:text-crimson focus-ring">
                         {{ __('Remove photo') }}
                     </button>
                 </form>

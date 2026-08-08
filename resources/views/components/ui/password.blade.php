@@ -18,7 +18,7 @@
         x-bind:type="show ? 'text' : 'password'"
         @if ($invalid) aria-invalid="true" @endif
         {{ $attributes->except('class')->merge([
-            'class' => 'block w-full rounded-xl border-line bg-card text-ink shadow-sm pr-11 placeholder:text-ink/40 '
+            'class' => 'block w-full rounded-xl border-line bg-card text-ink shadow-sm pr-11 placeholder:text-ink/65 '
                 .'focus:border-crimson focus:ring-crimson '
                 .($invalid ? 'border-crimson' : ''),
         ]) }}
@@ -29,7 +29,7 @@
         x-on:click="show = ! show"
         x-bind:aria-label="show ? 'Hide password' : 'Show password'"
         x-bind:aria-pressed="show.toString()"
-        class="absolute inset-y-0 right-0 flex items-center rounded-r-xl px-3 text-ink/50 hover:text-ink focus-ring"
+        class="absolute inset-y-0 right-0 flex items-center rounded-r-xl px-3 text-ink/65 hover:text-ink focus-ring"
         tabindex="0"
     >
         <x-ui.icon name="eye" class="h-5 w-5" x-show="! show" />

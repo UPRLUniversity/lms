@@ -30,11 +30,11 @@
     ];
 @endphp
 
-<div class="flex items-center justify-between gap-3 px-1 pb-3 text-sm text-ink/60">
+<div class="flex items-center justify-between gap-3 px-1 pb-3 text-sm text-ink/65">
     <p aria-live="polite">
         {{ $users->total() }} {{ \Illuminate\Support\Str::plural('person', $users->total()) }}
         @if ($search !== '' || $activeRole !== '')
-            <span class="text-ink/40">· filtered</span>
+            <span class="text-ink/65">· filtered</span>
         @endif
     </p>
 </div>
@@ -50,7 +50,7 @@
     @else
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-                <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/50">
+                <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/65">
                     <tr>
                         @foreach (['name', 'status', 'last_login'] as $key)
                             @php $c = $cols[$key]; @endphp
@@ -80,7 +80,7 @@
                                     <x-ui.avatar :user="$person" size="sm" />
                                     <div class="min-w-0">
                                         <p class="truncate font-medium text-ink">{{ $person->name }}</p>
-                                        <p class="truncate text-xs text-ink/60">{{ $person->email }}</p>
+                                        <p class="truncate text-xs text-ink/65">{{ $person->email }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -91,7 +91,7 @@
                                     <x-ui.badge variant="neutral">Deactivated</x-ui.badge>
                                 @endif
                             </td>
-                            <td class="px-5 py-3 text-ink/60">
+                            <td class="px-5 py-3 text-ink/65">
                                 {{ $person->last_login_at?->diffForHumans() ?? 'Never' }}
                             </td>
                             <td class="px-5 py-3">
@@ -99,7 +99,7 @@
                                     @forelse ($person->roles as $role)
                                         <x-ui.role-badge :role="$role->name" />
                                     @empty
-                                        <span class="text-xs text-ink/40">—</span>
+                                        <span class="text-xs text-ink/65">—</span>
                                     @endforelse
                                 </div>
                             </td>

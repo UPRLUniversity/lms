@@ -18,7 +18,7 @@
     <x-ui.card class="flex flex-col justify-between">
         <div class="flex items-center justify-between gap-3">
             <p class="text-sm font-medium text-ink/70">Awaiting grading</p>
-            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ $stats['ungraded'] > 0 ? 'bg-gold/15 text-gold-ink' : 'bg-ink/5 text-ink/50' }}">
+            <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg {{ $stats['ungraded'] > 0 ? 'bg-gold/10 text-gold-ink' : 'bg-ink/5 text-ink/65' }}">
                 <x-ui.icon name="inbox" class="h-5 w-5" />
             </span>
         </div>
@@ -47,7 +47,7 @@
                         <p class="truncate font-medium text-ink">{{ $course->title }}</p>
                         <x-ui.badge :variant="$course->status->badge()">{{ $course->status->label() }}</x-ui.badge>
                     </div>
-                    <p class="mt-0.5 truncate text-xs text-ink/60">
+                    <p class="mt-0.5 truncate text-xs text-ink/65">
                         {{ $course->code }} ·
                         {{ (int) $course->active_count }} active ·
                         {{ (int) $course->completed_count }} completed

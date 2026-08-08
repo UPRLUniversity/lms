@@ -11,7 +11,7 @@
             <h2 class="font-display text-2xl font-semibold text-ink">{{ $definition->title() }}</h2>
             <p class="mt-1 text-ink/70">{{ $definition->intro() }}</p>
             @if ($scope)
-                <p class="mt-2 text-sm text-ink/50">
+                <p class="mt-2 text-sm text-ink/65">
                     For <span class="font-medium text-ink/80">{{ $scope->title ?? $scope->name }}</span>
                 </p>
             @endif
@@ -41,7 +41,7 @@
                     <input id="file" name="file" type="file" accept=".csv,.xlsx,.xls,text/csv" required
                            aria-describedby="file-hint"
                            class="block w-full rounded-xl border border-line bg-card text-sm text-ink shadow-sm file:mr-4 file:border-0 file:bg-crimson file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-white hover:file:bg-crimson-dark focus:border-crimson focus:ring-crimson">
-                    <p id="file-hint" class="mt-1.5 text-xs text-ink/50">
+                    <p id="file-hint" class="mt-1.5 text-xs text-ink/65">
                         .csv or .xlsx, up to 8 MB and {{ number_format(\App\Support\Import\SpreadsheetReader::MAX_ROWS) }} rows.
                         Columns are matched by heading, so their order doesn't matter.
                     </p>
@@ -61,7 +61,7 @@
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
-                    <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/50">
+                    <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/65">
                         <tr>
                             <th scope="col" class="px-5 py-3 font-medium">Column</th>
                             <th scope="col" class="px-5 py-3 font-medium">Required</th>
@@ -73,13 +73,13 @@
                             <tr>
                                 <td class="px-5 py-3 align-top">
                                     <code class="rounded bg-ink/5 px-1.5 py-0.5 text-xs text-ink">{{ $column->key }}</code>
-                                    <span class="mt-1 block text-xs text-ink/50">{{ $column->label }}</span>
+                                    <span class="mt-1 block text-xs text-ink/65">{{ $column->label }}</span>
                                 </td>
                                 <td class="px-5 py-3 align-top">
                                     @if ($column->required)
                                         <x-ui.badge variant="crimson">Required</x-ui.badge>
                                     @else
-                                        <span class="text-xs text-ink/40">Optional</span>
+                                        <span class="text-xs text-ink/65">Optional</span>
                                     @endif
                                 </td>
                                 <td class="px-5 py-3 align-top text-ink/70">{{ $column->hint ?? '—' }}</td>

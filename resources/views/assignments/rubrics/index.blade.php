@@ -5,7 +5,7 @@
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
                 <h2 class="font-display text-2xl font-semibold text-ink">Rubrics</h2>
-                <p class="mt-1 text-sm text-ink/60">Reusable grading grids — attach one to any of your assignments.</p>
+                <p class="mt-1 text-sm text-ink/65">Reusable grading grids — attach one to any of your assignments.</p>
             </div>
             @if ($canCreate)
                 <x-ui.button :href="route('rubrics.create')">
@@ -35,13 +35,13 @@
                                 </span>
                                 <span class="min-w-0 flex-1">
                                     <span class="block truncate font-medium text-ink">{{ $rubric->name }}</span>
-                                    <span class="text-sm text-ink/55">
+                                    <span class="text-sm text-ink/65">
                                         {{ $rubric->criteria->count() }} {{ Str::plural('criterion', $rubric->criteria->count()) }}
                                         · {{ rtrim(rtrim(number_format($rubric->totalPoints(), 2), '0'), '.') }} pts max
                                         · used by {{ $rubric->assignments_count }} {{ Str::plural('assignment', $rubric->assignments_count) }}
                                     </span>
                                 </span>
-                                <x-ui.icon name="chevron-right" class="h-5 w-5 text-ink/30" />
+                                <x-ui.icon name="chevron-right" class="h-5 w-5 text-ink/65" />
                             </a>
                         </li>
                     @endforeach

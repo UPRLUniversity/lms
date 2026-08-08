@@ -14,7 +14,7 @@
                     </span>
                     <div>
                         <h3 class="font-display font-semibold leading-tight text-ink">Post an announcement</h3>
-                        <p class="text-xs text-ink/55">Enrolled students are notified in-app and by email.</p>
+                        <p class="text-xs text-ink/65">Enrolled students are notified in-app and by email.</p>
                     </div>
                 </div>
 
@@ -41,7 +41,7 @@
                         <h4 class="font-display font-semibold leading-snug text-ink">{{ $announcement->title }}</h4>
                         <div class="mt-1.5 flex items-center gap-2">
                             <x-ui.avatar :user="$announcement->author" size="xs" />
-                            <span class="text-xs text-ink/55">
+                            <span class="text-xs text-ink/65">
                                 {{ $announcement->author?->name ?? 'Instructor' }} · {{ $announcement->created_at->diffForHumans() }}
                             </span>
                         </div>
@@ -52,7 +52,7 @@
                               @submit.prevent="if (await window.uprlConfirm({ title: 'Remove this announcement?', text: 'Students keep any notification already sent.', confirmText: 'Yes, remove' })) $el.submit()">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="rounded-lg p-1.5 text-ink/40 hover:bg-crimson/10 hover:text-crimson focus-ring" aria-label="Remove announcement">
+                            <button type="submit" class="rounded-lg p-1.5 text-ink/65 hover:bg-crimson/10 hover:text-crimson focus-ring" aria-label="Remove announcement">
                                 <x-ui.icon name="trash" class="h-4 w-4" />
                             </button>
                         </form>
