@@ -94,10 +94,15 @@
               x-data="{ rule: '{{ old('progression_rule', $programme?->progression_rule?->value ?? 'open') }}' }">
         <legend class="px-1.5 text-sm font-medium text-ink">Progression between parts</legend>
 
+        @php $selectedRule = old('progression_rule', $programme?->progression_rule?->value ?? 'open'); @endphp
+
         <div class="mt-1 space-y-2">
             @foreach (\App\Enums\ProgressionRule::cases() as $rule)
                 <label class="flex items-start gap-3 rounded-xl border border-line bg-card p-3 hover:bg-surface/60 focus-within:ring-2 focus-within:ring-crimson">
+                    {{-- Checked server-side as well as through x-model, so the form still
+                         posts a value with JavaScript off, like the rest of this page. --}}
                     <input type="radio" name="progression_rule" value="{{ $rule->value }}" x-model="rule"
+                           @checked($selectedRule === $rule->value)
                            class="mt-0.5 border-line text-crimson focus:ring-crimson">
                     <span>
                         <span class="block text-sm font-medium text-ink">{{ $rule->label() }}</span>

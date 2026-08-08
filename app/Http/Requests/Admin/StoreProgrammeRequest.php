@@ -48,7 +48,11 @@ class StoreProgrammeRequest extends FormRequest
             'per_paper_fee' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
 
             'is_active' => ['nullable', 'boolean'],
-            'progression_rule' => ['required', 'in:'.implode(',', ProgressionRule::values())],
+            // Nullable, not required: an omitted value means `open`, which is the
+            // migration default and the do-nothing option. Making it required would
+            // break every caller that legitimately does not care, and the only value
+            // it could fall back to is the one it would have chosen anyway.
+            'progression_rule' => ['nullable', 'in:'.implode(',', ProgressionRule::values())],
             'cover' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:'.$cover->maxKb()],
         ];
     }
