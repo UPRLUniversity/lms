@@ -87,7 +87,7 @@
                                         <input type="hidden" name="override_prerequisites" value="0">
                                         <input type="checkbox" name="override_prerequisites" value="1" x-model="override"
                                                class="mt-0.5 rounded border-line text-crimson focus:ring-crimson">
-                                        <span>Enrol anyway <span class="text-ink/60">(records an override against this enrolment)</span></span>
+                                        <span>Enrol anyway <span class="text-ink/70">(records an override against this enrolment)</span></span>
                                     </label>
 
                                     <div x-show="override" x-collapse x-cloak class="mt-3">

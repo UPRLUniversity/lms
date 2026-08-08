@@ -247,7 +247,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
                     <div>
                         <h3 class="font-display font-semibold text-ink">Bands</h3>
-                        <p class="mt-1 text-sm text-ink/60">
+                        <p class="mt-1 text-sm text-ink/70">
                             <template x-if="passMark() !== null">
                                 <span><span class="font-medium text-ink">Pass mark:</span> <span x-text="passMark() + '%'"></span> — the lowest band marked as a pass.</span>
                             </template>
@@ -279,18 +279,22 @@
                                 <tr>
                                     <td class="px-4 py-2.5">
                                         <input x-model="band.label" :name="`bands[${i}][label]`" required maxlength="50"
+                                               :aria-label="`Band ${i + 1} label`"
                                                class="block w-28 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                     </td>
                                     <td class="px-4 py-2.5">
                                         <input x-model.number="band.min_percent" :name="`bands[${i}][min_percent]`" type="number" min="0" max="100" required
+                                               :aria-label="`${band.label || 'Band ' + (i + 1)} minimum percentage`"
                                                class="block w-20 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                     </td>
                                     <td class="px-4 py-2.5">
                                         <input x-model.number="band.max_percent" :name="`bands[${i}][max_percent]`" type="number" min="0" max="100" required
+                                               :aria-label="`${band.label || 'Band ' + (i + 1)} maximum percentage`"
                                                class="block w-20 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                     </td>
                                     <td class="px-4 py-2.5">
                                         <input x-model.number="band.grade_point" :name="`bands[${i}][grade_point]`" type="number" min="0" max="100" step="0.1" required
+                                               :aria-label="`${band.label || 'Band ' + (i + 1)} grade point`"
                                                class="block w-20 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                     </td>
                                     <td class="px-4 py-2.5">
@@ -308,6 +312,7 @@
                                     </td>
                                     <td class="px-4 py-2.5">
                                         <select x-model="band.color" :name="`bands[${i}][color]`"
+                                                :aria-label="`${band.label || 'Band ' + (i + 1)} colour`"
                                                 class="block w-32 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                             @foreach ($colors as $value => $label)
                                                 <option value="{{ $value }}">{{ $label }}</option>
@@ -316,7 +321,8 @@
                                     </td>
                                     <td class="px-4 py-2.5 text-right">
                                         <button type="button" @click="removeBand(i)" x-show="bands.length > 2"
-                                                class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove band">
+                                                class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring"
+                                                :aria-label="`Remove ${band.label || 'band ' + (i + 1)}`">
                                             <x-ui.icon name="trash" class="h-4 w-4" />
                                         </button>
                                     </td>
@@ -332,9 +338,10 @@
                 <h3 class="font-display font-semibold text-ink">Try it</h3>
                 <p class="mt-1 text-xs text-ink/60">Enter a score to see which band it maps to, using the bands above.</p>
                 <div class="mt-3 flex flex-wrap items-center gap-3">
-                    <input type="number" min="0" max="100" x-model.number="tryScore"
+                    <label for="try-score" class="sr-only">Score to test, as a percentage</label>
+                    <input id="try-score" type="number" min="0" max="100" x-model.number="tryScore"
                            class="block w-28 rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
-                    <span class="text-sm text-ink/50">%</span>
+                    <span class="text-sm text-ink/50" aria-hidden="true">%</span>
                     <span class="font-display text-lg font-semibold text-crimson" x-text="previewLine(tryScore)"></span>
                     <template x-if="bandFor(tryScore)">
                         <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"

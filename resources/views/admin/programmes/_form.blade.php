@@ -106,7 +106,7 @@
                            class="mt-0.5 border-line text-crimson focus:ring-crimson">
                     <span>
                         <span class="block text-sm font-medium text-ink">{{ $rule->label() }}</span>
-                        <span class="block text-xs leading-relaxed text-ink/60">{{ $rule->help() }}</span>
+                        <span class="block text-xs leading-relaxed text-ink/70">{{ $rule->help() }}</span>
                     </span>
                 </label>
             @endforeach

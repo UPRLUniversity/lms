@@ -191,7 +191,7 @@
                                     @endif
 
                                     @unless ($state['unlocked'])
-                                        <p class="mt-2 text-xs text-ink/55">
+                                        <p class="mt-2 text-xs text-ink/70">
                                             Finish the earlier parts of this programme to open these papers.
                                         </p>
                                     @endunless

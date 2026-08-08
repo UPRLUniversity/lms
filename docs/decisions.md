@@ -1811,3 +1811,57 @@ on Eloquent collections. Normalised at the boundary.
 **`CourseGradeRecordFactory` produced a fail about one run in nine** — its default percent
 started at 40, which lands in the F band. Every test asserting "this student passed" was
 quietly flaky. Floor raised to 50; a fail is opt-in via `failed()`.
+
+## Accessibility audit — Sections 18/19 screens (2026-08-08)
+
+A Lighthouse pass over the new screens, run in a real browser. Three genuine defects, all
+of them violations of rules this file's own brand system already states.
+
+### Gold badge text was illegible — 2.08:1
+
+`<x-ui.badge variant="gold">` rendered `bg-gold/15 text-gold`: base gold `#C9A227` on a gold
+tint, measuring **2.08:1** against a 4.5:1 requirement. The brand system says this outright
+— "the base gold fails WCAG AA on white, so never use --uprl-gold for text on light" — and
+the shared primitive was doing exactly that.
+
+Fixed at the component: `bg-gold/10 text-gold-ink`, which measures **4.67:1**. Lightening
+the tint as well as darkening the text was necessary; `text-gold-ink` on the old `/15` tint
+still only reached 4.36:1.
+
+This changes every gold badge in the app (Provisional, System default, Required elective,
+In progress). Fixing only the Section 19 call site was not an option — the constitution
+requires going through the shared primitive, so the primitive had to be correct.
+
+### The grade-scale band grid had 31 unlabelled controls
+
+Every row of the band editor — label, min %, max %, grade point, colour — carried no
+accessible name at all, so a screen reader announced six identical unlabelled number
+fields. A static `<label for>` cannot work here: the rows come from `x-for`, so every row
+would reuse one id. Each control now takes an `:aria-label` naming its band ("A minimum
+percentage"), which is unique per row and speaks the way a person reads the grid.
+
+Pre-existing from Section 6.5, fixed because Section 18 extended that exact table and
+leaving half of it labelled would have been worse than either state.
+
+### Faded text below AA
+
+Small text at `text-ink/55` and `/60` measures 3.89:1 and 4.48:1 — both under 4.5:1. The
+eight instances these two sections introduced were raised to `text-ink/70` (≈5.9:1), the
+lightest step that clears AA on white.
+
+**Not fixed, and flagged deliberately:** this is an app-wide pattern — roughly 670 uses of
+`text-ink/30` through `/65` across the views, most of them below AA. Correcting that is a
+design-token decision affecting every screen, and burying it inside a progression PR would
+be exactly the "while I'm here" the constitution forbids. It wants its own pass.
+
+### Scores after
+
+| Screen | Before | After |
+|---|---|---|
+| Grade-scale editor | 86 | **96** |
+| Locked course page | 96 | 96 |
+| Programme ladder | 96 | 96 |
+| Roster + override | 96 | 96 |
+
+Everything still failing on those screens is the faded-text pattern above, plus one
+account-menu button in the app layout whose `aria-label` does not match its visible text.

@@ -83,7 +83,7 @@
                 <div class="h-1.5 overflow-hidden rounded-full bg-ink/10">
                     <div class="h-full rounded-full bg-crimson transition-all" style="width: {{ $pct }}%"></div>
                 </div>
-                <p class="mt-1.5 text-xs text-ink/55">
+                <p class="mt-1.5 text-xs text-ink/70">
                     {{ $verdict->creditsEarned }} of {{ $verdict->creditsRequired }} credits earned
                 </p>
             </div>

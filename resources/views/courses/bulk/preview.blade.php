@@ -88,7 +88,7 @@
                                 <td class="px-5 py-3">
                                     <x-ui.badge :variant="$badge($row['problem'])">{{ Bulk::problemLabel($row['problem']) }}</x-ui.badge>
                                     @if ($row['reason'] ?? null)
-                                        <span class="mt-1 block max-w-md text-xs leading-relaxed text-ink/55">{{ $row['reason'] }}</span>
+                                        <span class="mt-1 block max-w-md text-xs leading-relaxed text-ink/70">{{ $row['reason'] }}</span>
                                     @endif
                                 </td>
                             </tr>

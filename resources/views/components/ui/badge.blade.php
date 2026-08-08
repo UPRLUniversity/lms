@@ -5,11 +5,16 @@
 
 @php
     // Default (tinted) badges — for light surfaces like table cells and lists.
+    //
+    // Gold uses text-gold-ink on a LIGHTER tint, not the base gold. The brand system says
+    // it outright — base gold is not legible as text on a light surface — and a Lighthouse
+    // pass measured the old `bg-gold/15 text-gold` pairing at 2.08:1 against a 4.5:1
+    // requirement. `bg-gold/10 text-gold-ink` measures 4.67:1 and keeps the badge gold.
     $tinted = [
         'neutral' => 'bg-ink/5 text-ink',
         'crimson' => 'bg-crimson/10 text-crimson',
         'success' => 'bg-success/10 text-success',
-        'gold' => 'bg-gold/15 text-gold',
+        'gold' => 'bg-gold/10 text-gold-ink',
         'ink' => 'bg-ink/10 text-ink',
     ];
 
