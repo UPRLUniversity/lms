@@ -29,7 +29,7 @@
                     <x-ui.icon name="mail" class="h-4 w-4 text-gold-ink" />
                     {{ __('Bundle non-urgent emails into a daily digest') }}
                 </span>
-                <span class="mt-1 block text-xs leading-relaxed text-ink/60">
+                <span class="mt-1 block text-xs leading-relaxed text-ink/65">
                     {{ __('Grades, certificates and announcements arrive once a day in a single email. Time-sensitive alerts — approvals, waitlist promotions, due-soon reminders — always send straight away.') }}
                 </span>
             </span>
@@ -37,7 +37,7 @@
 
         {{-- Per-type matrix --}}
         <div class="overflow-hidden rounded-2xl border border-line">
-            <div class="grid grid-cols-[1fr,3.5rem,3.5rem] items-center gap-3 border-b border-line bg-surface/70 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink/45 sm:grid-cols-[1fr,4.5rem,4.5rem]">
+            <div class="grid grid-cols-[1fr,3.5rem,3.5rem] items-center gap-3 border-b border-line bg-surface/70 px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-ink/65 sm:grid-cols-[1fr,4.5rem,4.5rem]">
                 <span>{{ __('What happens') }}</span>
                 <span class="text-center">{{ __('Email') }}</span>
                 <span class="text-center">{{ __('Bell') }}</span>
@@ -45,7 +45,7 @@
 
             @foreach ($grouped as $category => $types)
                 <div class="border-b border-line last:border-0">
-                    <p class="bg-surface/30 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink/35">{{ $category }}</p>
+                    <p class="bg-surface/30 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink/65">{{ $category }}</p>
 
                     @foreach ($types as $type)
                         @php
@@ -62,7 +62,7 @@
                                 <span class="min-w-0">
                                     <span class="block truncate text-sm text-ink/85">{{ $type->label() }}</span>
                                     @if ($critical)
-                                        <span class="text-[11px] text-ink/40">{{ __('Bell alert always on') }}</span>
+                                        <span class="text-[11px] text-ink/65">{{ __('Bell alert always on') }}</span>
                                     @endif
                                 </span>
                             </span>

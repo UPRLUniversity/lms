@@ -36,7 +36,7 @@
                                         · includes programme fees
                                     @endif
                                 </p>
-                                <p class="mt-0.5 text-xs text-ink/45">
+                                <p class="mt-0.5 text-xs text-ink/65">
                                     {{ $order->created_at->isoFormat('D MMM YYYY, HH:mm') }}
                                 </p>
                             </div>

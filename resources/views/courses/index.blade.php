@@ -80,9 +80,9 @@
                             <h3 class="mt-1 font-display text-lg font-semibold leading-snug text-ink line-clamp-2">
                                 <a href="{{ route('courses.edit', $course) }}" class="hover:text-crimson focus-ring rounded">{{ $course->title }}</a>
                             </h3>
-                            <p class="mt-1 text-sm text-ink/50">{{ $course->department?->name ?? 'No department' }}</p>
+                            <p class="mt-1 text-sm text-ink/65">{{ $course->department?->name ?? 'No department' }}</p>
 
-                            <div class="mt-3 flex items-center gap-3 text-xs text-ink/50">
+                            <div class="mt-3 flex items-center gap-3 text-xs text-ink/65">
                                 <span class="inline-flex items-center gap-1">
                                     <x-ui.icon name="book" class="h-4 w-4" /> {{ $course->lessons_count }} {{ Str::plural('lesson', $course->lessons_count) }}
                                 </span>

@@ -28,7 +28,7 @@
 
         <button type="button" data-action="insert-here" aria-haspopup="true" aria-expanded="false"
                 {{-- Always visible on touch, where there is no hover to reveal it. --}}
-                class="absolute left-1/2 inline-flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full border border-line bg-card text-ink/40 opacity-100 transition hover:border-crimson/40 hover:text-crimson focus-visible:opacity-100 group-hover/list:opacity-100 motion-reduce:transition-none sm:opacity-0"
+                class="absolute left-1/2 inline-flex h-5 w-5 -translate-x-1/2 items-center justify-center rounded-full border border-line bg-card text-ink/65 opacity-100 transition hover:border-crimson/40 hover:text-crimson focus-visible:opacity-100 group-hover/list:opacity-100 motion-reduce:transition-none sm:opacity-0"
                 aria-label="Insert a lesson, quiz or assignment here">
             <x-ui.icon name="plus" class="h-3 w-3" />
         </button>
@@ -37,7 +37,7 @@
     <div data-insert-menu hidden class="flex flex-wrap items-center justify-center gap-1.5 pb-2">
         <button type="button" data-action="insert-lesson"
                 class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-ink shadow-sm hover:border-ink/25 focus-ring">
-            <x-ui.icon name="play" class="h-4 w-4 text-ink/50" /> Lesson
+            <x-ui.icon name="play" class="h-4 w-4 text-ink/65" /> Lesson
         </button>
         <button type="button" data-action="insert-assessment"
                 class="inline-flex items-center gap-1.5 rounded-lg border border-line bg-card px-2.5 py-1.5 text-sm text-ink shadow-sm hover:border-ink/25 focus-ring">

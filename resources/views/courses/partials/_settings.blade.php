@@ -31,7 +31,7 @@
     <div class="lg:order-2">
         <div class="rounded-xl border border-line bg-card p-5 shadow-sm">
             <h3 class="font-display font-semibold text-ink">Publish checklist</h3>
-            <p class="mt-1 text-xs text-ink/60">A course needs all of these before it can go live.</p>
+            <p class="mt-1 text-xs text-ink/65">A course needs all of these before it can go live.</p>
             <ul class="mt-4 space-y-2.5 text-sm">
                 @php
                     $checks = [
@@ -46,11 +46,11 @@
                         <span @class([
                             'inline-flex h-5 w-5 items-center justify-center rounded-full',
                             'bg-success/10 text-success' => $done,
-                            'bg-ink/5 text-ink/30' => ! $done,
+                            'bg-ink/5 text-ink/65' => ! $done,
                         ])>
                             <x-ui.icon name="check" class="h-3.5 w-3.5" stroke-width="2.5" />
                         </span>
-                        <span class="{{ $done ? 'text-ink/80' : 'text-ink/50' }}">{{ $label }}</span>
+                        <span class="{{ $done ? 'text-ink/80' : 'text-ink/65' }}">{{ $label }}</span>
                     </li>
                 @endforeach
             </ul>
@@ -60,7 +60,7 @@
     {{-- Settings form --}}
     <div class="lg:order-1 lg:col-span-2">
         @if (! $canManage)
-            <div class="rounded-xl border border-line bg-surface/60 p-4 text-sm text-ink/60">
+            <div class="rounded-xl border border-line bg-surface/60 p-4 text-sm text-ink/65">
                 You have read-only access to this course.
             </div>
         @endif
@@ -74,7 +74,7 @@
                 {{-- Cover with live preview --}}
                 <div>
                     <label class="block text-sm font-medium text-ink">Cover image</label>
-                    <p class="text-xs text-ink/60">Shown on the catalogue. 1200×630 works best. JPG, PNG or WebP.</p>
+                    <p class="text-xs text-ink/65">Shown on the catalogue. 1200×630 works best. JPG, PNG or WebP.</p>
                     <div class="mt-2 flex flex-wrap items-center gap-4">
                         <div class="relative aspect-[16/9] w-56 overflow-hidden rounded-xl border border-line bg-gradient-to-br from-crimson to-crimson-dark">
                             <template x-if="coverPreview">
@@ -84,7 +84,7 @@
                                 <img x-show="!coverPreview" src="{{ $course->coverUrl() }}" alt="Current cover" class="h-full w-full object-cover">
                             @else
                                 <div x-show="!coverPreview" class="absolute inset-0 flex items-center justify-center">
-                                    <span class="font-display text-lg font-bold text-white/80">{{ $course->code }}</span>
+                                    <span class="font-display text-lg font-bold text-white/85">{{ $course->code }}</span>
                                 </div>
                             @endif
                         </div>
@@ -94,7 +94,7 @@
                                 <input type="file" name="cover" accept="image/png,image/jpeg,image/webp" class="sr-only"
                                        @change="previewCover($event)">
                             </label>
-                            <p class="mt-1 text-xs text-ink/50" x-text="coverName"></p>
+                            <p class="mt-1 text-xs text-ink/65" x-text="coverName"></p>
                         </div>
                     </div>
                     <x-input-error :messages="$errors->get('cover')" class="mt-2" />
@@ -153,7 +153,7 @@
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <h3 class="font-display font-semibold text-ink">Enrolment</h3>
-                            <p class="text-xs text-ink/60">How students join, and how many places there are.</p>
+                            <p class="text-xs text-ink/65">How students join, and how many places there are.</p>
                         </div>
                         @if ($course->isPublished())
                             <x-ui.button size="sm" variant="ghost" :href="route('courses.roster', $course)">
@@ -247,15 +247,15 @@
                 {{-- Learning objectives --}}
                 <div x-data="objectiveRows(@js(array_values($objectives)))" @change="dirty = true">
                     <label class="block text-sm font-medium text-ink">Learning objectives</label>
-                    <p class="text-xs text-ink/60">What will a learner be able to do? Add one per row.</p>
+                    <p class="text-xs text-ink/65">What will a learner be able to do? Add one per row.</p>
                     <div class="mt-2 space-y-2">
                         <template x-for="(row, index) in rows" :key="row.key">
                             <div class="flex items-center gap-2">
-                                <span class="text-ink/30"><x-ui.icon name="check" class="h-4 w-4" /></span>
+                                <span class="text-ink/65"><x-ui.icon name="check" class="h-4 w-4" /></span>
                                 <input type="text" :name="'learning_objectives[]'" x-model="row.value" maxlength="255"
                                        class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson"
                                        placeholder="e.g. Plan a basic PR campaign">
-                                <button type="button" @click="remove(index)" class="rounded-lg p-2 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove objective">
+                                <button type="button" @click="remove(index)" class="rounded-lg p-2 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove objective">
                                     <x-ui.icon name="trash" class="h-4 w-4" />
                                 </button>
                             </div>
@@ -271,19 +271,19 @@
                      x-data="programmePlacements(@js($programmeOptions), @js($placementRows))"
                      @change="dirty = true">
                     <label class="block text-sm font-medium text-ink">Programme placement</label>
-                    <p class="mt-0.5 text-xs text-ink/60">
+                    <p class="mt-0.5 text-xs text-ink/65">
                         Which qualifications this course counts toward. A course may sit in more than one —
                         the primary one decides the price it inherits.
                     </p>
 
                     @if ($programmes->isEmpty())
-                        <p class="mt-3 text-sm text-ink/50">
+                        <p class="mt-3 text-sm text-ink/65">
                             No programmes exist yet. An administrator creates them under Programmes.
                         </p>
                     @else
                         <div class="mt-3 space-y-3">
                             <template x-if="rows.length === 0">
-                                <p class="text-sm text-ink/50">
+                                <p class="text-sm text-ink/65">
                                     Not placed in any programme. This course still appears in the catalogue, but under
                                     no qualification.
                                 </p>
@@ -366,7 +366,7 @@
                                         <input type="hidden" :name="'placements[' + index + '][is_primary]'" :value="row.primary ? 1 : 0">
 
                                         <button type="button" @click="remove(index)"
-                                                class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-ink/50 hover:text-crimson focus-ring">
+                                                class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-ink/65 hover:text-crimson focus-ring">
                                             <x-ui.icon name="trash" class="h-3.5 w-3.5" /> Remove
                                         </button>
                                     </div>
@@ -389,7 +389,7 @@
                                   placeholder="Describe the course in detail…" />
 
                 <div class="flex items-center justify-end gap-3 border-t border-line pt-5">
-                    <span x-show="dirty" x-cloak class="text-sm text-ink/50">Unsaved changes</span>
+                    <span x-show="dirty" x-cloak class="text-sm text-ink/65">Unsaved changes</span>
                     <x-ui.button type="submit">Save settings</x-ui.button>
                 </div>
             </fieldset>

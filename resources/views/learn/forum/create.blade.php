@@ -6,11 +6,11 @@
 <x-app-layout :title="'New discussion · '.$course->title">
     <div class="mx-auto max-w-2xl space-y-6">
         <div>
-            <a href="{{ route('forum.index', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('forum.index', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to forum
             </a>
             <h2 class="mt-3 font-display text-2xl font-semibold text-ink">Start a discussion</h2>
-            <p class="text-sm text-ink/60">{{ $course->title }} · {{ $course->code }}</p>
+            <p class="text-sm text-ink/65">{{ $course->title }} · {{ $course->code }}</p>
         </div>
 
         <div class="rounded-2xl border border-line bg-card p-6 shadow-sm">

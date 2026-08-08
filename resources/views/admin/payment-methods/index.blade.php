@@ -30,7 +30,7 @@
                             <span @class([
                                 'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg',
                                 'bg-crimson/10 text-crimson' => $installed,
-                                'bg-ink/5 text-ink/40' => ! $installed,
+                                'bg-ink/5 text-ink/65' => ! $installed,
                             ])>
                                 <x-ui.icon name="{{ $card['key'] === 'bank_transfer' ? 'banknote' : 'credit-card' }}" class="h-5 w-5" />
                             </span>
@@ -47,7 +47,7 @@
 
                             @if ($installed && ! $ready)
                                 <x-ui.badge variant="gold">Needs configuration</x-ui.badge>
-                                <span class="text-xs text-ink/50">Add its keys below, then press <strong class="font-medium">Save changes</strong> to switch it on.</span>
+                                <span class="text-xs text-ink/65">Add its keys below, then press <strong class="font-medium">Save changes</strong> to switch it on.</span>
                             @endif
                         </div>
 
@@ -60,7 +60,7 @@
                                         <x-ui.button size="sm" variant="secondary" type="submit">Set up</x-ui.button>
                                     </form>
                                 @else
-                                    <span class="text-xs text-ink/45">Not installed</span>
+                                    <span class="text-xs text-ink/65">Not installed</span>
                                 @endif
                             @else
                                 @if ($canManage)
@@ -96,7 +96,7 @@
                                 @endif
 
                                 <button type="button" @click="open = !open"
-                                        class="rounded-lg p-2 text-ink/50 hover:bg-ink/5 hover:text-ink focus-ring"
+                                        class="rounded-lg p-2 text-ink/65 hover:bg-ink/5 hover:text-ink focus-ring"
                                         :aria-expanded="open.toString()"
                                         aria-label="Configure {{ $card['label'] }}">
                                     <x-ui.icon name="cog" class="h-5 w-5" />
@@ -155,7 +155,7 @@
                                                        class="block w-full rounded-xl border-line bg-card pr-11 font-mono text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                                 @if ($isSecret)
                                                     <button type="button" @click="show = !show"
-                                                            class="absolute inset-y-0 right-0 flex items-center px-3 text-ink/40 hover:text-ink focus-ring rounded-r-xl"
+                                                            class="absolute inset-y-0 right-0 flex items-center px-3 text-ink/65 hover:text-ink focus-ring rounded-r-xl"
                                                             :aria-label="show ? 'Hide' : 'Show'">
                                                         <x-ui.icon name="eye" class="h-4 w-4" x-show="!show" />
                                                         <x-ui.icon name="eye-off" class="h-4 w-4" x-show="show" x-cloak />
@@ -163,7 +163,7 @@
                                                 @endif
                                             </div>
                                             @if ($isSecret && $stored !== '')
-                                                <p class="mt-1 text-xs text-ink/50">Leave blank to keep the saved key.</p>
+                                                <p class="mt-1 text-xs text-ink/65">Leave blank to keep the saved key.</p>
                                             @endif
                                         </div>
                                     @endforeach
@@ -172,7 +172,7 @@
                                     @if ($card['key'] !== 'bank_transfer' && $card['key'] !== 'sandbox')
                                         <div x-data="{ copied: false }">
                                             <span class="block text-sm font-medium text-ink">Webhook URL</span>
-                                            <p class="text-xs text-ink/60">Paste this into your {{ $card['label'] }} dashboard so payments confirm automatically.</p>
+                                            <p class="text-xs text-ink/65">Paste this into your {{ $card['label'] }} dashboard so payments confirm automatically.</p>
                                             <div class="mt-1.5 flex gap-2">
                                                 <input type="text" readonly value="{{ $method->webhookUrl() }}"
                                                        x-ref="hook"
@@ -204,7 +204,7 @@
                                              submitted a DELETE and wiped the method's saved keys. --}}
                                         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
                                             <button type="submit" form="remove-{{ $card['key'] }}"
-                                                    class="rounded text-xs font-medium text-ink/50 hover:text-crimson focus-ring">Remove</button>
+                                                    class="rounded text-xs font-medium text-ink/65 hover:text-crimson focus-ring">Remove</button>
                                             <x-ui.button type="submit">Save changes</x-ui.button>
                                         </div>
                                     @endif

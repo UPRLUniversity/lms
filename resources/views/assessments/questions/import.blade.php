@@ -2,11 +2,11 @@
 
 <x-app-layout title="Import questions">
     <div class="mx-auto max-w-3xl">
-        <a href="{{ route('questions.index', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+        <a href="{{ route('questions.index', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to question bank
         </a>
         <h2 class="mt-2 font-display text-2xl font-semibold text-ink">Import questions</h2>
-        <p class="mt-1 text-sm text-ink/60">Copy questions from another course you teach into this bank.</p>
+        <p class="mt-1 text-sm text-ink/65">Copy questions from another course you teach into this bank.</p>
 
         @if ($sourceCourses->isEmpty())
             <div class="mt-6">
@@ -46,11 +46,11 @@
                                        class="mt-1 rounded border-line text-crimson focus:ring-crimson">
                                 <div class="min-w-0">
                                     <p class="text-sm font-medium text-ink">{{ Str::limit(strip_tags($q->prompt), 120) }}</p>
-                                    <p class="mt-0.5 text-xs text-ink/50">{{ $q->type->shortLabel() }} · {{ $q->difficulty->label() }} · {{ $q->category?->name ?? 'Uncategorised' }}</p>
+                                    <p class="mt-0.5 text-xs text-ink/65">{{ $q->type->shortLabel() }} · {{ $q->difficulty->label() }} · {{ $q->category?->name ?? 'Uncategorised' }}</p>
                                 </div>
                             </li>
                         @empty
-                            <li class="px-4 py-6 text-center text-sm text-ink/40">This course has no questions.</li>
+                            <li class="px-4 py-6 text-center text-sm text-ink/65">This course has no questions.</li>
                         @endforelse
                     </ul>
                 </x-ui.card>

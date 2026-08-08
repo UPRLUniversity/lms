@@ -23,7 +23,7 @@
 
 <x-app-layout :title="$editing ? 'Edit question' : 'New question'">
     <div class="mx-auto max-w-3xl" x-data="questionEditor(@js($config))">
-        <a href="{{ route('questions.index', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+        <a href="{{ route('questions.index', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to question bank
         </a>
         <h2 class="mt-2 font-display text-2xl font-semibold text-ink">{{ $editing ? 'Edit question' : 'New question' }}</h2>
@@ -57,7 +57,7 @@
                     <div>
                         <label for="points" class="block text-sm font-medium text-ink">
                             Points
-                            <span class="font-normal text-ink/40" x-show="type === 'scenario'">(auto)</span>
+                            <span class="font-normal text-ink/65" x-show="type === 'scenario'">(auto)</span>
                         </label>
                         <input id="points" name="points" type="number" min="0" step="0.5"
                                x-model="points"
@@ -76,7 +76,7 @@
                             <option value="{{ $c->id }}" @selected(old('category_id', $question?->category_id) == $c->id)>{{ $c->name }}</option>
                         @endforeach
                     </select>
-                    <p class="mt-1.5 text-xs text-ink/50">Categories let you pool questions for randomised exams.</p>
+                    <p class="mt-1.5 text-xs text-ink/65">Categories let you pool questions for randomised exams.</p>
                 </div>
             </x-ui.card>
 
@@ -94,21 +94,21 @@
                     <div class="space-y-3">
                         <div class="flex items-center justify-between">
                             <h3 class="font-display font-semibold text-ink">Options</h3>
-                            <span class="text-xs text-ink/50" x-text="type === 'mcq_single' ? 'Mark one correct answer' : 'Mark all correct answers'"></span>
+                            <span class="text-xs text-ink/65" x-text="type === 'mcq_single' ? 'Mark one correct answer' : 'Mark all correct answers'"></span>
                         </div>
                         <template x-for="(opt, i) in options" :key="opt.key">
                             <div class="flex items-center gap-2">
                                 <template x-if="type === 'mcq_single'">
                                     <button type="button" @click="setSingleCorrect(i)" :aria-pressed="opt.is_correct"
                                             class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border focus-ring"
-                                            :class="opt.is_correct ? 'border-success bg-success/10 text-success' : 'border-line text-ink/30'">
+                                            :class="opt.is_correct ? 'border-success bg-success/10 text-success' : 'border-line text-ink/65'">
                                         <x-ui.icon name="check" class="h-4 w-4" />
                                     </button>
                                 </template>
                                 <template x-if="type === 'mcq_multi'">
                                     <button type="button" @click="opt.is_correct = !opt.is_correct" :aria-pressed="opt.is_correct"
                                             class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border focus-ring"
-                                            :class="opt.is_correct ? 'border-success bg-success/10 text-success' : 'border-line text-ink/30'">
+                                            :class="opt.is_correct ? 'border-success bg-success/10 text-success' : 'border-line text-ink/65'">
                                         <x-ui.icon name="check" class="h-4 w-4" />
                                     </button>
                                 </template>
@@ -117,7 +117,7 @@
                                        class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                 <input type="hidden" :name="`payload[options][${i}][is_correct]`" :value="opt.is_correct ? 1 : 0">
                                 <button type="button" @click="removeOption(i)" x-show="options.length > 2"
-                                        class="rounded-lg p-2 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove option">
+                                        class="rounded-lg p-2 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove option">
                                     <x-ui.icon name="trash" class="h-4 w-4" />
                                 </button>
                             </div>
@@ -135,10 +135,10 @@
                         <div class="flex gap-3">
                             <button type="button" @click="tf_answer = true"
                                     class="flex-1 rounded-xl border px-4 py-3 text-sm font-medium focus-ring"
-                                    :class="tf_answer ? 'border-success bg-success/10 text-success' : 'border-line text-ink/60'">True</button>
+                                    :class="tf_answer ? 'border-success bg-success/10 text-success' : 'border-line text-ink/65'">True</button>
                             <button type="button" @click="tf_answer = false"
                                     class="flex-1 rounded-xl border px-4 py-3 text-sm font-medium focus-ring"
-                                    :class="!tf_answer ? 'border-crimson bg-crimson/10 text-crimson' : 'border-line text-ink/60'">False</button>
+                                    :class="!tf_answer ? 'border-crimson bg-crimson/10 text-crimson' : 'border-line text-ink/65'">False</button>
                         </div>
                         <input type="hidden" name="payload[answer]" :value="tf_answer ? 1 : 0">
                     </div>
@@ -148,14 +148,14 @@
                 <template x-if="type === 'fill_blank'">
                     <div class="space-y-3">
                         <h3 class="font-display font-semibold text-ink">Accepted answers</h3>
-                        <p class="text-xs text-ink/50">Any of these counts as correct.</p>
+                        <p class="text-xs text-ink/65">Any of these counts as correct.</p>
                         <template x-for="(ans, i) in accepted" :key="i">
                             <div class="flex items-center gap-2">
                                 <input type="text" x-model="accepted[i]" :name="`payload[accepted][${i}]`" required
                                        placeholder="Accepted answer"
                                        class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                 <button type="button" @click="removeAccepted(i)" x-show="accepted.length > 1"
-                                        class="rounded-lg p-2 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove answer">
+                                        class="rounded-lg p-2 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove answer">
                                     <x-ui.icon name="trash" class="h-4 w-4" />
                                 </button>
                             </div>
@@ -175,16 +175,16 @@
                 <template x-if="type === 'matching'">
                     <div class="space-y-3">
                         <h3 class="font-display font-semibold text-ink">Matching pairs</h3>
-                        <p class="text-xs text-ink/50">Students match each left item to its right item. Rights are shuffled when presented.</p>
+                        <p class="text-xs text-ink/65">Students match each left item to its right item. Rights are shuffled when presented.</p>
                         <template x-for="(pair, i) in pairs" :key="pair.key">
                             <div class="flex items-center gap-2">
                                 <input type="text" x-model="pair.left" :name="`payload[pairs][${i}][left]`" required placeholder="Left"
                                        class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
-                                <x-ui.icon name="arrows-right-left" class="h-5 w-5 shrink-0 text-ink/30" />
+                                <x-ui.icon name="arrows-right-left" class="h-5 w-5 shrink-0 text-ink/65" />
                                 <input type="text" x-model="pair.right" :name="`payload[pairs][${i}][right]`" required placeholder="Right"
                                        class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                 <button type="button" @click="removePair(i)" x-show="pairs.length > 2"
-                                        class="rounded-lg p-2 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove pair">
+                                        class="rounded-lg p-2 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove pair">
                                     <x-ui.icon name="trash" class="h-4 w-4" />
                                 </button>
                             </div>
@@ -198,7 +198,7 @@
                 {{-- Essay --}}
                 <template x-if="type === 'essay'">
                     <div class="space-y-2">
-                        <label for="guidance" class="block font-display font-semibold text-ink">Grading guidance <span class="font-normal text-ink/50">(only you see this)</span></label>
+                        <label for="guidance" class="block font-display font-semibold text-ink">Grading guidance <span class="font-normal text-ink/65">(only you see this)</span></label>
                         <textarea id="guidance" name="payload[guidance]" rows="4" x-model="guidance"
                                   placeholder="What a strong answer should contain…"
                                   class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson"></textarea>
@@ -210,12 +210,12 @@
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <h3 class="font-display font-semibold text-ink">Sub-questions</h3>
-                            <span class="text-xs text-ink/50">Total: <span x-text="scenarioPoints"></span> pts</span>
+                            <span class="text-xs text-ink/65">Total: <span x-text="scenarioPoints"></span> pts</span>
                         </div>
                         <template x-for="(sub, si) in subs" :key="sub.key">
                             <div class="rounded-xl border border-line bg-surface/40 p-4 space-y-3">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs font-semibold text-ink/50" x-text="`Part ${si + 1}`"></span>
+                                    <span class="text-xs font-semibold text-ink/65" x-text="`Part ${si + 1}`"></span>
                                     <select x-model="sub.type" @change="changeSubType(sub)" :name="`payload[sub_questions][${si}][type]`"
                                             class="rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                         @foreach ($subTypes as $t)
@@ -224,9 +224,9 @@
                                     </select>
                                     <input type="number" min="0" step="0.5" x-model="sub.points" :name="`payload[sub_questions][${si}][points]`"
                                            class="w-20 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson" aria-label="Points">
-                                    <span class="text-xs text-ink/40">pts</span>
+                                    <span class="text-xs text-ink/65">pts</span>
                                     <button type="button" @click="removeSub(si)" x-show="subs.length > 1"
-                                            class="ml-auto rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove part">
+                                            class="ml-auto rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove part">
                                         <x-ui.icon name="trash" class="h-4 w-4" />
                                     </button>
                                 </div>
@@ -243,14 +243,14 @@
                                                 <button type="button"
                                                         @click="sub.type === 'mcq_single' ? setSubSingleCorrect(sub, oi) : (opt.is_correct = !opt.is_correct)"
                                                         class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border focus-ring"
-                                                        :class="opt.is_correct ? 'border-success bg-success/10 text-success' : 'border-line text-ink/30'">
+                                                        :class="opt.is_correct ? 'border-success bg-success/10 text-success' : 'border-line text-ink/65'">
                                                     <x-ui.icon name="check" class="h-3.5 w-3.5" />
                                                 </button>
                                                 <input type="text" x-model="opt.text" :name="`payload[sub_questions][${si}][payload][options][${oi}][text]`" required
                                                        placeholder="Option" class="block w-full rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                                 <input type="hidden" :name="`payload[sub_questions][${si}][payload][options][${oi}][is_correct]`" :value="opt.is_correct ? 1 : 0">
                                                 <button type="button" @click="removeSubOption(sub, oi)" x-show="sub.options.length > 2"
-                                                        class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove option">
+                                                        class="rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove option">
                                                     <x-ui.icon name="trash" class="h-3.5 w-3.5" />
                                                 </button>
                                             </div>
@@ -263,10 +263,10 @@
                                     <div class="flex gap-2">
                                         <button type="button" @click="sub.tf_answer = true"
                                                 class="flex-1 rounded-lg border px-3 py-2 text-sm focus-ring"
-                                                :class="sub.tf_answer ? 'border-success bg-success/10 text-success' : 'border-line text-ink/60'">True</button>
+                                                :class="sub.tf_answer ? 'border-success bg-success/10 text-success' : 'border-line text-ink/65'">True</button>
                                         <button type="button" @click="sub.tf_answer = false"
                                                 class="flex-1 rounded-lg border px-3 py-2 text-sm focus-ring"
-                                                :class="!sub.tf_answer ? 'border-crimson bg-crimson/10 text-crimson' : 'border-line text-ink/60'">False</button>
+                                                :class="!sub.tf_answer ? 'border-crimson bg-crimson/10 text-crimson' : 'border-line text-ink/65'">False</button>
                                         <input type="hidden" :name="`payload[sub_questions][${si}][payload][answer]`" :value="sub.tf_answer ? 1 : 0">
                                     </div>
                                 </template>
@@ -278,7 +278,7 @@
                                                 <input type="text" x-model="sub.accepted[ai]" :name="`payload[sub_questions][${si}][payload][accepted][${ai}]`" required
                                                        placeholder="Accepted answer" class="block w-full rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                                 <button type="button" @click="removeSubAccepted(sub, ai)" x-show="sub.accepted.length > 1"
-                                                        class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove">
+                                                        class="rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove">
                                                     <x-ui.icon name="trash" class="h-3.5 w-3.5" />
                                                 </button>
                                             </div>
@@ -289,7 +289,7 @@
                                 </template>
 
                                 <template x-if="sub.type === 'essay'">
-                                    <p class="text-xs text-ink/50">Graded by hand after submission.</p>
+                                    <p class="text-xs text-ink/65">Graded by hand after submission.</p>
                                 </template>
                             </div>
                         </template>

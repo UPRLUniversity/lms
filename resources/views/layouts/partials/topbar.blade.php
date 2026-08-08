@@ -81,7 +81,7 @@
                     </template>
 
                     <template x-if="! loading && notifications.length === 0">
-                        <p class="px-4 py-8 text-center text-sm text-ink/50">You're all caught up.</p>
+                        <p class="px-4 py-8 text-center text-sm text-ink/65">You're all caught up.</p>
                     </template>
 
                     <template x-for="n in notifications" :key="n.id">
@@ -97,8 +97,8 @@
                             </span>
                             <span class="min-w-0 flex-1">
                                 <span class="block truncate text-ink" :class="! n.read ? 'font-semibold' : 'font-medium'" x-text="n.title"></span>
-                                <span class="block truncate text-ink/60" x-text="n.body"></span>
-                                <span class="mt-0.5 block text-[11px] font-medium uppercase tracking-wide text-ink/35" x-text="n.time"></span>
+                                <span class="block truncate text-ink/65" x-text="n.body"></span>
+                                <span class="mt-0.5 block text-[11px] font-medium uppercase tracking-wide text-ink/65" x-text="n.time"></span>
                             </span>
                         </a>
                     </template>

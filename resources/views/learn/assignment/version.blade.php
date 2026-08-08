@@ -12,7 +12,7 @@
     <div class="mx-auto max-w-2xl space-y-6">
         <div>
             <a href="{{ $isOwner ? route('assignments.show', [$course, $assignment]) : route('grading.assignments.index') }}"
-               class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+               class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> {{ $isOwner ? 'Back to assignment' : 'Back to grading' }}
             </a>
             <div class="mt-1 flex flex-wrap items-center gap-3">
@@ -22,7 +22,7 @@
                     <x-ui.badge variant="crimson">Late</x-ui.badge>
                 @endif
             </div>
-            <p class="mt-1 text-sm text-ink/60">
+            <p class="mt-1 text-sm text-ink/65">
                 Version {{ $submission->version }} · submitted {{ $submission->submitted_at->isoFormat('D MMM YYYY, HH:mm') }}
                 @unless ($isOwner) · {{ $submission->user->name }} @endunless
             </p>
@@ -32,7 +32,7 @@
             <div class="rounded-2xl border border-gold/40 bg-gold/10 p-4">
                 <p class="text-sm font-semibold text-ink">Returned for resubmission</p>
                 <p class="mt-1 whitespace-pre-line text-sm text-ink/80">{{ $submission->return_note }}</p>
-                <p class="mt-1.5 text-xs text-ink/50">
+                <p class="mt-1.5 text-xs text-ink/65">
                     {{ $submission->returned_at?->isoFormat('D MMM, HH:mm') }}{{ $submission->returnedBy ? ' · '.$submission->returnedBy->name : '' }}
                 </p>
             </div>
@@ -53,9 +53,9 @@
                         @php $media = $file['media']; @endphp
                         <li class="overflow-hidden rounded-xl border border-line">
                             <div class="flex items-center gap-2.5 bg-surface/40 px-3 py-2.5">
-                                <x-ui.icon name="document" class="h-4 w-4 shrink-0 text-ink/40" />
+                                <x-ui.icon name="document" class="h-4 w-4 shrink-0 text-ink/65" />
                                 <span class="min-w-0 flex-1 truncate text-sm font-medium text-ink">{{ $media->original_name }}</span>
-                                <span class="shrink-0 text-xs text-ink/45">{{ number_format($media->size_bytes / 1024) }} KB</span>
+                                <span class="shrink-0 text-xs text-ink/65">{{ number_format($media->size_bytes / 1024) }} KB</span>
                                 <a href="{{ route('media.download', $media) }}" class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-crimson hover:text-crimson-dark focus-ring rounded">
                                     <x-ui.icon name="download" class="h-4 w-4" /> Download
                                 </a>
@@ -78,10 +78,10 @@
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h3 class="font-display text-lg font-semibold text-ink">Grade for this version</h3>
                     <p class="font-display text-xl font-semibold text-crimson">
-                        {{ $fmtPts($grade->points_total) }}<span class="text-sm text-ink/40"> / {{ $fmtPts($assignment->max_points) }} pts</span>
+                        {{ $fmtPts($grade->points_total) }}<span class="text-sm text-ink/65"> / {{ $fmtPts($assignment->max_points) }} pts</span>
                     </p>
                 </div>
-                <p class="mt-1 text-xs text-ink/50">Graded {{ $grade->graded_at->isoFormat('D MMM YYYY, HH:mm') }} by {{ $grade->grader->name }}.</p>
+                <p class="mt-1 text-xs text-ink/65">Graded {{ $grade->graded_at->isoFormat('D MMM YYYY, HH:mm') }} by {{ $grade->grader->name }}.</p>
 
                 @if ($grade->criterion_scores)
                     <ul class="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line">
@@ -89,10 +89,10 @@
                             <li class="flex items-center justify-between gap-3 bg-surface/40 px-4 py-2.5">
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-medium text-ink">{{ $row['criterion_title'] }}</p>
-                                    <p class="text-xs text-ink/55">{{ $row['level_label'] }}</p>
+                                    <p class="text-xs text-ink/65">{{ $row['level_label'] }}</p>
                                 </div>
                                 <p class="shrink-0 text-sm font-semibold text-ink">
-                                    {{ $fmtPts($row['points']) }}<span class="font-normal text-ink/40"> / {{ $fmtPts($row['max_points'] ?? $row['points']) }}</span>
+                                    {{ $fmtPts($row['points']) }}<span class="font-normal text-ink/65"> / {{ $fmtPts($row['max_points'] ?? $row['points']) }}</span>
                                 </p>
                             </li>
                         @endforeach

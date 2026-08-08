@@ -34,7 +34,7 @@
                 </div>
             </div>
 
-            <p class="relative mt-12 text-xs text-ink/40">{{ config('brand.short') }} — {{ config('brand.motto') }}</p>
+            <p class="relative mt-12 text-xs text-ink/65">{{ config('brand.short') }} — {{ config('brand.motto') }}</p>
         </main>
     </body>
 </html>

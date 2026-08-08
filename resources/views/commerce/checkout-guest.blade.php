@@ -18,7 +18,7 @@
     <div class="mx-auto max-w-5xl px-6 py-10 lg:px-8">
 
         <nav class="mb-6 text-sm">
-            <a href="{{ route('cart.index') }}" class="inline-flex items-center gap-1.5 rounded text-ink/60 hover:text-crimson focus-ring">
+            <a href="{{ route('cart.index') }}" class="inline-flex items-center gap-1.5 rounded text-ink/65 hover:text-crimson focus-ring">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to cart
             </a>
         </nav>
@@ -81,9 +81,9 @@
 
                         @foreach ($feeLines as $line)
                             <li class="flex items-start justify-between gap-3 text-sm">
-                                <span class="min-w-0 text-ink/60">
+                                <span class="min-w-0 text-ink/65">
                                     {{ $line->title }}
-                                    <span class="block text-xs text-ink/45">Charged once per programme</span>
+                                    <span class="block text-xs text-ink/65">Charged once per programme</span>
                                 </span>
                                 <span class="shrink-0 font-medium text-ink">{{ $line->formattedAmount() }}</span>
                             </li>
@@ -92,7 +92,7 @@
 
                     <dl class="mt-4 space-y-2 text-sm">
                         <div class="flex items-baseline justify-between gap-3">
-                            <dt class="text-ink/60">Subtotal</dt>
+                            <dt class="text-ink/65">Subtotal</dt>
                             <dd class="font-medium text-ink">{{ $totals->formattedSubtotal() }}</dd>
                         </div>
                         @if ($totals->hasDiscount())
@@ -109,7 +109,7 @@
                         </div>
                     </dl>
 
-                    <p class="mt-4 text-xs text-ink/55">
+                    <p class="mt-4 text-xs text-ink/65">
                         Prices in {{ Money::currency() }}. Entry fees, where they apply, are shown above and
                         charged only on your first purchase in a programme.
                     </p>

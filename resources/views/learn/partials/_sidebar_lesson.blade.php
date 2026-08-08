@@ -13,7 +13,7 @@
 <li>
     @if ($item->locked)
         {{-- Sequential-locked: not a link --}}
-        <div class="group flex cursor-not-allowed items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-ink/35"
+        <div class="group flex cursor-not-allowed items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-ink/65"
              title="Complete the previous step to unlock">
             <span class="inline-flex h-5 w-5 shrink-0 items-center justify-center">
                 <x-ui.icon name="lock" class="h-4 w-4" />
@@ -43,13 +43,13 @@
                             <span class="h-1.5 w-1.5 rounded-full bg-crimson"></span>
                         </span>
                     @else
-                        <span class="text-ink/35"><x-ui.icon :name="$model->type->icon()" class="h-4 w-4" /></span>
+                        <span class="text-ink/65"><x-ui.icon :name="$model->type->icon()" class="h-4 w-4" /></span>
                     @endif
                 </span>
             </span>
 
             <span class="min-w-0 flex-1 truncate">{{ $model->title }}</span>
-            @if ($dur)<span class="shrink-0 text-[11px] text-ink/40">{{ $dur }}</span>@endif
+            @if ($dur)<span class="shrink-0 text-[11px] text-ink/65">{{ $dur }}</span>@endif
         </a>
     @endif
 </li>

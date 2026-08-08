@@ -101,6 +101,17 @@ Competence, Character". This file governs every session. Re-read it before actin
 - Accessibility is non-negotiable: semantic HTML, labels on every input,
   WCAG AA contrast (test crimson-on-white combinations), full keyboard
   operability, `prefers-reduced-motion` respected.
+- **Contrast floors — measured, not guessed** (`tests/Unit/Brand/TextContrastTest.php`
+  fails the build if these are broken):
+  - Faded ink text: **`text-ink/65` minimum** (5.40:1 on white, 5.33:1 on the app's
+    `--uprl-surface`). `/60` measures 4.49:1 on surface and fails.
+  - White text on crimson: **`text-white/85` minimum** (4.53:1). `/80` fails.
+  - Faded crimson/success text: **don't** — use the solid colour. `text-crimson/80`
+    is 4.35:1 on surface.
+  - Base `--uprl-gold` is never a foreground colour on light, for text OR icons —
+    use `text-gold-ink`, and pair it with `bg-gold/10` (4.68:1), not `/15` (4.48:1).
+  - Opacity below these floors is fine for BACKGROUNDS, borders and decorative SVG
+    (the sunburst), which is why the guard only inspects `text-*` utilities.
 
 ## Rich Text Editor (single, consistent)
 

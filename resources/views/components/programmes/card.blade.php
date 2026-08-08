@@ -37,7 +37,7 @@
             <p class="mt-2 text-sm leading-relaxed text-ink/70">{{ $programme->tagline }}</p>
         @endif
 
-        <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink/55">
+        <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-ink/65">
             @if ($courseCount !== null)
                 <span class="inline-flex items-center gap-1.5">
                     <x-ui.icon name="book" class="h-4 w-4" />
@@ -55,7 +55,7 @@
         <div class="mt-auto flex items-baseline justify-between gap-3 pt-5">
             <span class="text-sm font-semibold text-ink">
                 @if ($perPaper > 0)
-                    {{ Money::format($perPaper) }}<span class="text-xs font-normal text-ink/55"> / paper</span>
+                    {{ Money::format($perPaper) }}<span class="text-xs font-normal text-ink/65"> / paper</span>
                 @else
                     <span class="text-success">Free to study</span>
                 @endif

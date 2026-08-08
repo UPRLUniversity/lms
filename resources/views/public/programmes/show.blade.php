@@ -25,7 +25,7 @@
         <div class="relative mx-auto max-w-7xl px-6 py-12 lg:px-8 lg:py-16">
             <nav class="text-sm" aria-label="Breadcrumb">
                 <a href="{{ route('programmes.index') }}"
-                   class="inline-flex items-center gap-1.5 rounded text-white/75 transition hover:text-white focus-ring-inverse">
+                   class="inline-flex items-center gap-1.5 rounded text-white/85 transition hover:text-white focus-ring-inverse">
                     <x-ui.icon name="arrow-left" class="h-4 w-4" /> All qualifications
                 </a>
             </nav>
@@ -44,16 +44,16 @@
 
             <dl class="mt-8 flex flex-wrap gap-x-8 gap-y-4 text-white/85">
                 <div>
-                    <dt class="text-xs uppercase tracking-wide text-white/60">Parts</dt>
+                    <dt class="text-xs uppercase tracking-wide text-white/85">Parts</dt>
                     <dd class="font-display text-2xl font-bold text-white">{{ $parts->count() }}</dd>
                 </div>
                 <div>
-                    <dt class="text-xs uppercase tracking-wide text-white/60">Papers on offer</dt>
+                    <dt class="text-xs uppercase tracking-wide text-white/85">Papers on offer</dt>
                     <dd class="font-display text-2xl font-bold text-white">{{ $courseTotal }}</dd>
                 </div>
                 @if ((float) $programme->per_paper_fee > 0)
                     <div>
-                        <dt class="text-xs uppercase tracking-wide text-white/60">Per paper</dt>
+                        <dt class="text-xs uppercase tracking-wide text-white/85">Per paper</dt>
                         <dd class="font-display text-2xl font-bold text-white">{{ Money::format($programme->per_paper_fee) }}</dd>
                     </div>
                 @endif
@@ -151,7 +151,7 @@
                                 <p class="text-sm">
                                     <span class="font-semibold text-ink">{{ $creditLine }}</span>
                                     @if ($target !== null && $listed > $counted)
-                                        <span class="block text-xs font-normal text-ink/50">{{ $listed }} listed, including electives</span>
+                                        <span class="block text-xs font-normal text-ink/65">{{ $listed }} listed, including electives</span>
                                     @endif
                                 </p>
                             </header>
@@ -199,14 +199,14 @@
                             @endif
 
                             @if ($courses->isEmpty())
-                                <p class="px-5 py-8 text-center text-sm text-ink/55">
+                                <p class="px-5 py-8 text-center text-sm text-ink/65">
                                     No papers are published for this part yet.
                                 </p>
                             @else
                                 {{-- Column headings only from sm: below that each row is a
                                      stacked card, which reads far better at 375px than a
                                      four-column table squeezed sideways. --}}
-                                <div class="hidden items-center gap-4 border-b border-line px-5 py-2 text-xs font-medium uppercase tracking-wide text-ink/45 sm:flex">
+                                <div class="hidden items-center gap-4 border-b border-line px-5 py-2 text-xs font-medium uppercase tracking-wide text-ink/65 sm:flex">
                                     <span class="w-20 shrink-0">Code</span>
                                     <span class="min-w-0 flex-1">Paper</span>
                                     <span class="w-28 shrink-0">Status</span>
@@ -249,7 +249,7 @@
                                                     @if ($course->pivot->credit_load)
                                                         {{ $course->pivot->credit_load }}<span class="sm:hidden"> credits</span>
                                                     @else
-                                                        <span aria-hidden="true" class="text-ink/30">—</span>
+                                                        <span aria-hidden="true" class="text-ink/65">—</span>
                                                     @endif
                                                 </span>
 
@@ -310,7 +310,7 @@
                         </x-ui.button>
                     </div>
 
-                    <p class="mt-3 text-center text-xs text-ink/50">
+                    <p class="mt-3 text-center text-xs text-ink/65">
                         Prices in {{ Money::currency() }}. Add papers to your cart now and sign in when you check out.
                     </p>
                 </div>

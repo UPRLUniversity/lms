@@ -21,7 +21,7 @@
 
 <x-learn-layout :title="'Result — '.$assessment->title">
     <div class="mx-auto max-w-2xl px-4 py-10 sm:py-14">
-        <a href="{{ route('assessments.start', [$course, $assessment]) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-crimson focus-ring rounded">
+        <a href="{{ route('assessments.start', [$course, $assessment]) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> {{ $assessment->title }}
         </a>
 
@@ -41,15 +41,15 @@
                 <p class="mt-4 font-display text-xl font-semibold {{ $attempt->passed ? 'text-success' : 'text-crimson' }}">
                     {{ $attempt->passed ? 'Passed' : 'Not passed' }}
                 </p>
-                <p class="mt-1 text-sm text-ink/60">
+                <p class="mt-1 text-sm text-ink/65">
                     {{ rtrim(rtrim(number_format((float) $attempt->score, 2), '0'), '.') }} / {{ rtrim(rtrim(number_format((float) $attempt->max_score, 2), '0'), '.') }} points · pass mark {{ $assessment->passing_score }}%
                 </p>
             @elseif ($pending)
-                <span class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-gold/15 text-gold-ink">
+                <span class="inline-flex h-14 w-14 items-center justify-center rounded-full bg-gold/10 text-gold-ink">
                     <x-ui.icon name="clock" class="h-7 w-7" />
                 </span>
                 <p class="mt-4 font-display text-xl font-semibold text-ink">Submitted — awaiting grading</p>
-                <p class="mt-1 text-sm text-ink/60">An instructor will grade the written answers. Check back for your final score.</p>
+                <p class="mt-1 text-sm text-ink/65">An instructor will grade the written answers. Check back for your final score.</p>
             @endif
         </div>
 
@@ -62,16 +62,16 @@
                 </div>
                 <div class="mt-3 flex items-center justify-center gap-4 text-center">
                     <div>
-                        <p class="text-xs text-ink/50">Pre-module</p>
+                        <p class="text-xs text-ink/65">Pre-module</p>
                         <p class="font-display text-2xl font-semibold text-ink">{{ $gain['pre'] }}%</p>
                     </div>
-                    <x-ui.icon name="arrow-right" class="h-5 w-5 text-ink/30" />
+                    <x-ui.icon name="arrow-right" class="h-5 w-5 text-ink/65" />
                     <div>
-                        <p class="text-xs text-ink/50">Post-module</p>
+                        <p class="text-xs text-ink/65">Post-module</p>
                         <p class="font-display text-2xl font-semibold text-ink">{{ $gain['post'] }}%</p>
                     </div>
                     <div class="ml-2 rounded-xl bg-success/15 px-3 py-2">
-                        <p class="text-xs text-success/80">Gain</p>
+                        <p class="text-xs text-success">Gain</p>
                         <p class="font-display text-2xl font-semibold text-success">{{ $gain['gain'] >= 0 ? '+' : '' }}{{ $gain['gain'] }}</p>
                     </div>
                 </div>
@@ -86,9 +86,9 @@
                     @php $correct = $item['is_correct']; @endphp
                     <div class="rounded-2xl border border-line bg-card p-5 shadow-sm">
                         <div class="flex items-start justify-between gap-3">
-                            <span class="text-xs font-semibold uppercase tracking-wide text-ink/45">Question {{ $item['number'] }}</span>
+                            <span class="text-xs font-semibold uppercase tracking-wide text-ink/65">Question {{ $item['number'] }}</span>
                             <div class="flex items-center gap-2">
-                                <span class="text-xs tabular-nums text-ink/50">
+                                <span class="text-xs tabular-nums text-ink/65">
                                     {{ rtrim(rtrim(number_format((float) ($item['points_awarded'] ?? 0), 2), '0'), '.') }}/{{ rtrim(rtrim(number_format((float) $item['points_possible'], 2), '0'), '.') }}
                                 </span>
                                 @if ($correct === true)
@@ -103,7 +103,7 @@
 
                         <div class="mt-3 space-y-2 text-sm">
                             <div>
-                                <span class="text-ink/50">Your answer: </span>
+                                <span class="text-ink/65">Your answer: </span>
                                 @switch($item['type'])
                                     @case('mcq_single') @case('mcq_multi') @case('true_false')
                                         <span class="text-ink">{{ $answerText($item) ?: '—' }}</span>
@@ -115,13 +115,13 @@
                                         <p class="mt-1 whitespace-pre-line text-ink">{{ is_string($item['response']) ? $item['response'] : '—' }}</p>
                                         @break
                                     @default
-                                        <span class="text-ink/60">See breakdown above</span>
+                                        <span class="text-ink/65">See breakdown above</span>
                                 @endswitch
                             </div>
 
                             @if (in_array($item['type'], ['mcq_single', 'mcq_multi', 'true_false', 'fill_blank']) && $correct !== true)
                                 <div>
-                                    <span class="text-ink/50">Correct answer: </span>
+                                    <span class="text-ink/65">Correct answer: </span>
                                     <span class="text-success">{{ is_array($item['correct']) ? implode(', ', $item['correct']) : $item['correct'] }}</span>
                                 </div>
                             @endif
@@ -136,14 +136,14 @@
 
                             @if (! empty($item['feedback']))
                                 <div class="rounded-lg bg-surface p-3">
-                                    <p class="text-xs font-medium text-ink/50">Instructor feedback</p>
+                                    <p class="text-xs font-medium text-ink/65">Instructor feedback</p>
                                     <x-ui.prose class="mt-1 text-sm" :html="$item['feedback']" />
                                 </div>
                             @endif
 
                             @if (! empty($item['explanation']))
                                 <div class="rounded-lg border-l-2 border-crimson/30 bg-crimson/5 p-3">
-                                    <p class="text-xs font-medium text-ink/50">Explanation</p>
+                                    <p class="text-xs font-medium text-ink/65">Explanation</p>
                                     <x-ui.prose class="mt-1 text-sm" :html="$item['explanation']" />
                                 </div>
                             @endif
@@ -152,7 +152,7 @@
                 @endforeach
             </div>
         @elseif ($graded && ! $canReview)
-            <p class="mt-6 rounded-xl bg-surface p-4 text-center text-sm text-ink/55">
+            <p class="mt-6 rounded-xl bg-surface p-4 text-center text-sm text-ink/65">
                 @if ($assessment->review_policy === \App\Enums\ReviewPolicy::AfterClose)
                     Detailed review will be available once the assessment closes.
                 @else

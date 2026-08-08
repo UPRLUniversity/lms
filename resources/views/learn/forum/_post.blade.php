@@ -26,7 +26,7 @@
                 @if ($isAnswer)
                     <x-ui.badge variant="success"><x-ui.icon name="check" class="h-3 w-3" /> Answer</x-ui.badge>
                 @endif
-                <time class="text-xs text-ink/45" datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->diffForHumans() }}</time>
+                <time class="text-xs text-ink/65" datetime="{{ $post->created_at->toIso8601String() }}">{{ $post->created_at->diffForHumans() }}</time>
             </div>
 
             <x-ui.prose class="mt-2 text-sm" :html="$post->body" />
@@ -35,7 +35,7 @@
             <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
                 @if (! $isReply && $canReply)
                     <button type="button" x-data @click="$dispatch('toggle-reply-{{ $post->id }}')"
-                            class="inline-flex items-center gap-1 font-medium text-ink/55 hover:text-crimson focus-ring rounded">
+                            class="inline-flex items-center gap-1 font-medium text-ink/65 hover:text-crimson focus-ring rounded">
                         <x-ui.icon name="chat" class="h-3.5 w-3.5" /> Reply
                     </button>
                 @endif
@@ -44,7 +44,7 @@
                     <form method="POST" action="{{ route('forum.answer', [$course, $thread]) }}">
                         @csrf
                         <input type="hidden" name="post_id" value="{{ $post->id }}">
-                        <button type="submit" class="inline-flex items-center gap-1 font-medium {{ $isAnswer ? 'text-success' : 'text-ink/55 hover:text-success' }} focus-ring rounded">
+                        <button type="submit" class="inline-flex items-center gap-1 font-medium {{ $isAnswer ? 'text-success' : 'text-ink/65 hover:text-success' }} focus-ring rounded">
                             <x-ui.icon name="check-circle" class="h-3.5 w-3.5" />
                             {{ $isAnswer ? 'Unmark answer' : 'Mark as answer' }}
                         </button>
@@ -55,7 +55,7 @@
                     <form method="POST" action="{{ route('posts.report', $post) }}" x-data
                           @submit.prevent="if (await window.uprlConfirm({ title: 'Report this post?', text: 'An admin will review it. Add nothing more to do — we\'ll take it from here.', confirmText: 'Report', icon: 'warning' })) $el.submit()">
                         @csrf
-                        <button type="submit" class="inline-flex items-center gap-1 font-medium text-ink/45 hover:text-crimson focus-ring rounded">
+                        <button type="submit" class="inline-flex items-center gap-1 font-medium text-ink/65 hover:text-crimson focus-ring rounded">
                             <x-ui.icon name="flag" class="h-3.5 w-3.5" /> Report
                         </button>
                     </form>
@@ -66,7 +66,7 @@
                           @submit.prevent="if (await window.uprlConfirm({ title: 'Remove this reply?', text: 'It will be hidden from the discussion.', confirmText: 'Yes, remove' })) $el.submit()">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="inline-flex items-center gap-1 font-medium text-ink/45 hover:text-crimson focus-ring rounded">
+                        <button type="submit" class="inline-flex items-center gap-1 font-medium text-ink/65 hover:text-crimson focus-ring rounded">
                             <x-ui.icon name="trash" class="h-3.5 w-3.5" /> Remove
                         </button>
                     </form>

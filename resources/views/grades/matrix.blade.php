@@ -13,7 +13,7 @@
 <x-app-layout :title="'Gradebook · '.$course->title">
     <div class="mx-auto max-w-7xl space-y-6">
         <div>
-            <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to course
             </a>
             <div class="mt-2 flex flex-wrap items-end justify-between gap-3">
@@ -47,8 +47,8 @@
                                          style="height: {{ $d['count'] > 0 ? max(8, ($d['count'] / $maxDistribution) * 100) : 2 }}%"
                                          title="{{ $d['band']->label }}: {{ $d['count'] }}"></div>
                                 </div>
-                                <span class="text-[11px] font-medium text-ink/60">{{ $d['band']->label }}</span>
-                                <span class="text-[11px] text-ink/40">{{ $d['count'] }}</span>
+                                <span class="text-[11px] font-medium text-ink/65">{{ $d['band']->label }}</span>
+                                <span class="text-[11px] text-ink/65">{{ $d['count'] }}</span>
                             </div>
                         @endforeach
                     </div>
@@ -62,7 +62,7 @@
                 <input type="hidden" name="sort" value="{{ $sort }}">
                 <x-ui.button type="submit" size="sm" variant="secondary">Search</x-ui.button>
                 <a href="{{ route('courses.gradebook', array_filter(['course' => $course, 'search' => $search, 'sort' => $sort === 'grade' ? 'name' : 'grade'])) }}"
-                   class="ml-auto inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-crimson focus-ring rounded">
+                   class="ml-auto inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
                     <x-ui.icon name="arrows-up-down" class="h-4 w-4" /> Sort by {{ $sort === 'grade' ? 'name' : 'grade' }}
                 </a>
             </form>
@@ -74,7 +74,7 @@
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
                             <thead>
-                                <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/50">
+                                <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/65">
                                     <th scope="col" class="sticky left-0 z-10 bg-card px-5 py-3.5">Student</th>
                                     @foreach ($columns as $col)
                                         <th scope="col" class="px-4 py-3.5 whitespace-nowrap" title="{{ $col->title() }}">
@@ -96,7 +96,7 @@
                                                 <x-ui.avatar :user="$row['user']" size="sm" />
                                                 <div class="min-w-0">
                                                     <p class="truncate font-medium text-ink">{{ $row['user']->name }}</p>
-                                                    <p class="truncate text-xs text-ink/50">{{ $row['user']->email }}</p>
+                                                    <p class="truncate text-xs text-ink/65">{{ $row['user']->email }}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -115,10 +115,10 @@
                                                 @elseif ($band)
                                                     <span class="inline-flex items-center gap-1.5">
                                                         <x-ui.badge :variant="$band->color">{{ $band->label }}</x-ui.badge>
-                                                        <span class="text-xs text-ink/40">{{ round($item->percent) }}%</span>
+                                                        <span class="text-xs text-ink/65">{{ round($item->percent) }}%</span>
                                                     </span>
                                                 @else
-                                                    <span class="text-ink/30">—</span>
+                                                    <span class="text-ink/65">—</span>
                                                 @endif
                                             </td>
                                         @endforeach
@@ -138,7 +138,7 @@
                                                     @endif
                                                 </span>
                                             @else
-                                                <span class="text-ink/30">—</span>
+                                                <span class="text-ink/65">—</span>
                                             @endif
                                             @if ($isPass !== null)
                                                 <x-ui.badge :variant="$isPass ? 'success' : 'crimson'" class="ml-1.5">{{ $isPass ? 'Pass' : 'Fail' }}</x-ui.badge>

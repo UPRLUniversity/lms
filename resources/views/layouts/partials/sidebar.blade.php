@@ -40,7 +40,7 @@
 
             @if ($isPlaceholder)
                 <span
-                    class="group relative flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink/40"
+                    class="group relative flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-ink/65"
                     :class="collapsed ? 'lg:justify-center' : ''"
                     title="{{ $item['label'] }} — coming soon"
                     aria-disabled="true">
@@ -73,6 +73,6 @@
 
     {{-- Footer / motto --}}
     <div class="shrink-0 border-t border-line px-4 py-3">
-        <p class="text-xs text-ink/40" :class="collapsed ? 'lg:hidden' : ''">{{ config('brand.motto') }}</p>
+        <p class="text-xs text-ink/65" :class="collapsed ? 'lg:hidden' : ''">{{ config('brand.motto') }}</p>
     </div>
 </aside>

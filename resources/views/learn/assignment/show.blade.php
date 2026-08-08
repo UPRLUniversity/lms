@@ -20,7 +20,7 @@
             maxKb: {{ MediaPurpose::Submissions->maxKb() }},
          })">
 
-        <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-crimson focus-ring rounded">
+        <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to course
         </a>
 
@@ -32,7 +32,7 @@
                         <x-ui.icon name="document-text" class="h-6 w-6" />
                     </span>
                     <div>
-                        <p class="text-xs font-medium uppercase tracking-wide text-ink/50">Assignment · {{ $assignment->type->label() }}</p>
+                        <p class="text-xs font-medium uppercase tracking-wide text-ink/65">Assignment · {{ $assignment->type->label() }}</p>
                         <h1 class="font-display text-2xl font-semibold text-ink">{{ $assignment->title }}</h1>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                 @php $pastDue = $assignment->isPastDue(); @endphp
                 <div class="mt-5 flex flex-wrap items-center gap-2 rounded-xl p-3 text-sm
                             {{ $pastDue ? 'border border-crimson/30 bg-crimson/5' : 'border border-line bg-surface' }}">
-                    <x-ui.icon name="clock" class="h-4 w-4 {{ $pastDue ? 'text-crimson' : 'text-ink/50' }}" />
+                    <x-ui.icon name="clock" class="h-4 w-4 {{ $pastDue ? 'text-crimson' : 'text-ink/65' }}" />
                     <span class="text-ink/80">
                         Due {{ $assignment->due_at->isoFormat('ddd D MMM YYYY, HH:mm') }}
                         @unless ($pastDue)
@@ -63,11 +63,11 @@
 
             <dl class="mt-5 grid grid-cols-2 gap-4">
                 <div class="rounded-xl bg-surface p-3">
-                    <dt class="text-xs text-ink/50">Graded out of</dt>
+                    <dt class="text-xs text-ink/65">Graded out of</dt>
                     <dd class="mt-0.5 font-display text-lg font-semibold text-ink">{{ $assignment->max_points ? $fmtPts($assignment->max_points).' pts' : '—' }}</dd>
                 </div>
                 <div class="rounded-xl bg-surface p-3">
-                    <dt class="text-xs text-ink/50">Your versions</dt>
+                    <dt class="text-xs text-ink/65">Your versions</dt>
                     <dd class="mt-0.5 font-display text-lg font-semibold text-ink">{{ $total ?: 'None yet' }}</dd>
                 </div>
             </dl>
@@ -86,7 +86,7 @@
                                    class="flex items-center gap-2.5 rounded-xl border border-line bg-surface/40 p-3 text-sm transition hover:border-crimson/30 focus-ring">
                                     <x-ui.icon name="download" class="h-4 w-4 shrink-0 text-crimson" />
                                     <span class="min-w-0 flex-1 truncate font-medium text-ink">{{ $resource->original_name }}</span>
-                                    <span class="shrink-0 text-xs text-ink/45">{{ number_format($resource->size_bytes / 1024) }} KB</span>
+                                    <span class="shrink-0 text-xs text-ink/65">{{ number_format($resource->size_bytes / 1024) }} KB</span>
                                 </a>
                             </li>
                         @endforeach
@@ -103,7 +103,7 @@
                     <h2 class="font-display text-base font-semibold text-ink">Your work was returned for another version</h2>
                 </div>
                 <p class="mt-2 whitespace-pre-line text-sm text-ink/80">{{ $latest->return_note }}</p>
-                <p class="mt-2 text-xs text-ink/50">
+                <p class="mt-2 text-xs text-ink/65">
                     Returned {{ $latest->returned_at?->isoFormat('D MMM, HH:mm') }}{{ $latest->returnedBy ? ' by '.$latest->returnedBy->name : '' }}.
                     Submit a new version below when you're ready.
                 </p>
@@ -116,10 +116,10 @@
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <h2 class="font-display text-lg font-semibold text-ink">Your grade</h2>
                     <p class="font-display text-2xl font-semibold text-crimson">
-                        {{ $fmtPts($grade->points_total) }}<span class="text-base text-ink/40"> / {{ $fmtPts($assignment->max_points) }} pts</span>
+                        {{ $fmtPts($grade->points_total) }}<span class="text-base text-ink/65"> / {{ $fmtPts($assignment->max_points) }} pts</span>
                     </p>
                 </div>
-                <p class="mt-1 text-xs text-ink/50">Graded {{ $grade->graded_at->isoFormat('D MMM YYYY, HH:mm') }} on version {{ $latest->version }}.</p>
+                <p class="mt-1 text-xs text-ink/65">Graded {{ $grade->graded_at->isoFormat('D MMM YYYY, HH:mm') }} on version {{ $latest->version }}.</p>
 
                 @if ($grade->criterion_scores)
                     <ul class="mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line">
@@ -127,10 +127,10 @@
                             <li class="flex items-center justify-between gap-3 bg-surface/40 px-4 py-3">
                                 <div class="min-w-0">
                                     <p class="truncate text-sm font-medium text-ink">{{ $row['criterion_title'] }}</p>
-                                    <p class="text-xs text-ink/55">{{ $row['level_label'] }}</p>
+                                    <p class="text-xs text-ink/65">{{ $row['level_label'] }}</p>
                                 </div>
                                 <p class="shrink-0 text-sm font-semibold text-ink">
-                                    {{ $fmtPts($row['points']) }}<span class="font-normal text-ink/40"> / {{ $fmtPts($row['max_points'] ?? $row['points']) }}</span>
+                                    {{ $fmtPts($row['points']) }}<span class="font-normal text-ink/65"> / {{ $fmtPts($row['max_points'] ?? $row['points']) }}</span>
                                 </p>
                             </li>
                         @endforeach
@@ -153,7 +153,7 @@
                     {{ $total === 0 ? 'Hand in your work' : 'Submit a new version' }}
                 </h2>
                 @if ($total > 0)
-                    <p class="mt-1 text-sm text-ink/60">This will become version {{ $total + 1 }}. Earlier versions stay in your history unchanged.</p>
+                    <p class="mt-1 text-sm text-ink/65">This will become version {{ $total + 1 }}. Earlier versions stay in your history unchanged.</p>
                 @endif
                 @if ($assignment->isPastDue() && $assignment->allow_late)
                     <p class="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-crimson/5 px-2.5 py-1.5 text-xs font-medium text-crimson">
@@ -175,7 +175,7 @@
                                 :value="old('body')"
                                 :height="240"
                                 placeholder="Write your answer here…" />
-                            <p class="mt-1 text-xs text-ink/45" x-show="draftSavedAt" x-cloak>
+                            <p class="mt-1 text-xs text-ink/65" x-show="draftSavedAt" x-cloak>
                                 Draft saved on this device at <span x-text="draftSavedAt"></span>.
                             </p>
                         </div>
@@ -184,7 +184,7 @@
                     @if ($assignment->type->acceptsFiles())
                         <div>
                             <label for="submission-files" class="block text-sm font-medium text-ink">
-                                Files <span class="font-normal text-ink/40">(up to 5 · PDF, Word, ZIP, text or images · {{ (int) round(MediaPurpose::Submissions->maxKb() / 1024) }}MB each)</span>
+                                Files <span class="font-normal text-ink/65">(up to 5 · PDF, Word, ZIP, text or images · {{ (int) round(MediaPurpose::Submissions->maxKb() / 1024) }}MB each)</span>
                             </label>
                             <input id="submission-files" type="file" multiple @change="pick($event)"
                                    accept="{{ implode(',', MediaPurpose::Submissions->allowedMimes()) }}"
@@ -193,10 +193,10 @@
                             <ul class="mt-2 space-y-1.5" x-show="files.length" x-cloak>
                                 <template x-for="(file, i) in files" :key="i">
                                     <li class="flex items-center gap-2 rounded-lg border border-line bg-surface/40 px-3 py-2 text-sm">
-                                        <x-ui.icon name="document" class="h-4 w-4 shrink-0 text-ink/40" />
+                                        <x-ui.icon name="document" class="h-4 w-4 shrink-0 text-ink/65" />
                                         <span class="min-w-0 flex-1 truncate text-ink" x-text="file.name"></span>
-                                        <span class="shrink-0 text-xs text-ink/45" x-text="fmtSize(file.size)"></span>
-                                        <button type="button" @click="removeFile(i)" class="rounded p-0.5 text-ink/35 hover:text-crimson focus-ring" aria-label="Remove file">
+                                        <span class="shrink-0 text-xs text-ink/65" x-text="fmtSize(file.size)"></span>
+                                        <button type="button" @click="removeFile(i)" class="rounded p-0.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove file">
                                             <x-ui.icon name="x" class="h-3.5 w-3.5" />
                                         </button>
                                     </li>
@@ -223,7 +223,7 @@
 
                     {{-- Upload progress --}}
                     <div x-show="uploading" x-cloak>
-                        <div class="flex items-center justify-between text-xs font-medium text-ink/60">
+                        <div class="flex items-center justify-between text-xs font-medium text-ink/65">
                             <span>Uploading…</span>
                             <span x-text="progress + '%'"></span>
                         </div>
@@ -243,9 +243,9 @@
             </div>
         @else
             <div class="mt-6 rounded-2xl border border-line bg-card p-6 text-center shadow-sm">
-                <x-ui.icon name="lock" class="mx-auto h-8 w-8 text-ink/30" />
+                <x-ui.icon name="lock" class="mx-auto h-8 w-8 text-ink/65" />
                 <h2 class="mt-2 font-display text-lg font-semibold text-ink">Submissions have closed</h2>
-                <p class="mx-auto mt-1 max-w-md text-sm text-ink/60">
+                <p class="mx-auto mt-1 max-w-md text-sm text-ink/65">
                     The deadline was {{ $assignment->due_at->isoFormat('D MMM YYYY, HH:mm') }} and this assignment doesn't accept late work.
                     If you believe this is an error, please contact your instructor.
                 </p>

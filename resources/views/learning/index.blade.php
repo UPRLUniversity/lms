@@ -67,13 +67,13 @@
                         <div class="flex flex-1 flex-col p-5">
                             <p class="text-xs font-medium uppercase tracking-wide text-crimson">{{ $course->code }}</p>
                             <h3 class="mt-1 font-display text-lg font-semibold leading-snug text-ink line-clamp-2">{{ $course->title }}</h3>
-                            <p class="mt-1 text-sm text-ink/50">{{ $course->department?->name ?? 'No department' }}</p>
+                            <p class="mt-1 text-sm text-ink/65">{{ $course->department?->name ?? 'No department' }}</p>
 
                             {{-- Progress bar for courses being learnt --}}
                             @if (in_array($status, [EnrollmentStatus::Active, EnrollmentStatus::Completed], true))
                                 @php $percent = (int) $enrollment->progress_percent; @endphp
                                 <div class="mt-3">
-                                    <div class="flex items-center justify-between text-xs font-medium text-ink/60">
+                                    <div class="flex items-center justify-between text-xs font-medium text-ink/65">
                                         <span>{{ $percent }}% complete</span>
                                     </div>
                                     <div class="mt-1 h-1.5 overflow-hidden rounded-full bg-ink/5">
@@ -96,7 +96,7 @@
                                         </x-ui.button>
                                         @break
                                     @case(EnrollmentStatus::Pending)
-                                        <div class="flex items-center justify-center gap-2 rounded-xl bg-gold/15 px-4 py-2 text-sm font-medium text-gold">
+                                        <div class="flex items-center justify-center gap-2 rounded-xl bg-gold/10 px-4 py-2 text-sm font-medium text-gold-ink">
                                             <x-ui.icon name="clock" class="h-4 w-4" /> Pending approval
                                         </div>
                                         @break
@@ -116,7 +116,7 @@
                                                is a silent SyntaxError and the button does nothing at all. --}}
                                           @submit.prevent="if (await window.uprlConfirm({ title: 'Withdraw from this course?', text: @js('You can re-enrol later if a place is available.'), confirmText: 'Yes, withdraw' })) $el.submit()">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="mt-2 w-full rounded-lg py-1.5 text-center text-xs font-medium text-ink/50 hover:text-crimson focus-ring">
+                                        <button type="submit" class="mt-2 w-full rounded-lg py-1.5 text-center text-xs font-medium text-ink/65 hover:text-crimson focus-ring">
                                             {{ $status === EnrollmentStatus::Waitlisted ? 'Leave the waitlist' : 'Withdraw' }}
                                         </button>
                                     </form>

@@ -47,13 +47,13 @@
             <header class="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b border-line bg-card/90 px-4 backdrop-blur sm:px-6">
                 {{-- Mobile: open curriculum --}}
                 <button type="button" @click="drawer = true"
-                        class="rounded-lg p-2 text-ink/60 hover:bg-ink/5 hover:text-ink focus-ring lg:hidden"
+                        class="rounded-lg p-2 text-ink/65 hover:bg-ink/5 hover:text-ink focus-ring lg:hidden"
                         aria-label="Open curriculum">
                     <x-ui.icon name="list" class="h-5 w-5" />
                 </button>
                 {{-- Desktop: focus mode (show/hide curriculum) --}}
                 <button type="button" @click="collapsed = ! collapsed"
-                        class="hidden rounded-lg p-2 text-ink/60 hover:bg-ink/5 hover:text-ink focus-ring lg:inline-flex"
+                        class="hidden rounded-lg p-2 text-ink/65 hover:bg-ink/5 hover:text-ink focus-ring lg:inline-flex"
                         :aria-pressed="collapsed.toString()"
                         :title="collapsed ? 'Show curriculum' : 'Hide curriculum (focus mode)'">
                     <x-ui.icon name="panel-left" class="h-5 w-5" />
@@ -68,7 +68,7 @@
                     <div class="h-1.5 w-28 overflow-hidden rounded-full bg-ink/5">
                         <div class="h-full rounded-full bg-crimson transition-[width] duration-500" :style="`width: ${percent}%`"></div>
                     </div>
-                    <span class="text-xs font-medium text-ink/60" x-text="percent + '%'"></span>
+                    <span class="text-xs font-medium text-ink/65" x-text="percent + '%'"></span>
                 </div>
 
                 <x-ui.button size="sm" variant="ghost" :href="route('learning.index')" class="hidden sm:inline-flex">
@@ -97,7 +97,7 @@
                             <x-ui.icon name="chevron-left" class="h-5 w-5" /> <span class="hidden sm:inline">Previous</span>
                         </x-ui.button>
                     @else
-                        <span class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-ink/30">
+                        <span class="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-ink/65">
                             <x-ui.icon name="chevron-left" class="h-5 w-5" /> <span class="hidden sm:inline">Previous</span>
                         </span>
                     @endif
@@ -107,7 +107,7 @@
                             {{-- Mark as incomplete (only when done) --}}
                             <button type="button" x-show="isDone(currentId)" x-cloak
                                     @click="markIncomplete()"
-                                    class="rounded-xl px-3 py-2 text-sm font-medium text-ink/50 hover:text-crimson focus-ring">
+                                    class="rounded-xl px-3 py-2 text-sm font-medium text-ink/65 hover:text-crimson focus-ring">
                                 Mark as incomplete
                             </button>
 
@@ -171,7 +171,7 @@
                  x-transition:enter-start="opacity-0 scale-95"
                  x-transition:enter-end="opacity-100 scale-100">
                 <button type="button" @click="dismissCelebration()"
-                        class="absolute right-3 top-3 rounded-lg p-1.5 text-ink/40 hover:bg-ink/5 hover:text-ink focus-ring"
+                        class="absolute right-3 top-3 rounded-lg p-1.5 text-ink/65 hover:bg-ink/5 hover:text-ink focus-ring"
                         aria-label="Dismiss">
                     <x-ui.icon name="x" class="h-5 w-5" />
                 </button>

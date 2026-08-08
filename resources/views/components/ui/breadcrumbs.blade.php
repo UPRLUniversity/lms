@@ -12,11 +12,11 @@
 
 @if ($items)
     <nav aria-label="Breadcrumb" {{ $attributes->merge(['class' => 'min-w-0']) }}>
-        <ol class="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-ink/60">
+        <ol class="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-ink/65">
             @foreach ($items as $i => $item)
                 <li class="flex min-w-0 items-center gap-1.5">
                     @if ($i > 0)
-                        <x-ui.icon name="chevron-right" class="h-3.5 w-3.5 shrink-0 text-ink/30" />
+                        <x-ui.icon name="chevron-right" class="h-3.5 w-3.5 shrink-0 text-ink/65" />
                     @endif
 
                     @if ($i === $last || empty($item['href']))

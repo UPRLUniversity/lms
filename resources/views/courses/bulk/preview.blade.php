@@ -57,7 +57,7 @@
         <x-ui.card :padding="false">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
-                    <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/50">
+                    <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/65">
                         <tr>
                             <th scope="col" class="px-5 py-3 font-medium">Row</th>
                             <th scope="col" class="px-5 py-3 font-medium">Email</th>
@@ -72,17 +72,17 @@
                                 'bg-crimson/[0.02]' => ! Bulk::isImportable($row['problem']),
                                 'bg-gold/[0.05]' => $row['problem'] === Bulk::PREREQUISITE_NOT_MET,
                             ])>
-                                <td class="px-5 py-3 text-ink/40">{{ $row['line'] }}</td>
+                                <td class="px-5 py-3 text-ink/65">{{ $row['line'] }}</td>
                                 <td class="px-5 py-3">
                                     <span class="font-medium text-ink">{{ $row['email'] ?: '—' }}</span>
                                     @if ($row['user_name'])
-                                        <span class="block text-xs text-ink/50">{{ $row['user_name'] }}</span>
+                                        <span class="block text-xs text-ink/65">{{ $row['user_name'] }}</span>
                                     @endif
                                 </td>
                                 <td class="px-5 py-3">
                                     <span class="text-ink">{{ $row['course_code'] ?: '—' }}</span>
                                     @if ($row['course_title'])
-                                        <span class="block text-xs text-ink/50">{{ $row['course_title'] }}</span>
+                                        <span class="block text-xs text-ink/65">{{ $row['course_title'] }}</span>
                                     @endif
                                 </td>
                                 <td class="px-5 py-3">
@@ -100,11 +100,11 @@
 
         {{-- Confirm --}}
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <p class="text-sm text-ink/60">
+            <p class="text-sm text-ink/65">
                 {{ $counts['valid'] }} of {{ $counts['total'] }} rows will be enrolled.
             </p>
             @if ($counts['valid'] === 0)
-                <span class="rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink/50">Nothing to import</span>
+                <span class="rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink/65">Nothing to import</span>
             @else
                 <form method="POST" action="{{ route('enrollments.bulk.store') }}">
                     @csrf

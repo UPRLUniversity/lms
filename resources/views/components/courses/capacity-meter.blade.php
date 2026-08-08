@@ -18,7 +18,7 @@
         <span class="text-sm font-medium text-ink/70">{{ $hasLimit ? 'Places filled' : 'Enrolment' }}</span>
         @if ($hasLimit)
             <span class="font-display text-sm font-semibold {{ $full ? 'text-crimson' : 'text-ink' }}">
-                {{ $taken }}<span class="text-ink/40"> / {{ $capacity }}</span>
+                {{ $taken }}<span class="text-ink/65"> / {{ $capacity }}</span>
             </span>
         @else
             <span class="font-display text-sm font-semibold text-ink">{{ $taken }} enrolled</span>
@@ -32,7 +32,7 @@
             <div class="h-full rounded-full transition-all {{ $full ? 'bg-crimson' : 'bg-success' }}"
                  style="width: {{ $pct }}%"></div>
         </div>
-        <p class="mt-1.5 text-xs text-ink/60">
+        <p class="mt-1.5 text-xs text-ink/65">
             @if ($full)
                 Course full
                 @if ($waitlist > 0)
@@ -43,6 +43,6 @@
             @endif
         </p>
     @else
-        <p class="mt-1.5 text-xs text-ink/60">Unlimited places.</p>
+        <p class="mt-1.5 text-xs text-ink/65">Unlimited places.</p>
     @endif
 </div>

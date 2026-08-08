@@ -36,7 +36,7 @@
                                     @endif
                                     <x-ui.badge :variant="$scale->status->badge()">{{ $scale->status->label() }}</x-ui.badge>
                                 </div>
-                                <p class="mt-1 text-xs text-ink/50">
+                                <p class="mt-1 text-xs text-ink/65">
                                     {{ $scale->bands->count() }} {{ Str::plural('band', $scale->bands->count()) }} ·
                                     limit {{ rtrim(rtrim(number_format((float) $scale->scale_limit, 2), '0'), '.') }} ·
                                     @if ($scale->passMark() !== null)

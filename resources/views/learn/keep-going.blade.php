@@ -66,8 +66,8 @@
                         <span @class([
                             'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
                             'bg-crimson/10 text-crimson' => $item->statusTone === 'crimson',
-                            'bg-gold/15 text-gold-ink' => $item->statusTone === 'gold',
-                            'bg-ink/5 text-ink/50' => ! $item->statusTone,
+                            'bg-gold/10 text-gold-ink' => $item->statusTone === 'gold',
+                            'bg-ink/5 text-ink/65' => ! $item->statusTone,
                         ])>
                             <x-ui.icon :name="$kindIcon($item)" class="h-5 w-5" />
                         </span>
@@ -77,7 +77,7 @@
                                 'block text-xs',
                                 'text-crimson' => $item->statusTone === 'crimson',
                                 'text-gold-ink' => $item->statusTone === 'gold',
-                                'text-ink/50' => ! $item->statusTone,
+                                'text-ink/65' => ! $item->statusTone,
                             ])>{{ $reason($item) }}</span>
                         </span>
                         <x-ui.button size="sm" variant="secondary" :href="$href($item)" class="shrink-0">

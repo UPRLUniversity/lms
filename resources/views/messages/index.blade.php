@@ -36,7 +36,7 @@
                            ])
                            @if ($isActive) aria-current="page" @endif>
                             @if ($conversation->isGroup())
-                                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold-ink">
+                                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold-ink">
                                     <x-ui.icon name="chat-group" class="h-4 w-4" />
                                 </span>
                             @else
@@ -47,12 +47,12 @@
                                     <span class="truncate text-sm {{ $unread ? 'font-bold text-ink' : 'font-medium text-ink/90' }}">
                                         {{ $conversation->titleFor($me) }}
                                     </span>
-                                    <span class="shrink-0 text-[11px] text-ink/40">
+                                    <span class="shrink-0 text-[11px] text-ink/65">
                                         {{ $conversation->last_message_at?->diffForHumans(short: true) }}
                                     </span>
                                 </span>
                                 <span class="mt-0.5 flex items-center justify-between gap-2">
-                                    <span class="truncate text-xs {{ $unread ? 'font-semibold text-ink/70' : 'text-ink/50' }}">{{ $preview }}</span>
+                                    <span class="truncate text-xs {{ $unread ? 'font-semibold text-ink/70' : 'text-ink/65' }}">{{ $preview }}</span>
                                     @if ($unread)
                                         <span class="inline-flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-crimson px-1.5 text-[11px] font-semibold text-white">
                                             {{ $unread > 9 ? '9+' : $unread }}
@@ -63,7 +63,7 @@
                         </a>
                     @empty
                         <div class="px-3 py-10 text-center">
-                            <p class="text-sm text-ink/50">No conversations yet.</p>
+                            <p class="text-sm text-ink/65">No conversations yet.</p>
                             <a href="{{ route('messages.create') }}" class="mt-2 inline-block text-sm font-medium text-crimson hover:text-crimson-dark focus-ring rounded">Start one →</a>
                         </div>
                     @endforelse

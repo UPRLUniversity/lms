@@ -18,7 +18,7 @@
             <div class="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3">
                 <div class="min-w-0">
                     <p class="truncate font-display text-sm font-semibold text-ink">{{ $assessment->title }}</p>
-                    <p class="text-xs text-ink/50"><span x-text="answeredCount"></span> of <span x-text="total"></span> answered</p>
+                    <p class="text-xs text-ink/65"><span x-text="answeredCount"></span> of <span x-text="total"></span> answered</p>
                 </div>
                 <div class="flex items-center gap-3">
                     <template x-if="timed">
@@ -42,7 +42,7 @@
                                 'ring-2 ring-crimson ring-offset-1': index === i,
                                 'bg-success/15 text-success': statusOf(i) === 'answered',
                                 'bg-gold/20 text-gold-ink': statusOf(i) === 'flagged',
-                                'bg-ink/5 text-ink/50': statusOf(i) === 'skipped',
+                                'bg-ink/5 text-ink/65': statusOf(i) === 'skipped',
                             }"
                             :aria-label="`Question ${i + 1}, ${statusOf(i)}`"
                             x-text="i + 1"></button>
@@ -54,10 +54,10 @@
                 <div x-show="index === i" id="lesson-content">
                     <div class="rounded-2xl border border-line bg-card p-6 shadow-sm">
                         <div class="flex items-start justify-between gap-3">
-                            <p class="text-xs font-semibold uppercase tracking-wide text-ink/45">Question <span x-text="i + 1"></span> of <span x-text="total"></span></p>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-ink/65">Question <span x-text="i + 1"></span> of <span x-text="total"></span></p>
                             <button type="button" @click="toggleFlag(item.question_id)"
                                     class="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium focus-ring"
-                                    :class="flags[item.question_id] ? 'bg-gold/20 text-gold-ink' : 'text-ink/45 hover:bg-surface'">
+                                    :class="flags[item.question_id] ? 'bg-gold/20 text-gold-ink' : 'text-ink/65 hover:bg-surface'">
                                 <x-ui.icon name="flag" class="h-3.5 w-3.5" /> <span x-text="flags[item.question_id] ? 'Flagged' : 'Flag'"></span>
                             </button>
                         </div>
@@ -107,7 +107,7 @@
                                     <template x-for="left in item.lefts" :key="left.id">
                                         <div class="flex items-center gap-3 rounded-xl border border-line p-3">
                                             <span class="min-w-0 flex-1 text-sm text-ink" x-text="left.text"></span>
-                                            <x-ui.icon name="arrows-right-left" class="h-4 w-4 shrink-0 text-ink/30" />
+                                            <x-ui.icon name="arrows-right-left" class="h-4 w-4 shrink-0 text-ink/65" />
                                             <select @change="setMatch(item.question_id, left.id, $event.target.value)"
                                                     class="rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                                                 <option value="">Choose…</option>

@@ -21,7 +21,7 @@
     {{-- Cover --}}
     <div>
         <span class="block text-sm font-medium text-ink">Cover image</span>
-        <p class="text-xs text-ink/60">Shown on the programme card and its landing page. 1600×600 works best. JPG, PNG or WebP, up to {{ $maxMb }}MB.</p>
+        <p class="text-xs text-ink/65">Shown on the programme card and its landing page. 1600×600 works best. JPG, PNG or WebP, up to {{ $maxMb }}MB.</p>
         <div class="mt-2 flex flex-wrap items-center gap-4">
             <div class="relative aspect-[8/3] w-56 overflow-hidden rounded-xl border border-line bg-gradient-to-br from-crimson to-crimson-dark">
                 <template x-if="coverPreview">
@@ -31,7 +31,7 @@
                     <img x-show="!coverPreview" src="{{ $programme->coverUrl() }}" alt="Current cover" class="h-full w-full object-cover">
                 @else
                     <div x-show="!coverPreview" class="absolute inset-0 flex items-center justify-center">
-                        <span class="font-display text-lg font-bold text-white/80">{{ $programme->code ?? 'Cover' }}</span>
+                        <span class="font-display text-lg font-bold text-white/85">{{ $programme->code ?? 'Cover' }}</span>
                     </div>
                 @endif
             </div>
@@ -41,7 +41,7 @@
                     <input type="file" name="cover" accept="image/png,image/jpeg,image/webp" class="sr-only"
                            @change="previewCover($event)">
                 </label>
-                <p class="mt-1 text-xs text-ink/50" x-text="coverName"></p>
+                <p class="mt-1 text-xs text-ink/65" x-text="coverName"></p>
             </div>
         </div>
         <x-input-error :messages="$errors->get('cover')" class="mt-2" />
@@ -71,7 +71,7 @@
     {{-- Fees --}}
     <fieldset class="rounded-xl border border-line bg-surface/40 p-4">
         <legend class="px-1.5 text-sm font-medium text-ink">Fee schedule</legend>
-        <p class="mb-3 text-xs text-ink/60">
+        <p class="mb-3 text-xs text-ink/65">
             Registration and administration are charged <strong class="font-medium text-ink/75">once</strong>, on a student's
             first purchase in this programme. Per paper is the default price of each course placed here — an individual
             course can override it.
@@ -132,7 +132,7 @@
                @checked(old('is_active', $programme?->is_active ?? true))>
         <span>
             <span class="block text-sm font-medium text-ink">Active</span>
-            <span class="block text-xs text-ink/60">Inactive programmes stay intact but are hidden from the public catalogue filters.</span>
+            <span class="block text-xs text-ink/65">Inactive programmes stay intact but are hidden from the public catalogue filters.</span>
         </span>
     </label>
 </div>

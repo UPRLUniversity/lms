@@ -46,8 +46,8 @@
 
                             <div class="min-w-0 flex-1">
                                 <p class="font-medium text-ink">{{ $request->user->name }}</p>
-                                <p class="truncate text-sm text-ink/60">{{ $request->user->email }}</p>
-                                <p class="mt-0.5 text-xs text-ink/50">
+                                <p class="truncate text-sm text-ink/65">{{ $request->user->email }}</p>
+                                <p class="mt-0.5 text-xs text-ink/65">
                                     {{ $request->course->code }} · {{ $request->course->title }}
                                     · requested {{ $request->enrolled_at?->diffForHumans() }}
                                 </p>

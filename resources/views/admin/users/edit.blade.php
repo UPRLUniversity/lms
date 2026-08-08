@@ -3,7 +3,7 @@
 
     <div class="mx-auto max-w-2xl space-y-6">
         <div>
-            <a href="{{ route('admin.users.index') }}" class="inline-flex items-center gap-1 rounded text-sm text-ink/60 hover:text-crimson focus-ring">
+            <a href="{{ route('admin.users.index') }}" class="inline-flex items-center gap-1 rounded text-sm text-ink/65 hover:text-crimson focus-ring">
                 <x-ui.icon name="chevron-left" class="h-4 w-4" /> Back to people
             </a>
             <div class="mt-2 flex items-center gap-3">
@@ -36,7 +36,7 @@
                             @if ($currentRole)
                                 <x-ui.role-badge :role="$currentRole" />
                             @endif
-                            <span class="text-sm text-ink/60">You can’t change your own role.</span>
+                            <span class="text-sm text-ink/65">You can’t change your own role.</span>
                         </div>
                     </div>
                 @else
@@ -77,7 +77,7 @@
                 <p class="mt-1 text-sm text-ink/70">Add {{ $user->name }} to a published course directly (status active).</p>
 
                 @if ($enrollableCourses->isEmpty())
-                    <p class="mt-4 text-sm text-ink/50">This user is already enrolled in every published course.</p>
+                    <p class="mt-4 text-sm text-ink/65">This user is already enrolled in every published course.</p>
                 @else
                     <form method="POST" action="{{ route('enrollment.admin.store') }}" class="mt-4 flex flex-wrap items-end gap-3">
                         @csrf

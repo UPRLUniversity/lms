@@ -9,7 +9,7 @@
     $tones = [
         'crimson' => 'bg-crimson/10 text-crimson',
         'success' => 'bg-success/10 text-success',
-        'gold' => 'bg-gold/15 text-gold',
+        'gold' => 'bg-gold/10 text-gold-ink',
         'neutral' => 'bg-ink/5 text-ink',
     ];
     $iconClasses = $tones[$tone] ?? $tones['crimson'];

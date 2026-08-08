@@ -18,7 +18,7 @@
                     @foreach ($conversations as $conversation)
                         <a href="{{ route('messages.show', $conversation) }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-ink/5 focus-ring">
                             @if ($conversation->isGroup())
-                                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/15 text-gold-ink"><x-ui.icon name="chat-group" class="h-4 w-4" /></span>
+                                <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/10 text-gold-ink"><x-ui.icon name="chat-group" class="h-4 w-4" /></span>
                             @else
                                 <x-ui.avatar :user="$conversation->otherParticipant($me)" size="sm" />
                             @endif
@@ -31,7 +31,7 @@
             {{-- Composer --}}
             <section class="rounded-2xl border border-line bg-card shadow-sm">
                 <div class="flex items-center gap-3 border-b border-line px-4 py-3">
-                    <a href="{{ route('messages.index') }}" class="rounded-lg p-1.5 text-ink/50 hover:bg-ink/5 hover:text-ink focus-ring" aria-label="Back">
+                    <a href="{{ route('messages.index') }}" class="rounded-lg p-1.5 text-ink/65 hover:bg-ink/5 hover:text-ink focus-ring" aria-label="Back">
                         <x-ui.icon name="arrow-left" class="h-5 w-5" />
                     </a>
                     <h2 class="font-display text-lg font-semibold text-ink">New message</h2>
@@ -56,10 +56,10 @@
                         @if ($canCreateGroup)
                             <div class="inline-flex rounded-xl border border-line bg-surface p-1" role="tablist" aria-label="Conversation type">
                                 <button type="button" @click="mode = '{{ ConversationType::Direct->value }}'"
-                                        :class="mode === '{{ ConversationType::Direct->value }}' ? 'bg-card text-crimson shadow-sm' : 'text-ink/60'"
+                                        :class="mode === '{{ ConversationType::Direct->value }}' ? 'bg-card text-crimson shadow-sm' : 'text-ink/65'"
                                         class="rounded-lg px-3 py-1.5 text-sm font-medium focus-ring">Direct</button>
                                 <button type="button" @click="mode = '{{ ConversationType::Group->value }}'"
-                                        :class="mode === '{{ ConversationType::Group->value }}' ? 'bg-card text-crimson shadow-sm' : 'text-ink/60'"
+                                        :class="mode === '{{ ConversationType::Group->value }}' ? 'bg-card text-crimson shadow-sm' : 'text-ink/65'"
                                         class="rounded-lg px-3 py-1.5 text-sm font-medium focus-ring">Group</button>
                             </div>
                         @endif
@@ -77,7 +77,7 @@
                                     {{-- Chosen: show who, with a way back to searching. --}}
                                     <div x-show="chosen.length" x-cloak class="flex items-center justify-between gap-2 rounded-xl border border-line bg-surface px-3.5 py-2.5">
                                         <span class="truncate text-sm font-medium text-ink" x-text="label"></span>
-                                        <button type="button" @click="clear()" class="rounded-lg p-1 text-ink/40 hover:text-crimson focus-ring" aria-label="Choose someone else">
+                                        <button type="button" @click="clear()" class="rounded-lg p-1 text-ink/65 hover:text-crimson focus-ring" aria-label="Choose someone else">
                                             <x-ui.icon name="x" class="h-4 w-4" />
                                         </button>
                                     </div>
@@ -97,7 +97,7 @@
                                                 <li class="px-3.5 py-2.5"><x-ui.skeleton class="h-4 w-2/3" /></li>
                                             </template>
                                             <template x-if="!loading && !results.length">
-                                                <li class="px-3.5 py-2.5 text-sm text-ink/50">No one matches “<span x-text="term"></span>”.</li>
+                                                <li class="px-3.5 py-2.5 text-sm text-ink/65">No one matches “<span x-text="term"></span>”.</li>
                                             </template>
                                             <template x-for="(person, i) in results" :key="person.id">
                                                 <li role="option" :aria-selected="(i === activeIndex).toString()">
@@ -105,7 +105,7 @@
                                                             :class="i === activeIndex ? 'bg-crimson/5' : ''"
                                                             class="block w-full px-3.5 py-2 text-left focus-ring">
                                                         <span class="block truncate text-sm font-medium text-ink" x-text="person.name"></span>
-                                                        <span class="block truncate text-xs text-ink/50" x-text="person.email"></span>
+                                                        <span class="block truncate text-xs text-ink/65" x-text="person.email"></span>
                                                     </button>
                                                 </li>
                                             </template>
@@ -144,7 +144,7 @@
                                                 <template x-for="person in chosen" :key="person.id">
                                                     <span class="inline-flex items-center gap-1.5 rounded-full bg-crimson/10 py-1 pl-3 pr-1.5 text-sm text-ink">
                                                         <span x-text="person.name"></span>
-                                                        <button type="button" @click="remove(person)" class="rounded-full p-0.5 text-ink/40 hover:text-crimson focus-ring"
+                                                        <button type="button" @click="remove(person)" class="rounded-full p-0.5 text-ink/65 hover:text-crimson focus-ring"
                                                                 :aria-label="`Remove ${person.name}`">
                                                             <x-ui.icon name="x" class="h-3.5 w-3.5" />
                                                         </button>
@@ -161,7 +161,7 @@
                                                     <div class="px-2 py-1.5"><x-ui.skeleton class="h-4 w-2/3" /></div>
                                                 </template>
                                                 <template x-if="!loading && !results.length">
-                                                    <p class="px-2 py-1.5 text-sm text-ink/50">No one matches that search.</p>
+                                                    <p class="px-2 py-1.5 text-sm text-ink/65">No one matches that search.</p>
                                                 </template>
                                                 <template x-for="person in results" :key="person.id">
                                                     <button type="button" @click="choose(person)"
@@ -172,7 +172,7 @@
                                                         </span>
                                                         <span class="min-w-0">
                                                             <span class="block truncate text-sm text-ink" x-text="person.name"></span>
-                                                            <span class="block truncate text-xs text-ink/50" x-text="person.email"></span>
+                                                            <span class="block truncate text-xs text-ink/65" x-text="person.email"></span>
                                                         </span>
                                                     </button>
                                                 </template>

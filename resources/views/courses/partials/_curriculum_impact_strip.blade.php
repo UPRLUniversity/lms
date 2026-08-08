@@ -23,7 +23,7 @@
         never be a surprise who it reaches (Section 16).
     --}}
     <div class="mt-4 flex flex-wrap items-start gap-3 rounded-xl border border-gold/30 bg-gold/[0.06] px-4 py-3">
-        <span class="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold/15 text-gold-ink">
+        <span class="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gold/10 text-gold-ink">
             <x-ui.icon name="users" class="h-4 w-4" />
         </span>
 
@@ -40,7 +40,7 @@
                     {{ $finished === 1 ? 'has' : 'have' }} already finished this course.
                 @endif
             </p>
-            <p class="mt-0.5 text-sm text-ink/60">
+            <p class="mt-0.5 text-sm text-ink/65">
                 Changes that move a deadline, change what is graded, or change what they can reach
                 are announced to them. Wording and media edits are not. Anything they have already
                 worked on is hidden rather than deleted, so their record is kept.

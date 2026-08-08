@@ -4,10 +4,10 @@
     $isFiltered = collect($filters)->filter()->isNotEmpty();
 @endphp
 
-<div class="flex items-center justify-between gap-3 px-1 pb-3 text-sm text-ink/60">
+<div class="flex items-center justify-between gap-3 px-1 pb-3 text-sm text-ink/65">
     <p aria-live="polite">
         {{ $questions->total() }} {{ Str::plural('question', $questions->total()) }}
-        @if ($isFiltered)<span class="text-ink/40">· filtered</span>@endif
+        @if ($isFiltered)<span class="text-ink/65">· filtered</span>@endif
     </p>
 </div>
 
@@ -22,7 +22,7 @@
     @else
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-                <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/50">
+                <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/65">
                     <tr>
                         <th scope="col" class="px-5 py-3 font-medium">Question</th>
                         <th scope="col" class="px-5 py-3 font-medium">Type</th>
@@ -41,7 +41,7 @@
                                     {{ Str::limit(strip_tags($question->prompt), 110) }}
                                 </a>
                                 @if ($question->assessments_count > 0)
-                                    <span class="mt-0.5 inline-flex items-center gap-1 text-xs text-ink/45">
+                                    <span class="mt-0.5 inline-flex items-center gap-1 text-xs text-ink/65">
                                         <x-ui.icon name="clipboard" class="h-3.5 w-3.5" />
                                         used in {{ $question->assessments_count }} {{ Str::plural('assessment', $question->assessments_count) }}
                                     </span>
@@ -49,11 +49,11 @@
                             </td>
                             <td class="px-5 py-3">
                                 <span class="inline-flex items-center gap-1.5 text-ink/70">
-                                    <x-ui.icon :name="$question->type->icon()" class="h-4 w-4 text-ink/40" />
+                                    <x-ui.icon :name="$question->type->icon()" class="h-4 w-4 text-ink/65" />
                                     {{ $question->type->shortLabel() }}
                                 </span>
                             </td>
-                            <td class="px-5 py-3 text-ink/60">{{ $question->category?->name ?? '—' }}</td>
+                            <td class="px-5 py-3 text-ink/65">{{ $question->category?->name ?? '—' }}</td>
                             <td class="px-5 py-3">
                                 <x-ui.badge :variant="$question->difficulty->badge()">{{ $question->difficulty->label() }}</x-ui.badge>
                             </td>
@@ -74,7 +74,7 @@
                                         @csrf
                                         @method('delete')
                                         <x-ui.button size="sm" variant="ghost" type="submit" title="Delete"
-                                                     class="text-ink/50 hover:text-crimson">
+                                                     class="text-ink/65 hover:text-crimson">
                                             <x-ui.icon name="trash" class="h-4 w-4" /><span class="sr-only">Delete</span>
                                         </x-ui.button>
                                     </form>

@@ -2,7 +2,7 @@
     <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
             <h3 class="font-display text-lg font-semibold text-ink">Curriculum</h3>
-            <p class="text-sm text-ink/60">
+            <p class="text-sm text-ink/65">
                 Lessons, quizzes and assignments share one order. Drag a row by its handle — or focus it and
                 press <kbd class="rounded border border-line bg-surface px-1 text-xs">Alt</kbd> +
                 <kbd class="rounded border border-line bg-surface px-1 text-xs">↑</kbd>/<kbd class="rounded border border-line bg-surface px-1 text-xs">↓</kbd>.
@@ -88,7 +88,7 @@
                         @endforeach
                     </select>
                 </div>
-                <p x-show="insert.index !== null" x-cloak class="rounded-xl bg-surface px-3 py-2 text-sm text-ink/60">
+                <p x-show="insert.index !== null" x-cloak class="rounded-xl bg-surface px-3 py-2 text-sm text-ink/65">
                     It'll be added exactly where you clicked in the outline.
                 </p>
 
@@ -139,7 +139,7 @@
                 </div>
                 <input type="hidden" name="module_id" :value="newAssessment.placement === 'standalone' ? '' : newAssessment.moduleId">
 
-                <p x-show="insert.index !== null" x-cloak class="rounded-xl bg-surface px-3 py-2 text-sm text-ink/60">
+                <p x-show="insert.index !== null" x-cloak class="rounded-xl bg-surface px-3 py-2 text-sm text-ink/65">
                     It'll be added exactly where you clicked in the outline.
                 </p>
 

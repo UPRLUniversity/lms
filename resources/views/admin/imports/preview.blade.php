@@ -50,7 +50,7 @@
         <x-ui.card :padding="false">
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">
-                    <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/50">
+                    <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/65">
                         <tr>
                             <th scope="col" class="px-5 py-3 font-medium">Row</th>
                             @foreach ($shown as $column)
@@ -62,7 +62,7 @@
                     <tbody class="divide-y divide-line">
                         @foreach ($report['rows'] as $row)
                             <tr class="hover:bg-surface/60 {{ $row->isOk() ? '' : 'bg-crimson/[0.02]' }}">
-                                <td class="px-5 py-3 align-top text-ink/40">{{ $row->line }}</td>
+                                <td class="px-5 py-3 align-top text-ink/65">{{ $row->line }}</td>
 
                                 @foreach ($shown as $column)
                                     <td class="max-w-xs px-5 py-3 align-top">
@@ -80,7 +80,7 @@
                                          programme, the answer key, the student's name. Confirms
                                          the file was read the way the human meant it. --}}
                                     @if ($row->isOk() && $row->resolved !== [])
-                                        <span class="mt-1 block text-xs text-ink/50">
+                                        <span class="mt-1 block text-xs text-ink/65">
                                             {{ collect($row->resolved)->filter()->join(' · ') }}
                                         </span>
                                     @endif
@@ -93,13 +93,13 @@
         </x-ui.card>
 
         <div class="flex flex-wrap items-center justify-between gap-3">
-            <p class="text-sm text-ink/60">
+            <p class="text-sm text-ink/65">
                 {{ $counts['valid'] }} of {{ $counts['total'] }} {{ \Illuminate\Support\Str::plural('row', $counts['total']) }}
                 will be imported.
             </p>
 
             @if ($counts['valid'] === 0)
-                <span class="rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink/50">Nothing to import</span>
+                <span class="rounded-xl border border-line bg-surface px-4 py-2.5 text-sm text-ink/65">Nothing to import</span>
             @else
                 <form method="POST" action="{{ route('admin.imports.store', $params) }}">
                     @csrf

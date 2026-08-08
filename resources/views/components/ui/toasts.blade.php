@@ -46,7 +46,7 @@
                   :class="{
                       'bg-success/10 text-success': t.type === 'success',
                       'bg-crimson/10 text-crimson': t.type === 'error',
-                      'bg-ink/5 text-ink/60': t.type === 'info',
+                      'bg-ink/5 text-ink/65': t.type === 'info',
                   }">
                 <svg x-show="t.type === 'success'" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.75 6 6 9-13.5" /></svg>
                 <svg x-show="t.type === 'error'" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12" /></svg>
@@ -56,7 +56,7 @@
             <p class="flex-1 text-sm text-ink" x-text="t.message"></p>
 
             <button type="button" @click="remove(t.id)"
-                    class="-mr-1 rounded-lg p-1 text-ink/40 hover:bg-ink/5 hover:text-ink focus-ring"
+                    class="-mr-1 rounded-lg p-1 text-ink/65 hover:bg-ink/5 hover:text-ink focus-ring"
                     aria-label="Dismiss notification">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 18 18 6M6 6l12 12" /></svg>
             </button>

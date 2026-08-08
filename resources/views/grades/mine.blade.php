@@ -13,7 +13,7 @@
 <x-app-layout :title="'Grades · '.$course->title">
     <div class="mx-auto max-w-5xl space-y-6">
         <div>
-            <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to course
             </a>
             <div class="mt-2 flex flex-wrap items-end justify-between gap-3">
@@ -35,7 +35,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <p class="text-sm text-ink/60">Overall grade</p>
+                            <p class="text-sm text-ink/65">Overall grade</p>
                             @if ($record)
                                 <x-ui.badge variant="success">Final</x-ui.badge>
                             @elseif ($summary->provisional)
@@ -57,13 +57,13 @@
                             @elseif ($summary->percent !== null)
                                 {{ $scale->formatResult($summary->percent, $summary->band) }}
                             @else
-                                <span class="text-ink/40 text-base font-normal">Nothing graded yet</span>
+                                <span class="text-ink/65 text-base font-normal">Nothing graded yet</span>
                             @endif
                         </p>
                         @if ($record)
-                            <p class="mt-1 text-xs text-ink/50">Recorded {{ $record->computed_at->isoFormat('D MMM YYYY') }} — won't change even if the scale is edited later.</p>
+                            <p class="mt-1 text-xs text-ink/65">Recorded {{ $record->computed_at->isoFormat('D MMM YYYY') }} — won't change even if the scale is edited later.</p>
                         @elseif ($summary->provisional)
-                            <p class="mt-1 text-xs text-ink/50">Some coursework is still awaiting grading — this figure will update as it's graded.</p>
+                            <p class="mt-1 text-xs text-ink/65">Some coursework is still awaiting grading — this figure will update as it's graded.</p>
                         @endif
                     </div>
                 </div>
@@ -74,7 +74,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[640px] text-sm">
                         <thead>
-                            <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/50">
+                            <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/65">
                                 <th scope="col" class="px-5 py-3.5">Coursework</th>
                                 <th scope="col" class="px-5 py-3.5">Score</th>
                                 <th scope="col" class="px-5 py-3.5">%</th>
@@ -87,13 +87,13 @@
                                 <tr>
                                     <td class="px-5 py-4">
                                         <div class="flex items-center gap-2">
-                                            <x-ui.icon :name="$item->isAssignment() ? 'document-text' : 'clipboard'" class="h-4 w-4 shrink-0 text-ink/40" />
+                                            <x-ui.icon :name="$item->isAssignment() ? 'document-text' : 'clipboard'" class="h-4 w-4 shrink-0 text-ink/65" />
                                             <span class="font-medium text-ink">{{ $item->title() }}</span>
                                         </div>
                                     </td>
                                     <td class="px-5 py-4 text-ink/70">
                                         @if ($item->pending)
-                                            <span class="text-ink/30">—</span>
+                                            <span class="text-ink/65">—</span>
                                         @else
                                             {{ $fmtNum($item->pointsEarned) }} / {{ $fmtNum($item->pointsPossible) }}
                                         @endif
@@ -107,7 +107,7 @@
                                         @elseif ($band)
                                             <x-ui.badge :variant="$band->color">{{ $band->label }}</x-ui.badge>
                                         @else
-                                            <span class="text-ink/30">—</span>
+                                            <span class="text-ink/65">—</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -117,7 +117,7 @@
                 </div>
             </div>
 
-            <p class="text-xs text-ink/40">
+            <p class="text-xs text-ink/65">
                 Displayed as {{ $scale->name }} · limit {{ $fmtNum($scale->scale_limit) }}@if ($scale->passMark() !== null) · pass mark {{ $scale->passMark() }}%@endif.
                 Per-item grades are informational and never averaged directly — the overall grade is points-weighted across all coursework.
             </p>

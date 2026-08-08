@@ -10,7 +10,7 @@
 <x-app-layout :title="'Order '.$order->shortReference()">
     <div class="mx-auto max-w-3xl space-y-6">
         <nav class="text-sm">
-            <a href="{{ route('orders.index') }}" class="inline-flex items-center gap-1.5 text-ink/60 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('orders.index') }}" class="inline-flex items-center gap-1.5 text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Your orders
             </a>
         </nav>
@@ -74,7 +74,7 @@
             <div class="flex flex-wrap items-start justify-between gap-3 border-b border-line px-5 py-4">
                 <div>
                     <h3 class="font-display text-lg font-semibold text-ink">Receipt</h3>
-                    <p class="mt-0.5 text-xs text-ink/55">
+                    <p class="mt-0.5 text-xs text-ink/65">
                         Reference <span class="font-mono">{{ $order->shortReference() }}</span>
                         · {{ $order->created_at->isoFormat('D MMM YYYY') }}
                     </p>
@@ -110,7 +110,7 @@
                     <li class="flex items-start justify-between gap-3 bg-surface/50 px-5 py-3.5">
                         <div class="min-w-0">
                             <span class="text-ink/75">{{ $item->title }}</span>
-                            <span class="block text-xs text-ink/45">One-off programme fee</span>
+                            <span class="block text-xs text-ink/65">One-off programme fee</span>
                         </div>
                         <span class="shrink-0 font-medium text-ink">{{ $item->formattedLineTotal() }}</span>
                     </li>
@@ -119,7 +119,7 @@
 
             <dl class="space-y-2 border-t border-line px-5 py-4 text-sm">
                 <div class="flex items-baseline justify-between gap-3">
-                    <dt class="text-ink/60">Subtotal</dt>
+                    <dt class="text-ink/65">Subtotal</dt>
                     <dd class="text-ink">{{ \App\Support\Money::format($order->subtotal) }}</dd>
                 </div>
                 @if ((float) $order->discount_total > 0)

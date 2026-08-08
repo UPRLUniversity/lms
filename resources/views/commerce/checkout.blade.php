@@ -8,7 +8,7 @@
 <x-app-layout title="Checkout">
     <div class="mx-auto max-w-6xl">
         <nav class="mb-6 text-sm">
-            <a href="{{ route('cart.index') }}" class="inline-flex items-center gap-1.5 text-ink/60 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('cart.index') }}" class="inline-flex items-center gap-1.5 text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to cart
             </a>
         </nav>
@@ -43,9 +43,9 @@
 
                             @foreach ($totals->feeLines() as $line)
                                 <li class="flex items-start justify-between gap-3 text-sm">
-                                    <span class="min-w-0 text-ink/60">
+                                    <span class="min-w-0 text-ink/65">
                                         {{ $line->title }}
-                                        <span class="block text-xs text-ink/45">Charged once per programme</span>
+                                        <span class="block text-xs text-ink/65">Charged once per programme</span>
                                     </span>
                                     <span class="shrink-0 font-medium text-ink">{{ $line->formattedAmount() }}</span>
                                 </li>
@@ -54,7 +54,7 @@
 
                         <dl class="mt-4 space-y-2 text-sm">
                             <div class="flex items-baseline justify-between gap-3">
-                                <dt class="text-ink/60">Subtotal</dt>
+                                <dt class="text-ink/65">Subtotal</dt>
                                 <dd class="font-medium text-ink">{{ $totals->formattedSubtotal() }}</dd>
                             </div>
                             @if ($totals->hasDiscount())
@@ -84,7 +84,7 @@
 
                     <x-ui.card>
                         <h3 class="font-display text-lg font-semibold text-ink">Your details</h3>
-                        <p class="mt-1 text-xs text-ink/60">Used for your receipt. We already have your account details — add anything else you would like on record.</p>
+                        <p class="mt-1 text-xs text-ink/65">Used for your receipt. We already have your account details — add anything else you would like on record.</p>
 
                         <div class="mt-4 grid gap-4 sm:grid-cols-2">
                             <x-ui.field name="first_name" label="First name" :value="old('first_name', explode(' ', $user->name)[0] ?? '')" />
@@ -124,15 +124,15 @@
                                                 @endif
                                             </span>
                                             @if ($method->key === 'bank_transfer')
-                                                <span class="mt-0.5 block text-xs text-ink/60">
+                                                <span class="mt-0.5 block text-xs text-ink/65">
                                                     You will see our account details next. Access opens once we confirm your transfer.
                                                 </span>
                                             @elseif ($method->key === 'sandbox')
-                                                <span class="mt-0.5 block text-xs text-ink/60">
+                                                <span class="mt-0.5 block text-xs text-ink/65">
                                                     Test gateway — completes instantly without taking any money.
                                                 </span>
                                             @else
-                                                <span class="mt-0.5 block text-xs text-ink/60">
+                                                <span class="mt-0.5 block text-xs text-ink/65">
                                                     You will be taken to {{ $method->label }} to pay securely, then returned here.
                                                 </span>
                                             @endif
