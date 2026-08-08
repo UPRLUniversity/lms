@@ -77,10 +77,16 @@ class ProgressionService
      * this needs is resolved in a fixed number of queries regardless of how many courses
      * are asked about.
      *
+     * `$assumeSequential` evaluates ONE named programme as though its rule were already
+     * `sequential`, whatever it is actually set to. It exists for `progression:audit`,
+     * which has to answer "who would this block?" before anybody flips the switch — the
+     * question is worthless if it can only be asked after the fact. Nothing else should
+     * pass it: everywhere real, the stored rule is the rule.
+     *
      * @param  Collection<int, Course>  $courses
      * @return Collection<int, ProgressionVerdict>
      */
-    public function verdictsFor(User $user, Collection $courses): Collection
+    public function verdictsFor(User $user, Collection $courses, ?Programme $assumeSequential = null): Collection
     {
         if ($courses->isEmpty()) {
             return collect();
@@ -109,9 +115,54 @@ class ProgressionService
 
         $cleared = [];   // part id => bool, computed once per part per request
 
-        return $courses->mapWithKeys(function (Course $course) use ($user, $partsByProgramme, &$cleared) {
-            return [$course->id => $this->verdictFor($user, $course, $partsByProgramme, $cleared)];
+        return $courses->mapWithKeys(function (Course $course) use ($user, $partsByProgramme, &$cleared, $assumeSequential) {
+            return [$course->id => $this->verdictFor($user, $course, $partsByProgramme, $cleared, $assumeSequential)];
         });
+    }
+
+    /**
+     * Where a student stands in every part of a programme, keyed by part id — for the
+     * programme page's ladder.
+     *
+     * Returns an empty collection for a guest or an `open` programme: with nothing to
+     * unlock there is no ladder to draw, and drawing one anyway would invent a rule the
+     * programme does not have.
+     *
+     * @return Collection<int, array{part: ProgrammePart, unlocked: bool, cleared: bool, creditsEarned: int, creditBar: ?int, outstanding: Collection<int, Course>}>
+     */
+    public function partStatesFor(?User $user, Programme $programme): Collection
+    {
+        if ($user === null || ! $this->ruleOf($programme)->isSequential()) {
+            return collect();
+        }
+
+        $parts = $programme->relationLoaded('parts')
+            ? $programme->parts
+            : $programme->parts()->with('courses')->get();
+
+        $parts->loadMissing('courses');
+
+        $states = collect();
+        $allEarlierCleared = true;
+
+        foreach ($parts->sortBy('position') as $part) {
+            $cleared = $this->isPartCleared($user, $part);
+
+            $states->put($part->id, [
+                'part' => $part,
+                // The first part is always open, so the flag starts true and only ever
+                // closes behind an uncleared part.
+                'unlocked' => $allEarlierCleared,
+                'cleared' => $cleared,
+                'creditsEarned' => $this->creditsEarnedIn($user, $part),
+                'creditBar' => $this->creditBarFor($part),
+                'outstanding' => $this->compulsoryOutstanding($user, $part),
+            ]);
+
+            $allEarlierCleared = $allEarlierCleared && $cleared;
+        }
+
+        return $states;
     }
 
     /*
@@ -248,7 +299,7 @@ class ProgressionService
      * @param  Collection<int, Collection<int, ProgrammePart>>  $partsByProgramme
      * @param  array<int, bool>  $cleared
      */
-    private function verdictFor(User $user, Course $course, Collection $partsByProgramme, array &$cleared): ProgressionVerdict
+    private function verdictFor(User $user, Course $course, Collection $partsByProgramme, array &$cleared, ?Programme $assumeSequential = null): ProgressionVerdict
     {
         $placements = $course->programmeParts;
 
@@ -262,7 +313,10 @@ class ProgressionService
         foreach ($placements as $placement) {
             $programme = $placement->programme;
 
-            if ($programme === null || ! $this->ruleOf($programme)->isSequential()) {
+            $enforcing = $programme !== null
+                && ($this->ruleOf($programme)->isSequential() || $assumeSequential?->id === $programme->id);
+
+            if (! $enforcing) {
                 return ProgressionVerdict::allowed();
             }
 

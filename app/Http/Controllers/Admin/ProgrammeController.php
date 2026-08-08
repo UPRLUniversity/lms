@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\MediaPurpose;
+use App\Enums\ProgressionRule;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProgrammeRequest;
 use App\Http\Requests\Admin\UpdateProgrammeRequest;
@@ -61,6 +62,7 @@ class ProgrammeController extends Controller
             'administration_fee' => $data['administration_fee'] ?? 0,
             'per_paper_fee' => $data['per_paper_fee'] ?? 0,
             'is_active' => (bool) ($data['is_active'] ?? true),
+            'progression_rule' => $data['progression_rule'] ?? ProgressionRule::Open->value,
             'position' => (int) Programme::max('position') + 1,
         ]);
 
@@ -93,6 +95,7 @@ class ProgrammeController extends Controller
             'administration_fee' => $data['administration_fee'] ?? 0,
             'per_paper_fee' => $data['per_paper_fee'] ?? 0,
             'is_active' => (bool) ($data['is_active'] ?? false),
+            'progression_rule' => $data['progression_rule'] ?? ProgressionRule::Open->value,
         ]);
 
         // Replace the cover (keep exactly one), same pattern as a course cover.

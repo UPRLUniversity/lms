@@ -39,6 +39,22 @@ class AdminEnrollmentController extends Controller
                 overrideReason: $override ? $request->string('override_reason')->trim()->value() : null,
             );
         } catch (EnrollmentException $e) {
+            // A prerequisite refusal is the one failure staff can act on, so it comes back
+            // with enough context for the form to offer the override rather than just an
+            // error they can do nothing about. Deliberately two-step: showing the reason
+            // BEFORE the override exists is what makes ticking it a decision.
+            if ($e->verdict !== null) {
+                return back()
+                    ->with('error', $e->getMessage())
+                    ->with('prerequisite_block', [
+                        'user_id' => $student->id,
+                        'course_id' => $course->id,
+                        'student' => $student->name,
+                        'message' => $e->getMessage(),
+                    ])
+                    ->withInput();
+            }
+
             return back()->with('error', $e->getMessage())->withInput();
         }
 

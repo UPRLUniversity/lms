@@ -19,6 +19,12 @@
     $hasPurchased = $hasPurchased ?? false;
     $inCart = $inCart ?? false;
     $enrolled = $status === EnrollmentStatus::Active || $status === EnrollmentStatus::Completed;
+
+    // Progression. Only ever locks someone who does NOT already have access — an existing
+    // enrolment is never re-evaluated, so a student mid-course keeps their "Continue
+    // learning" button whatever a programme's rule was changed to afterwards.
+    $verdict = $verdict ?? null;
+    $locked = $verdict?->isBlocked() && ! $enrolled && ! $hasPurchased;
 @endphp
 
 {{-- Price header (paid courses only) --}}
@@ -61,6 +67,35 @@
     <x-ui.button class="w-full" :href="route('learn.resume', $course)">
         {{ $status === EnrollmentStatus::Completed ? 'Revisit the course' : 'Continue learning' }}
     </x-ui.button>
+
+@elseif ($locked)
+    {{-- Locked, not hidden. A student must be able to see what they are working toward,
+         and exactly what is left — so the reason names the part and links to it. --}}
+    <div class="rounded-xl border border-line bg-surface px-4 py-4 text-center">
+        <p class="font-display text-base font-semibold text-ink">
+            {{ $verdict->headline() }}
+        </p>
+        <p class="mt-1.5 text-sm leading-relaxed text-ink/70">{{ $verdict->message() }}</p>
+
+        @if ($verdict->creditsRequired)
+            @php $pct = min(100, (int) round($verdict->creditsEarned / max(1, $verdict->creditsRequired) * 100)); @endphp
+            <div class="mt-3">
+                <div class="h-1.5 overflow-hidden rounded-full bg-ink/10">
+                    <div class="h-full rounded-full bg-crimson transition-all" style="width: {{ $pct }}%"></div>
+                </div>
+                <p class="mt-1.5 text-xs text-ink/55">
+                    {{ $verdict->creditsEarned }} of {{ $verdict->creditsRequired }} credits earned
+                </p>
+            </div>
+        @endif
+
+        @if ($verdict->blockingPart?->programme)
+            <x-ui.button variant="secondary" class="mt-4 w-full"
+                         :href="route('programmes.show', $verdict->blockingPart->programme).'#'.$verdict->blockingPart->slug">
+                See {{ $verdict->blockingPart->name }}
+            </x-ui.button>
+        @endif
+    </div>
 
 @elseif ($isPaid && $hasPurchased)
     {{-- Paid for, but the enrolment did not land (a rare fulfilment failure). Say so

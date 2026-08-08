@@ -33,6 +33,7 @@ class CartController extends Controller
         private readonly CartService $carts,
         private readonly CheckoutService $checkout,
         private readonly CouponService $coupons,
+        private readonly ProgressionService $progression,
     ) {}
 
     public function index(Request $request): View
@@ -58,6 +59,15 @@ class CartController extends Controller
             'cart' => $cart,
             'totals' => $totals,
             'pruned' => $pruned,
+            // A line can become blocked after it was added — a programme switched to
+            // sequential, or the buyer signed in as somebody else's cart merged. Flag it
+            // here so checkout's refusal is never a surprise.
+            'verdicts' => $request->user()
+                ? $this->progression->verdictsFor(
+                    $request->user(),
+                    $cart->items->map(fn ($item) => $item->course)->filter()->values(),
+                )
+                : collect(),
         ]);
     }
 

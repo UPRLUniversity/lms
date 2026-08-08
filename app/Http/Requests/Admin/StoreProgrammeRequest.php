@@ -3,10 +3,11 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\MediaPurpose;
+use App\Enums\ProgressionRule;
 use App\Models\Programme;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class StoreProgrammeRequest extends FormRequest
 {
@@ -47,6 +48,7 @@ class StoreProgrammeRequest extends FormRequest
             'per_paper_fee' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
 
             'is_active' => ['nullable', 'boolean'],
+            'progression_rule' => ['required', 'in:'.implode(',', ProgressionRule::values())],
             'cover' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:'.$cover->maxKb()],
         ];
     }
