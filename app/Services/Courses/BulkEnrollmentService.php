@@ -6,6 +6,7 @@ use App\Enums\EnrollmentSource;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\User;
+use App\Support\Courses\ProgressionVerdict;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -32,7 +33,18 @@ class BulkEnrollmentService
 
     public const EMPTY_ROW = 'empty';
 
-    public function __construct(private readonly EnrollmentService $enrollments) {}
+    /**
+     * Not a refusal — a WARNING. The row still imports (a bulk import is a staff action,
+     * and the registrar admitting a cohort of transfer students is the normal reason to
+     * reach for one), but naming it in the preview makes it a decision rather than an
+     * accident. Every such row records a prerequisite override.
+     */
+    public const PREREQUISITE_NOT_MET = 'prerequisite_not_met';
+
+    public function __construct(
+        private readonly EnrollmentService $enrollments,
+        private readonly ProgressionService $progression,
+    ) {}
 
     /**
      * Human label for a row problem (for the preview table).
@@ -45,9 +57,18 @@ class BulkEnrollmentService
             self::UNKNOWN_CODE => 'No course with this code',
             self::DUPLICATE => 'Duplicate row in this file',
             self::ALREADY_ENROLLED => 'Already enrolled',
+            self::PREREQUISITE_NOT_MET => 'Prerequisite not met — will import as an override',
             self::EMPTY_ROW => 'Empty row',
             default => 'Problem',
         };
+    }
+
+    /**
+     * Whether a flagged row still imports. Only the prerequisite warning does.
+     */
+    public static function isImportable(string $problem): bool
+    {
+        return $problem === self::OK || $problem === self::PREREQUISITE_NOT_MET;
     }
 
     /**
@@ -84,6 +105,10 @@ class BulkEnrollmentService
             ->map(fn (Enrollment $e) => $e->user_id.':'.$e->course_id)
             ->flip();
 
+        // Progression verdicts for every (student, course) pair the file mentions,
+        // resolved per student rather than per row so a 500-row import stays flat.
+        $verdicts = $this->verdictsForFile($records, $usersByEmail, $coursesByCode);
+
         $seen = [];
         $rows = [];
         $counts = [self::OK => 0];
@@ -95,7 +120,7 @@ class BulkEnrollmentService
             $user = $email !== '' ? $usersByEmail->get(Str::lower($email)) : null;
             $course = $code !== '' ? $coursesByCode->get($code) : null;
 
-            $problem = $this->classify($email, $code, $user, $course, $existing, $seen);
+            $problem = $this->classify($email, $code, $user, $course, $existing, $seen, $verdicts);
 
             if ($user && $course) {
                 $seen[$user->id.':'.$course->id] = true;
@@ -112,15 +137,22 @@ class BulkEnrollmentService
                 'course_id' => $course?->id,
                 'course_title' => $course?->title,
                 'problem' => $problem,
+                'reason' => $problem === self::PREREQUISITE_NOT_MET
+                    ? $verdicts->get($user->id.':'.$course->id)?->message()
+                    : null,
             ];
         }
+
+        $importable = ($counts[self::OK] ?? 0) + ($counts[self::PREREQUISITE_NOT_MET] ?? 0);
 
         return [
             'rows' => $rows,
             'counts' => [
                 'total' => count($rows),
-                'valid' => $counts[self::OK] ?? 0,
-                'invalid' => count($rows) - ($counts[self::OK] ?? 0),
+                // "valid" is what will actually be written, so the preview's headline
+                // number never promises fewer enrolments than the import performs.
+                'valid' => $importable,
+                'invalid' => count($rows) - $importable,
             ] + $counts,
         ];
     }
@@ -138,8 +170,10 @@ class BulkEnrollmentService
         $imported = 0;
         $skipped = 0;
 
+        $overridden = 0;
+
         foreach ($report['rows'] as $row) {
-            if ($row['problem'] !== self::OK) {
+            if (! self::isImportable($row['problem'])) {
                 $skipped++;
 
                 continue;
@@ -155,8 +189,23 @@ class BulkEnrollmentService
             }
 
             try {
-                $this->enrollments->adminEnroll($student, $course, $actor, EnrollmentSource::Bulk);
+                // The prerequisite gate is overridden for EVERY row, not only the ones the
+                // preview flagged: state can move between preview and import, and a bulk
+                // import that half-enforced would produce a result nobody could predict
+                // from the screen they approved. Each override is recorded per enrolment.
+                $this->enrollments->adminEnroll(
+                    $student,
+                    $course,
+                    $actor,
+                    EnrollmentSource::Bulk,
+                    overridePrerequisites: true,
+                    overrideReason: 'Bulk enrolment import by '.$actor->name,
+                );
                 $imported++;
+
+                if ($row['problem'] === self::PREREQUISITE_NOT_MET) {
+                    $overridden++;
+                }
             } catch (\Throwable) {
                 // A race (e.g. enrolled between preview and import) — count, don't fail.
                 $skipped++;
@@ -166,6 +215,7 @@ class BulkEnrollmentService
         return [
             'imported' => $imported,
             'skipped' => $skipped,
+            'overridden' => $overridden,
             'total' => $report['counts']['total'],
         ];
     }
@@ -183,8 +233,9 @@ class BulkEnrollmentService
      *
      * @param  Collection<string, int>  $existing
      * @param  array<string, bool>  $seen
+     * @param  Collection<string, ProgressionVerdict>  $verdicts
      */
-    private function classify(string $email, string $code, ?User $user, ?Course $course, Collection $existing, array $seen): string
+    private function classify(string $email, string $code, ?User $user, ?Course $course, Collection $existing, array $seen, Collection $verdicts): string
     {
         if ($email === '' && $code === '') {
             return self::EMPTY_ROW;
@@ -204,8 +255,46 @@ class BulkEnrollmentService
         if ($existing->has($key)) {
             return self::ALREADY_ENROLLED;
         }
+        // Last, because it is the only flag that does not stop the row: a genuine problem
+        // above should be reported instead of a warning about a row that will not import.
+        if ($verdicts->get($key)?->isBlocked()) {
+            return self::PREREQUISITE_NOT_MET;
+        }
 
         return self::OK;
+    }
+
+    /**
+     * Progression verdicts for every (student, course) pair the file names, keyed
+     * "userId:courseId". One ProgressionService pass per DISTINCT STUDENT rather than per
+     * row — a file listing 40 courses for the same student costs one pass, not 40.
+     *
+     * @param  Collection<int, array{email: string, course_code: string}>  $records
+     * @param  Collection<string, User>  $usersByEmail
+     * @param  Collection<string, Course>  $coursesByCode
+     * @return Collection<string, ProgressionVerdict>
+     */
+    private function verdictsForFile(Collection $records, Collection $usersByEmail, Collection $coursesByCode): Collection
+    {
+        $wanted = $records
+            ->map(fn (array $r) => [
+                'user' => $r['email'] !== '' ? $usersByEmail->get(Str::lower($r['email'])) : null,
+                'course' => $r['course_code'] !== '' ? $coursesByCode->get($r['course_code']) : null,
+            ])
+            ->filter(fn (array $pair) => $pair['user'] && $pair['course']);
+
+        $verdicts = collect();
+
+        foreach ($wanted->groupBy(fn (array $pair) => $pair['user']->id) as $pairs) {
+            $student = $pairs->first()['user'];
+            $courses = $pairs->pluck('course')->unique('id')->values();
+
+            foreach ($this->progression->verdictsFor($student, $courses) as $courseId => $verdict) {
+                $verdicts->put($student->id.':'.$courseId, $verdict);
+            }
+        }
+
+        return $verdicts;
     }
 
     /**

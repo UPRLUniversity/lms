@@ -62,6 +62,20 @@ class EnrollmentService
                 throw EnrollmentException::paymentRequired();
             }
 
+            // THE PROGRESSION GATE, sixth and last. Placed here — above the capacity
+            // branch below — deliberately: a blocked student must be REFUSED, not
+            // waitlisted. Promotion off a waitlist is automatic when a seat frees, so
+            // queueing them would mean the system eventually enrols them past this gate
+            // with nobody watching. A place you cannot use is a false promise anyway.
+            //
+            // For paid courses this check rarely fires, because the cart refuses first
+            // and a purchase reaches the course through adminEnroll. It is the rule's
+            // home nonetheless, mirroring the paywall directly above it.
+            $verdict = app(ProgressionService::class)->check($student, $course);
+            if ($verdict->isBlocked()) {
+                throw EnrollmentException::prerequisiteNotMet($verdict);
+            }
+
             $existing = $this->lockedEnrollment($student, $course);
             if ($existing && $existing->status->isLive()) {
                 throw EnrollmentException::alreadyEnrolled();
@@ -80,15 +94,36 @@ class EnrollmentService
      * A staff member enrols a student directly (status active). May exceed capacity by
      * design — a deliberate override of the seat limit. Source is admin for a single
      * enrolment, bulk for a CSV import.
+     *
+     * `$overridePrerequisites` defaults to FALSE on purpose. Every caller that should skip
+     * the progression gate says so explicitly at its call site, which means a new caller
+     * added in a year's time inherits the enforcing behaviour rather than the exemption —
+     * the safe direction for a mistake to fall in.
+     *
+     * The check still RUNS when overriding, because that is the only way to know whether
+     * an override actually happened. Recording one unconditionally would stamp every
+     * ordinary purchase and make the audit column worthless.
      */
-    public function adminEnroll(User $student, Course $course, User $actor, EnrollmentSource $source = EnrollmentSource::Admin): Enrollment
-    {
-        return DB::transaction(function () use ($student, $course, $actor, $source) {
+    public function adminEnroll(
+        User $student,
+        Course $course,
+        User $actor,
+        EnrollmentSource $source = EnrollmentSource::Admin,
+        bool $overridePrerequisites = false,
+        ?string $overrideReason = null,
+    ): Enrollment {
+        return DB::transaction(function () use ($student, $course, $actor, $source, $overridePrerequisites, $overrideReason) {
             $course = Course::query()->lockForUpdate()->findOrFail($course->id);
 
             $existing = $this->lockedEnrollment($student, $course);
             if ($existing && in_array($existing->status, [EnrollmentStatus::Active, EnrollmentStatus::Completed], true)) {
                 throw EnrollmentException::alreadyEnrolled();
+            }
+
+            $verdict = app(ProgressionService::class)->check($student, $course);
+
+            if ($verdict->isBlocked() && ! $overridePrerequisites) {
+                throw EnrollmentException::prerequisiteNotMet($verdict);
             }
 
             return $this->writeEnrollment(
@@ -97,6 +132,9 @@ class EnrollmentService
                 EnrollmentStatus::Active,
                 $source,
                 approver: $actor,
+                overrodePrerequisites: $verdict->isBlocked(),
+                overrideActor: $actor,
+                overrideReason: $overrideReason,
             );
         });
     }
@@ -229,6 +267,9 @@ class EnrollmentService
         EnrollmentStatus $status,
         EnrollmentSource $source,
         ?User $approver = null,
+        bool $overrodePrerequisites = false,
+        ?User $overrideActor = null,
+        ?string $overrideReason = null,
     ): Enrollment {
         $enrollment = Enrollment::updateOrCreate(
             ['user_id' => $student->id, 'course_id' => $course->id],
@@ -242,6 +283,10 @@ class EnrollmentService
                 // this row was previously pending (and already digested) before a
                 // withdrawal/rejection reused it.
                 'pending_digested_at' => null,
+                // Also always written, so a row reused by a LATER enrolment that needed no
+                // override cannot keep a stale reason attached to it.
+                'prerequisite_override_by' => $overrodePrerequisites ? $overrideActor?->id : null,
+                'prerequisite_override_reason' => $overrodePrerequisites ? $overrideReason : null,
             ],
         );
 

@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Services\Commerce\CartService;
 use App\Services\Commerce\CheckoutService;
 use App\Services\Commerce\CouponService;
+use App\Services\Courses\ProgressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -60,11 +61,28 @@ class CartController extends Controller
         ]);
     }
 
-    public function store(Request $request, Course $course): RedirectResponse
+    public function store(Request $request, Course $course, ProgressionService $progression): RedirectResponse
     {
         // Only a course a stranger could legitimately see may be added — otherwise the
         // cart becomes a way to discover unpublished courses.
         abort_unless($course->isPublished() && $course->visibility->isPublic(), 404);
+
+        // THE PRIMARY PROGRESSION GATE. Every programme course is paid, so a purchase
+        // reaches the course through OrderFulfilmentService — which deliberately does not
+        // enforce, because refusing after payment strands a paid order. Refusing here,
+        // before any money moves, is what makes that safe.
+        //
+        // Only for a signed-in visitor: a guest's history is unknowable, and demanding an
+        // account before anything can be added is the friction the public catalogue exists
+        // to remove. CheckoutService re-checks once they have signed in, which they must
+        // do before paying.
+        if ($student = $request->user()) {
+            $verdict = $progression->check($student, $course);
+
+            if ($verdict->isBlocked()) {
+                return back()->with('error', $verdict->message());
+            }
+        }
 
         $cart = $this->carts->current($request->user());
 
