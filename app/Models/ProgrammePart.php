@@ -27,6 +27,7 @@ class ProgrammePart extends Model
         'slug',
         'description',
         'credit_target',
+        'unlock_credits',
         'position',
     ];
 
@@ -34,6 +35,7 @@ class ProgrammePart extends Model
     {
         return [
             'credit_target' => 'integer',
+            'unlock_credits' => 'integer',
             'position' => 'integer',
         ];
     }

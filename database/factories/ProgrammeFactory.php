@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ProgressionRule;
 use App\Models\Programme;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -28,7 +29,17 @@ class ProgrammeFactory extends Factory
             'per_paper_fee' => 7000,
             'position' => 0,
             'is_active' => true,
+            'progression_rule' => ProgressionRule::Open->value,
         ];
+    }
+
+    /**
+     * Parts must be worked through in order — the state every progression test needs,
+     * and the one a factory must never produce by accident.
+     */
+    public function sequential(): static
+    {
+        return $this->state(fn () => ['progression_rule' => ProgressionRule::Sequential->value]);
     }
 
     public function free(): static

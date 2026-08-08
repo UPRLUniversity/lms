@@ -24,6 +24,7 @@ class ProgrammePartFactory extends Factory
             'slug' => Str::slug($name),
             'description' => fake()->sentence(10),
             'credit_target' => 24,
+            'unlock_credits' => null,
             'position' => 0,
         ];
     }
@@ -35,5 +36,14 @@ class ProgrammePartFactory extends Factory
             'slug' => Str::slug($name),
             'position' => $position,
         ]);
+    }
+
+    /**
+     * A part that states no credit target — most of them, in the real curriculum. Such a
+     * part is judged on the compulsory bar alone.
+     */
+    public function withoutCreditTarget(): static
+    {
+        return $this->state(fn () => ['credit_target' => null, 'unlock_credits' => null]);
     }
 }
