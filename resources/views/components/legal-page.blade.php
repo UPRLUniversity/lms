@@ -25,7 +25,7 @@
         <h1 class="font-display text-3xl font-bold text-ink sm:text-4xl">{{ $title }}</h1>
 
         @if ($updated)
-            <p class="mt-2 text-sm text-ink/60">Last updated {{ $updated }}</p>
+            <p class="mt-2 text-sm text-ink/65">Last updated {{ $updated }}</p>
         @endif
 
         <div role="note" class="mt-6 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3">
@@ -41,7 +41,7 @@
             {{ $slot }}
         </x-ui.prose>
 
-        <p class="mt-10 border-t border-line pt-6 text-sm text-ink/60">
+        <p class="mt-10 border-t border-line pt-6 text-sm text-ink/65">
             Questions about this page? Write to
             <a href="mailto:{{ config('mail.support') }}" class="rounded font-medium text-crimson underline-offset-2 hover:underline focus-ring">{{ config('mail.support') }}</a>.
         </p>

@@ -3,7 +3,7 @@
         {{-- Header --}}
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <a href="{{ url()->previous() }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line text-ink/60 hover:bg-surface" aria-label="Back">
+                <a href="{{ url()->previous() }}" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-line text-ink/65 hover:bg-surface" aria-label="Back">
                     <x-ui.icon name="chevron-left" class="h-5 w-5" />
                 </a>
                 <div>
@@ -32,7 +32,7 @@
             <x-ui.card :padding="false">
                 <x-slot name="header">
                     <h3 class="font-display text-lg font-semibold text-ink">Progress distribution</h3>
-                    <p class="text-sm text-ink/60">{{ $progress['total'] }} {{ \Illuminate\Support\Str::plural('student', $progress['total']) }} enrolled</p>
+                    <p class="text-sm text-ink/65">{{ $progress['total'] }} {{ \Illuminate\Support\Str::plural('student', $progress['total']) }} enrolled</p>
                 </x-slot>
                 <div class="p-5">
                     @if ($progress['total'] === 0)
@@ -54,7 +54,7 @@
             <x-ui.card :padding="false">
                 <x-slot name="header">
                     <h3 class="font-display text-lg font-semibold text-ink">Grade distribution</h3>
-                    <p class="text-sm text-ink/60">
+                    <p class="text-sm text-ink/65">
                         @if ($distribution['scale'])
                             {{ $distribution['scale']->name }} · {{ $distribution['total'] - $distribution['ungraded'] }} graded, {{ $distribution['ungraded'] }} pending
                         @else
@@ -123,14 +123,14 @@
         <x-ui.card :padding="false">
             <x-slot name="header">
                 <h3 class="font-display text-lg font-semibold text-ink">Hardest questions</h3>
-                <p class="text-sm text-ink/60">Ranked by share of answers marked wrong</p>
+                <p class="text-sm text-ink/65">Ranked by share of answers marked wrong</p>
             </x-slot>
             <div class="p-5">
                 @forelse ($hardest as $item)
                     <div class="flex items-center gap-4 py-3 first:pt-0 last:pb-0 {{ ! $loop->last ? 'border-b border-line' : '' }}">
                         <div class="min-w-0 flex-1">
                             <p class="truncate text-sm text-ink">{{ \Illuminate\Support\Str::limit(strip_tags($item['question']->prompt), 90) }}</p>
-                            <p class="text-xs text-ink/55">{{ $item['responses'] }} {{ \Illuminate\Support\Str::plural('response', $item['responses']) }}</p>
+                            <p class="text-xs text-ink/65">{{ $item['responses'] }} {{ \Illuminate\Support\Str::plural('response', $item['responses']) }}</p>
                         </div>
                         <div class="flex items-center gap-2">
                             <div class="h-1.5 w-24 overflow-hidden rounded-full bg-ink/5">

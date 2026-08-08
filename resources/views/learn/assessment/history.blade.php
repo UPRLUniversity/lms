@@ -2,7 +2,7 @@
 
 <x-learn-layout :title="'Attempts — '.$assessment->title">
     <div class="mx-auto max-w-2xl px-4 py-10">
-        <a href="{{ route('assessments.start', [$course, $assessment]) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-crimson focus-ring rounded">
+        <a href="{{ route('assessments.start', [$course, $assessment]) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> {{ $assessment->title }}
         </a>
         <h1 class="mt-3 font-display text-2xl font-semibold text-ink">Your attempts</h1>
@@ -17,7 +17,7 @@
                     <li class="flex items-center justify-between gap-3 px-4 py-3.5">
                         <div>
                             <p class="text-sm font-medium text-ink">Attempt {{ $past->attempt_number }}</p>
-                            <p class="text-xs text-ink/50">{{ $past->submitted_at?->format('M j, Y g:i A') ?? 'In progress' }}</p>
+                            <p class="text-xs text-ink/65">{{ $past->submitted_at?->format('M j, Y g:i A') ?? 'In progress' }}</p>
                         </div>
                         <div class="flex items-center gap-3">
                             <x-ui.badge :variant="$past->status->badge()">{{ $past->status->label() }}</x-ui.badge>

@@ -20,7 +20,7 @@
         <x-brand.sunburst class="pointer-events-none absolute -right-24 -top-28 h-[28rem] w-[28rem] text-white/10" />
         <div class="relative mx-auto grid max-w-7xl gap-10 px-6 py-12 lg:grid-cols-3 lg:px-8 lg:py-16">
             <div class="lg:col-span-2">
-                <nav class="flex flex-wrap items-center gap-2 text-sm text-white/70" aria-label="Breadcrumb">
+                <nav class="flex flex-wrap items-center gap-2 text-sm text-white/85" aria-label="Breadcrumb">
                     <a href="{{ route('catalogue.index') }}" class="hover:text-white focus-ring rounded">Catalogue</a>
                     @if ($course->department)
                         <span aria-hidden="true">/</span>
@@ -90,7 +90,7 @@
                 <section aria-labelledby="curriculum-heading" class="mt-10">
                     <div class="flex items-end justify-between gap-3">
                         <h2 id="curriculum-heading" class="font-display text-2xl font-semibold text-ink">Curriculum</h2>
-                        <p class="text-sm text-ink/60">{{ $course->modules->count() }} {{ Str::plural('module', $course->modules->count()) }} · {{ $totalLessons }} {{ Str::plural('lesson', $totalLessons) }}</p>
+                        <p class="text-sm text-ink/65">{{ $course->modules->count() }} {{ Str::plural('module', $course->modules->count()) }} · {{ $totalLessons }} {{ Str::plural('lesson', $totalLessons) }}</p>
                     </div>
 
                     <div class="mt-4 space-y-3">
@@ -101,9 +101,9 @@
                                         :aria-expanded="open.toString()">
                                     <span class="min-w-0">
                                         <span class="font-display font-semibold text-ink">{{ $module->title }}</span>
-                                        <span class="ml-2 text-sm text-ink/50">{{ $module->lessons->count() }} {{ Str::plural('lesson', $module->lessons->count()) }}</span>
+                                        <span class="ml-2 text-sm text-ink/65">{{ $module->lessons->count() }} {{ Str::plural('lesson', $module->lessons->count()) }}</span>
                                     </span>
-                                    <x-ui.icon name="chevron-right" class="h-5 w-5 shrink-0 text-ink/40 transition-transform" ::class="open && 'rotate-90'" />
+                                    <x-ui.icon name="chevron-right" class="h-5 w-5 shrink-0 text-ink/65 transition-transform" ::class="open && 'rotate-90'" />
                                 </button>
 
                                 <div x-show="open" x-collapse>
@@ -112,7 +112,7 @@
                                             @php $embed = $lesson->videoEmbedUrl(); @endphp
                                             <li x-data="{ playing: false }">
                                                 <div class="flex items-center gap-3 px-5 py-3">
-                                                    <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink/5 text-ink/60">
+                                                    <span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ink/5 text-ink/65">
                                                         <x-ui.icon :name="$lesson->type->icon()" class="h-4 w-4" />
                                                     </span>
                                                     <span class="min-w-0 flex-1">
@@ -129,7 +129,7 @@
                                                         @endif
                                                     @endif
                                                     @if ($dm = $fmt((int) $lesson->duration_minutes))
-                                                        <span class="text-xs text-ink/40">{{ $dm }}</span>
+                                                        <span class="text-xs text-ink/65">{{ $dm }}</span>
                                                     @endif
                                                 </div>
 
@@ -169,7 +169,7 @@
                                             <span class="text-xs font-medium text-crimson">Lead instructor</span>
                                         @endif
                                         @if ($instructor->title)
-                                            <p class="text-sm text-ink/60">{{ $instructor->title }}</p>
+                                            <p class="text-sm text-ink/65">{{ $instructor->title }}</p>
                                         @endif
                                         @if ($instructor->bio)
                                             <p class="mt-2 text-sm leading-relaxed text-ink/70 line-clamp-3">{{ $instructor->bio }}</p>
@@ -200,22 +200,22 @@
                         <div class="p-6">
                             <dl class="space-y-2.5 text-sm">
                                 <div class="flex items-center justify-between">
-                                    <dt class="text-ink/60">Level</dt>
+                                    <dt class="text-ink/65">Level</dt>
                                     <dd class="font-medium text-ink">{{ $course->level->label() }}</dd>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <dt class="text-ink/60">Lessons</dt>
+                                    <dt class="text-ink/65">Lessons</dt>
                                     <dd class="font-medium text-ink">{{ $totalLessons }}</dd>
                                 </div>
                                 @if ($d = $fmt($totalMinutes))
                                     <div class="flex items-center justify-between">
-                                        <dt class="text-ink/60">Duration</dt>
+                                        <dt class="text-ink/65">Duration</dt>
                                         <dd class="font-medium text-ink">{{ $d }}</dd>
                                     </div>
                                 @endif
                                 @if ($course->department)
                                     <div class="flex items-center justify-between gap-3">
-                                        <dt class="text-ink/60">Department</dt>
+                                        <dt class="text-ink/65">Department</dt>
                                         <dd class="text-right font-medium text-ink">{{ $course->department->name }}</dd>
                                     </div>
                                 @endif
@@ -225,7 +225,7 @@
                                  under more than one programme, so this is a list, not a field. --}}
                             @if ($course->programmeParts->isNotEmpty())
                                 <div class="mt-5 border-t border-line pt-5">
-                                    <p class="text-xs font-medium uppercase tracking-wide text-ink/50">Counts toward</p>
+                                    <p class="text-xs font-medium uppercase tracking-wide text-ink/65">Counts toward</p>
                                     <ul class="mt-2 space-y-2">
                                         @foreach ($course->programmeParts as $placement)
                                             <li class="flex items-start justify-between gap-3 text-sm">
@@ -234,7 +234,7 @@
                                                        class="font-medium text-ink hover:text-crimson focus-ring rounded">
                                                         {{ $placement->programme->name }}
                                                     </a>
-                                                    <span class="block text-xs text-ink/55">{{ $placement->name }}</span>
+                                                    <span class="block text-xs text-ink/65">{{ $placement->name }}</span>
                                                 </span>
                                                 <span class="shrink-0 text-right">
                                                     @if ($placement->pivot->requirement)
@@ -243,7 +243,7 @@
                                                         </x-ui.badge>
                                                     @endif
                                                     @if ($placement->pivot->credit_load)
-                                                        <span class="mt-0.5 block text-xs text-ink/50">{{ $placement->pivot->credit_load }} credits</span>
+                                                        <span class="mt-0.5 block text-xs text-ink/65">{{ $placement->pivot->credit_load }} credits</span>
                                                     @endif
                                                 </span>
                                             </li>

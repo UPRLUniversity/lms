@@ -14,7 +14,7 @@
         </span>
         <span class="min-w-0">
             <span class="block text-sm font-medium text-ink" x-text="fileLabel || 'Choose a file to upload'">Choose a file to upload</span>
-            <span class="block text-xs text-ink/50">Up to {{ $maxMb }}MB.</span>
+            <span class="block text-xs text-ink/65">Up to {{ $maxMb }}MB.</span>
         </span>
         <input type="file" name="file" @if ($accept) accept="{{ $accept }}" @endif class="sr-only"
                @change="fileLabel = $event.target.files[0]?.name ?? ''">
@@ -22,7 +22,7 @@
 
     {{-- Existing file (edit mode) --}}
     <template x-if="lesson.file && !fileLabel">
-        <p class="text-xs text-ink/60">
+        <p class="text-xs text-ink/65">
             Current file: <span class="font-medium text-ink" x-text="lesson.file.name"></span>. Choose a new file to replace it.
         </p>
     </template>

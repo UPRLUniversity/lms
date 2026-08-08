@@ -9,7 +9,7 @@
 <x-app-layout :title="'Preview · '.$template->name">
     <div class="mx-auto max-w-6xl space-y-8">
         <div>
-            <a href="{{ route('admin.certificate-templates.edit', $template) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+            <a href="{{ route('admin.certificate-templates.edit', $template) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to {{ $template->name }}
             </a>
             <h2 class="mt-1 font-display text-2xl font-semibold text-ink">Live preview</h2>

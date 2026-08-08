@@ -12,7 +12,7 @@
 @endphp
 
 @if ($isBlank)
-    <span class="italic text-ink/40">empty</span>
+    <span class="italic text-ink/65">empty</span>
 @elseif (is_bool($value))
     <span>{{ $value ? 'Yes' : 'No' }}</span>
 @elseif (is_array($value))

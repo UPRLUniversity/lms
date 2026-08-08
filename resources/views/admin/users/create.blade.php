@@ -1,7 +1,7 @@
 <x-app-layout title="New user">
     <div class="mx-auto max-w-2xl space-y-6">
         <div>
-            <a href="{{ route('admin.users.index') }}" class="inline-flex items-center gap-1 rounded text-sm text-ink/60 hover:text-crimson focus-ring">
+            <a href="{{ route('admin.users.index') }}" class="inline-flex items-center gap-1 rounded text-sm text-ink/65 hover:text-crimson focus-ring">
                 <x-ui.icon name="chevron-left" class="h-4 w-4" /> Back to people
             </a>
             <h2 class="mt-2 font-display text-2xl font-semibold text-ink">Create a user</h2>

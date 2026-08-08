@@ -25,7 +25,7 @@
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <p class="truncate font-display text-lg font-semibold text-ink">{{ $certificate->course->title }}</p>
-                                <p class="mt-1 text-xs text-ink/50">
+                                <p class="mt-1 text-xs text-ink/65">
                                     Issued {{ $certificate->issued_at->isoFormat('D MMM YYYY') }} · {{ $certificate->serial }}
                                 </p>
                             </div>
@@ -40,7 +40,7 @@
 
                         @if ($certificate->isRevoked())
                             <div class="mt-4">
-                                <span class="text-sm text-ink/50">This certificate has been revoked.</span>
+                                <span class="text-sm text-ink/65">This certificate has been revoked.</span>
                             </div>
                         @else
                             <div

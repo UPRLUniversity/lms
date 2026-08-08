@@ -14,7 +14,7 @@
     <div class="mx-auto max-w-4xl space-y-6">
         {{-- Header --}}
         <div>
-            <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('learn.resume', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to course
             </a>
             <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
@@ -24,7 +24,7 @@
                     </span>
                     <div>
                         <h2 class="font-display text-2xl font-semibold text-ink">Discussion forum</h2>
-                        <p class="text-sm text-ink/60">{{ $course->title }} · {{ $course->code }}</p>
+                        <p class="text-sm text-ink/65">{{ $course->title }} · {{ $course->code }}</p>
                     </div>
                 </div>
 
@@ -77,7 +77,7 @@
                    @class([
                        $tabBase,
                        'border-crimson text-crimson' => $filter === $key,
-                       'border-transparent text-ink/55 hover:text-ink hover:border-line' => $filter !== $key,
+                       'border-transparent text-ink/65 hover:text-ink hover:border-line' => $filter !== $key,
                    ])
                    @if ($filter === $key) aria-current="page" @endif>
                     {{ $label }}
@@ -107,7 +107,7 @@
                             <h3 class="mt-1 truncate font-display text-lg font-semibold text-ink group-hover:text-crimson">
                                 {{ $thread->title }}
                             </h3>
-                            <p class="mt-0.5 text-xs text-ink/55">
+                            <p class="mt-0.5 text-xs text-ink/65">
                                 {{ $thread->author?->name ?? 'A member' }}
                                 @if ($thread->lesson)
                                     · on <span class="text-ink/70">{{ $thread->lesson->title }}</span>
@@ -116,10 +116,10 @@
                             </p>
                         </div>
                         <div class="shrink-0 text-right">
-                            <span class="inline-flex items-center gap-1 text-sm font-medium text-ink/60">
+                            <span class="inline-flex items-center gap-1 text-sm font-medium text-ink/65">
                                 <x-ui.icon name="chat" class="h-4 w-4" /> {{ $thread->replyCount() }}
                             </span>
-                            <p class="text-[11px] text-ink/40">{{ \Illuminate\Support\Str::plural('reply', $thread->replyCount()) }}</p>
+                            <p class="text-[11px] text-ink/65">{{ \Illuminate\Support\Str::plural('reply', $thread->replyCount()) }}</p>
                         </div>
                     </div>
                 </a>

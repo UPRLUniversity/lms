@@ -32,7 +32,7 @@
         <x-ui.card>
             <div class="flex items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
-                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg {{ $item['count'] > 0 ? 'bg-gold/15 text-gold-ink' : 'bg-ink/5 text-ink/50' }}">
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-lg {{ $item['count'] > 0 ? 'bg-gold/10 text-gold-ink' : 'bg-ink/5 text-ink/65' }}">
                         <x-ui.icon :name="$item['icon']" class="h-5 w-5" />
                     </span>
                     <div>
@@ -55,7 +55,7 @@
     <x-ui.card class="lg:col-span-2" :padding="false">
         <x-slot name="header">
             <h3 class="font-display text-lg font-semibold text-ink">Enrolment trend</h3>
-            <p class="text-sm text-ink/60">New enrolments over the last 12 months</p>
+            <p class="text-sm text-ink/65">New enrolments over the last 12 months</p>
         </x-slot>
         <div class="p-5">
             @if (array_sum($trend['values']) === 0)
@@ -88,7 +88,7 @@
     <x-ui.card :padding="false">
         <x-slot name="header">
             <h3 class="font-display text-lg font-semibold text-ink">Top courses</h3>
-            <p class="text-sm text-ink/60">By total enrolment</p>
+            <p class="text-sm text-ink/65">By total enrolment</p>
         </x-slot>
         <div class="p-5">
             @forelse ($topCourses as $row)
@@ -96,7 +96,7 @@
                     <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-crimson/10 text-xs font-semibold text-crimson">{{ $loop->iteration }}</span>
                     <div class="min-w-0 flex-1">
                         <p class="truncate text-sm font-medium text-ink">{{ $row['course']->title }}</p>
-                        <p class="truncate text-xs text-ink/55">{{ $row['course']->department?->name ?? 'No department' }}</p>
+                        <p class="truncate text-xs text-ink/65">{{ $row['course']->department?->name ?? 'No department' }}</p>
                     </div>
                     <span class="shrink-0 text-sm font-semibold text-ink/80">{{ number_format($row['enrollments']) }}</span>
                 </div>
@@ -119,7 +119,7 @@
                     <x-ui.icon :name="$event['icon']" class="h-4 w-4" />
                 </span>
                 <p class="min-w-0 flex-1 truncate text-sm text-ink/80">{{ $event['text'] }}</p>
-                <time class="shrink-0 text-xs text-ink/50" datetime="{{ $event['when']?->toIso8601String() }}">{{ $event['when']?->diffForHumans() }}</time>
+                <time class="shrink-0 text-xs text-ink/65" datetime="{{ $event['when']?->toIso8601String() }}">{{ $event['when']?->diffForHumans() }}</time>
             </div>
         @empty
             <x-ui.empty-state icon="clock" title="Nothing yet" description="Enrolments and completions will appear here." />

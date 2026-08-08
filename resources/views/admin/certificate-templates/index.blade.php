@@ -39,7 +39,7 @@
                                         <x-ui.badge variant="success">Shows grade</x-ui.badge>
                                     @endif
                                 </div>
-                                <p class="mt-1 text-xs text-ink/50">
+                                <p class="mt-1 text-xs text-ink/65">
                                     {{ $template->courses_count }} {{ Str::plural('course', $template->courses_count) }} using it
                                 </p>
                             </div>

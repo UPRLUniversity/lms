@@ -16,7 +16,7 @@
         <form method="GET" action="{{ route('admin.orders.index') }}" class="flex flex-col gap-3 rounded-2xl border border-line bg-card p-4 shadow-sm sm:flex-row">
             <div class="relative flex-1">
                 <label for="q" class="sr-only">Search orders</label>
-                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/40">
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/65">
                     <x-ui.icon name="search" class="h-5 w-5" />
                 </span>
                 <x-ui.input id="q" name="q" type="search" :value="$filters['search']"
@@ -59,9 +59,9 @@
                                 </div>
                                 <p class="mt-1 truncate text-sm text-ink/75">
                                     {{ $order->user?->name ?? 'Deleted user' }}
-                                    <span class="text-ink/45">· {{ $order->user?->email }}</span>
+                                    <span class="text-ink/65">· {{ $order->user?->email }}</span>
                                 </p>
-                                <p class="mt-0.5 text-xs text-ink/50">
+                                <p class="mt-0.5 text-xs text-ink/65">
                                     {{ $courseCount }} {{ Str::plural('course', $courseCount) }}
                                     · {{ $order->created_at->isoFormat('D MMM YYYY, HH:mm') }}
                                     @if ($order->payment_method_key)

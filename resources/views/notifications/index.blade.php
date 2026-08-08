@@ -32,7 +32,7 @@
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
                 <h2 class="font-display text-2xl font-semibold text-ink">Notifications</h2>
-                <p class="mt-1 text-sm text-ink/60">
+                <p class="mt-1 text-sm text-ink/65">
                     @if ($unreadCount > 0)
                         You have <span class="font-semibold text-crimson">{{ $unreadCount }}</span> unread {{ Str::plural('update', $unreadCount) }}.
                     @else
@@ -53,11 +53,11 @@
         {{-- Filter pills --}}
         <div class="inline-flex rounded-xl border border-line bg-card p-1 text-sm shadow-sm">
             <a href="{{ route('notifications.index') }}"
-               @class(['rounded-lg px-4 py-1.5 font-medium focus-ring transition-colors', 'bg-crimson text-white shadow-sm' => $filter !== 'unread', 'text-ink/60 hover:text-ink' => $filter === 'unread'])>
+               @class(['rounded-lg px-4 py-1.5 font-medium focus-ring transition-colors', 'bg-crimson text-white shadow-sm' => $filter !== 'unread', 'text-ink/65 hover:text-ink' => $filter === 'unread'])>
                 All
             </a>
             <a href="{{ route('notifications.index', ['filter' => 'unread']) }}"
-               @class(['inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 font-medium focus-ring transition-colors', 'bg-crimson text-white shadow-sm' => $filter === 'unread', 'text-ink/60 hover:text-ink' => $filter !== 'unread'])>
+               @class(['inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 font-medium focus-ring transition-colors', 'bg-crimson text-white shadow-sm' => $filter === 'unread', 'text-ink/65 hover:text-ink' => $filter !== 'unread'])>
                 Unread
                 @if ($unreadCount > 0)
                     <span @class(['rounded-full px-1.5 text-xs', 'bg-white/20 text-white' => $filter === 'unread', 'bg-crimson/10 text-crimson' => $filter !== 'unread'])>{{ $unreadCount }}</span>
@@ -85,7 +85,7 @@
                     @endphp
 
                     @if ($newBucket)
-                        <p class="px-1 pt-1 text-xs font-semibold uppercase tracking-[0.14em] text-ink/40 {{ ! $loop->first ? 'mt-2' : '' }}">
+                        <p class="px-1 pt-1 text-xs font-semibold uppercase tracking-[0.14em] text-ink/65 {{ ! $loop->first ? 'mt-2' : '' }}">
                             {{ $thisBucket }}
                         </p>
                     @endif
@@ -112,7 +112,7 @@
                                 @endif
                             </span>
                             <span class="mt-0.5 block text-sm leading-relaxed text-ink/70">{{ $notification->data['body'] ?? '' }}</span>
-                            <span class="mt-1.5 block text-xs text-ink/40">{{ $notification->created_at->diffForHumans() }}</span>
+                            <span class="mt-1.5 block text-xs text-ink/65">{{ $notification->created_at->diffForHumans() }}</span>
                         </span>
 
                         <x-ui.icon name="chevron-right" class="mt-3 h-4 w-4 shrink-0 text-ink/25 transition-transform group-hover:translate-x-0.5 group-hover:text-crimson" />

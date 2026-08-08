@@ -5,11 +5,11 @@
         {{-- Header --}}
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="min-w-0">
-                <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+                <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
                     <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to {{ $course->title }}
                 </a>
                 <h2 class="mt-2 font-display text-2xl font-semibold text-ink">Question bank</h2>
-                <p class="mt-1 text-sm text-ink/60">Author reusable questions, then build quizzes and exams from them.</p>
+                <p class="mt-1 text-sm text-ink/65">Author reusable questions, then build quizzes and exams from them.</p>
             </div>
 
             <div class="flex items-center gap-2" x-data="{ open: false }">
@@ -30,7 +30,7 @@
                         @foreach ($types as $t)
                             <a href="{{ route('questions.create', ['course' => $course, 'type' => $t->value]) }}"
                                class="flex items-center gap-2.5 px-3 py-2 text-sm text-ink hover:bg-surface focus-ring">
-                                <x-ui.icon :name="$t->icon()" class="h-4 w-4 text-ink/50" /> {{ $t->label() }}
+                                <x-ui.icon :name="$t->icon()" class="h-4 w-4 text-ink/65" /> {{ $t->label() }}
                             </a>
                         @endforeach
                     </div>
@@ -44,7 +44,7 @@
             <div class="min-w-[16rem] flex-1">
                 <label for="search" class="sr-only">Search questions</label>
                 <div class="relative">
-                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/40">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/65">
                         <x-ui.icon name="search" class="h-5 w-5" />
                     </span>
                     <x-ui.input id="search" name="search" type="search" placeholder="Search prompt text…" class="pl-10"

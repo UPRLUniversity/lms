@@ -18,7 +18,7 @@
 
         <div class="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
             <h3 class="font-display text-lg font-semibold text-ink" x-text="lesson.id ? 'Edit lesson' : 'Add lesson'">Add lesson</h3>
-            <button type="button" @click="closeEditor()" class="rounded-lg p-1 text-ink/60 hover:text-ink focus-ring" aria-label="Close">
+            <button type="button" @click="closeEditor()" class="rounded-lg p-1 text-ink/65 hover:text-ink focus-ring" aria-label="Close">
                 <x-ui.icon name="x" class="h-5 w-5" />
             </button>
         </div>
@@ -77,7 +77,7 @@
                             </div>
                         </template>
                         <template x-if="lesson.video_url && !videoEmbed(lesson.video_url)">
-                            <p class="text-xs text-ink/50">Paste a YouTube or Vimeo link to see a preview.</p>
+                            <p class="text-xs text-ink/65">Paste a YouTube or Vimeo link to see a preview.</p>
                         </template>
                     </div>
 

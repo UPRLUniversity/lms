@@ -26,7 +26,7 @@
                 <p class="mt-1.5 rounded-xl border border-line bg-ink/5 px-4 py-2.5 font-mono font-bold tracking-wide text-ink">
                     {{ $coupon->code }}
                 </p>
-                <p class="mt-1 text-xs text-ink/55">A code cannot be renamed — students may already be holding it.</p>
+                <p class="mt-1 text-xs text-ink/65">A code cannot be renamed — students may already be holding it.</p>
             </div>
         @else
             <x-ui.field name="code" label="Code" required :value="old('code')"
@@ -62,7 +62,7 @@
             </div>
         </div>
 
-        <p class="mt-3 text-xs text-ink/60">
+        <p class="mt-3 text-xs text-ink/65">
             Discounts apply to course prices only. One-off programme registration and administration
             fees are never discounted.
         </p>
@@ -76,7 +76,7 @@
             <p class="text-sm text-ink/75">
                 {{ $coupon->scope->label() }}@if ($coupon->course) — {{ $coupon->course->code }}@elseif ($coupon->programme) — {{ $coupon->programme->name }}@endif
             </p>
-            <p class="mt-1 text-xs text-ink/55">Scope cannot be changed after a code is created — it would rewrite what past uses meant.</p>
+            <p class="mt-1 text-xs text-ink/65">Scope cannot be changed after a code is created — it would rewrite what past uses meant.</p>
         @else
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-ui.field name="scope" label="Applies to" required>
@@ -120,7 +120,7 @@
             </div>
 
             @unless ($isAdmin)
-                <p class="mt-3 text-xs text-ink/60">You can issue codes for courses you teach. Ask an administrator for a catalogue-wide code.</p>
+                <p class="mt-3 text-xs text-ink/65">You can issue codes for courses you teach. Ask an administrator for a catalogue-wide code.</p>
             @endunless
         @endif
     </fieldset>
@@ -148,7 +148,7 @@
                @checked(old('is_active', $coupon?->is_active ?? true))>
         <span>
             <span class="block text-sm font-medium text-ink">Active</span>
-            <span class="block text-xs text-ink/60">Switch off to stop the code working without deleting it.</span>
+            <span class="block text-xs text-ink/65">Switch off to stop the code working without deleting it.</span>
         </span>
     </label>
 </div>

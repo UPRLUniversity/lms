@@ -24,14 +24,14 @@
         {{-- Header --}}
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="min-w-0">
-                <a href="{{ route('courses.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+                <a href="{{ route('courses.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
                     <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to courses
                 </a>
                 <div class="mt-2 flex flex-wrap items-center gap-3">
                     <h2 class="font-display text-2xl font-semibold text-ink">{{ $course->title }}</h2>
                     <x-ui.badge :variant="$course->status->badge()">{{ $course->status->label() }}</x-ui.badge>
                 </div>
-                <p class="mt-1 text-sm text-ink/60">{{ $course->code }} · {{ $course->department?->name ?? 'No department' }}</p>
+                <p class="mt-1 text-sm text-ink/65">{{ $course->code }} · {{ $course->department?->name ?? 'No department' }}</p>
             </div>
 
             {{-- Workflow actions --}}
@@ -104,7 +104,7 @@
         {{-- In-review notice --}}
         @if ($isReview)
             <div class="mt-5 flex gap-3 rounded-xl border border-gold/40 bg-gold/10 p-4">
-                <span class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/20 text-gold">
+                <span class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/20 text-gold-ink">
                     <x-ui.icon name="clock" class="h-5 w-5" />
                 </span>
                 <p class="text-sm text-ink/80">
@@ -118,15 +118,15 @@
         <div class="mt-6 border-b border-line">
             <nav class="-mb-px flex gap-6" aria-label="Builder sections">
                 <button type="button" @click="tab = 'settings'"
-                        :class="tab === 'settings' ? 'border-crimson text-crimson' : 'border-transparent text-ink/60 hover:text-ink'"
+                        :class="tab === 'settings' ? 'border-crimson text-crimson' : 'border-transparent text-ink/65 hover:text-ink'"
                         class="border-b-2 px-1 pb-3 text-sm font-medium focus-ring rounded-t">Settings</button>
                 <button type="button" @click="tab = 'curriculum'"
-                        :class="tab === 'curriculum' ? 'border-crimson text-crimson' : 'border-transparent text-ink/60 hover:text-ink'"
+                        :class="tab === 'curriculum' ? 'border-crimson text-crimson' : 'border-transparent text-ink/65 hover:text-ink'"
                         class="border-b-2 px-1 pb-3 text-sm font-medium focus-ring rounded-t">
                     Curriculum
                 </button>
                 <button type="button" @click="tab = 'announcements'"
-                        :class="tab === 'announcements' ? 'border-crimson text-crimson' : 'border-transparent text-ink/60 hover:text-ink'"
+                        :class="tab === 'announcements' ? 'border-crimson text-crimson' : 'border-transparent text-ink/65 hover:text-ink'"
                         class="border-b-2 px-1 pb-3 text-sm font-medium focus-ring rounded-t">
                     Announcements
                 </button>

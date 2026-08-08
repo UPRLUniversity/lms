@@ -28,7 +28,7 @@
                     <label for="file" class="mb-1 block text-sm font-medium text-ink">CSV file</label>
                     <input id="file" name="file" type="file" accept=".csv,text/csv" required
                            class="block w-full rounded-xl border border-line bg-card text-sm text-ink shadow-sm file:mr-4 file:border-0 file:bg-crimson file:px-4 file:py-2.5 file:text-sm file:font-medium file:text-white hover:file:bg-crimson-dark focus:border-crimson focus:ring-crimson">
-                    <p class="mt-1.5 text-xs text-ink/50">CSV up to 4 MB. The first row may be a header.</p>
+                    <p class="mt-1.5 text-xs text-ink/65">CSV up to 4 MB. The first row may be a header.</p>
                 </div>
 
                 <x-ui.button type="submit">

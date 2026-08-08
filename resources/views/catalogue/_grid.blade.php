@@ -1,10 +1,10 @@
 @php use Illuminate\Support\Str; @endphp
 
 <div class="flex items-center justify-between gap-3">
-    <p class="text-sm text-ink/60" aria-live="polite">
+    <p class="text-sm text-ink/65" aria-live="polite">
         {{ $courses->total() }} {{ Str::plural('course', $courses->total()) }}
         @if ($filters['search'] !== '' || $filters['faculty'] !== '' || $filters['department'] !== '' || $filters['level'] !== '')
-            <span class="text-ink/40">· filtered</span>
+            <span class="text-ink/65">· filtered</span>
         @endif
     </p>
 </div>

@@ -2,7 +2,7 @@
     <div class="mx-auto max-w-4xl space-y-6">
         <div>
             <h2 class="font-display text-2xl font-semibold text-ink">Grading queue</h2>
-            <p class="mt-1 text-sm text-ink/60">Attempts with written answers awaiting your grade.</p>
+            <p class="mt-1 text-sm text-ink/65">Attempts with written answers awaiting your grade.</p>
         </div>
 
         {{-- Queue switcher: assessment attempts ↔ assignment submissions --}}
@@ -10,7 +10,7 @@
             <a href="{{ route('grading.index') }}" aria-current="page"
                class="rounded-lg bg-crimson/10 px-4 py-2 text-sm font-medium text-crimson focus-ring">Assessments</a>
             <a href="{{ route('grading.assignments.index') }}"
-               class="rounded-lg px-4 py-2 text-sm font-medium text-ink/60 transition hover:bg-ink/5 focus-ring">Assignments</a>
+               class="rounded-lg px-4 py-2 text-sm font-medium text-ink/65 transition hover:bg-ink/5 focus-ring">Assignments</a>
         </div>
 
         @if ($attempts->isEmpty())
@@ -23,7 +23,7 @@
                         <li class="flex items-center justify-between gap-3 px-5 py-4">
                             <div class="min-w-0">
                                 <p class="truncate font-medium text-ink">{{ $attempt->assessment->title }}</p>
-                                <p class="text-sm text-ink/55">
+                                <p class="text-sm text-ink/65">
                                     {{ $attempt->user->name }} · {{ $attempt->assessment->course->title }}
                                     · submitted {{ $attempt->submitted_at?->diffForHumans() }}
                                 </p>

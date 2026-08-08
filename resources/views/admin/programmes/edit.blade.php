@@ -1,6 +1,6 @@
 <x-app-layout :title="$programme->name">
     <div class="mx-auto max-w-2xl space-y-6">
-        <a href="{{ route('admin.programmes.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+        <a href="{{ route('admin.programmes.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> Programmes
         </a>
         <div class="flex flex-wrap items-center gap-2">

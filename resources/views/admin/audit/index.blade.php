@@ -134,7 +134,7 @@
                                     <span @class([
                                         'inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
                                         'bg-crimson/10 text-crimson' => $event?->isDestructive(),
-                                        'bg-ink/5 text-ink/60' => ! $event?->isDestructive(),
+                                        'bg-ink/5 text-ink/65' => ! $event?->isDestructive(),
                                     ])>
                                         <x-ui.icon :name="$event?->isDestructive() ? 'flag' : 'check'" class="h-4 w-4" />
                                     </span>
@@ -144,7 +144,7 @@
                                             <span class="font-medium">{{ $entry->causer?->name ?? 'System' }}</span>
                                             <span class="text-ink/70">{{ $entry->description }}</span>
                                         </span>
-                                        <span class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink/50">
+                                        <span class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink/65">
                                             <span>{{ $entry->eventLabel() }}</span>
                                             @if ($entry->subject_type)
                                                 <span aria-hidden="true">·</span>
@@ -165,7 +165,7 @@
 
                                     @if ($expandable)
                                         <x-ui.icon name="chevron-right"
-                                                   class="h-4 w-4 shrink-0 text-ink/40 transition-transform group-open:rotate-90" />
+                                                   class="h-4 w-4 shrink-0 text-ink/65 transition-transform group-open:rotate-90" />
                                     @endif
                                 </summary>
 
@@ -176,7 +176,7 @@
                                                 <table class="w-full min-w-[36rem] text-sm">
                                                     <caption class="sr-only">Fields changed by this action</caption>
                                                     <thead>
-                                                        <tr class="text-left text-xs uppercase tracking-wide text-ink/50">
+                                                        <tr class="text-left text-xs uppercase tracking-wide text-ink/65">
                                                             <th scope="col" class="pb-2 pr-4 font-semibold">Field</th>
                                                             <th scope="col" class="pb-2 pr-4 font-semibold">Before</th>
                                                             <th scope="col" class="pb-2 font-semibold">After</th>
@@ -198,7 +198,7 @@
                                                                         </span>
                                                                     </td>
                                                                 @else
-                                                                    <td class="py-2 pr-4 text-ink/60">
+                                                                    <td class="py-2 pr-4 text-ink/65">
                                                                         <x-admin.audit-value :value="$before[$fieldName] ?? null" />
                                                                     </td>
                                                                     <td class="py-2 font-medium text-ink">
@@ -213,7 +213,7 @@
                                         @endif
 
                                         @if ($context !== [])
-                                            <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-ink/60">
+                                            <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-ink/65">
                                                 @foreach ($context as $ctxKey => $ctxValue)
                                                     <div class="flex gap-1.5">
                                                         <dt class="font-medium text-ink/70">{{ \Illuminate\Support\Str::headline($ctxKey) }}:</dt>

@@ -8,13 +8,13 @@
     <div class="mx-auto max-w-5xl space-y-6">
         <div>
             <h2 class="font-display text-2xl font-semibold text-ink">Grading</h2>
-            <p class="mt-1 text-sm text-ink/60">Assignment submissions across your courses.</p>
+            <p class="mt-1 text-sm text-ink/65">Assignment submissions across your courses.</p>
         </div>
 
         {{-- Queue switcher: assessment attempts ↔ assignment submissions --}}
         <div class="flex gap-1 rounded-xl border border-line bg-card p-1 shadow-sm w-fit" role="tablist" aria-label="Grading queues">
             <a href="{{ route('grading.index') }}"
-               class="rounded-lg px-4 py-2 text-sm font-medium text-ink/60 transition hover:bg-ink/5 focus-ring">Assessments</a>
+               class="rounded-lg px-4 py-2 text-sm font-medium text-ink/65 transition hover:bg-ink/5 focus-ring">Assessments</a>
             <a href="{{ route('grading.assignments.index') }}" aria-current="page"
                class="rounded-lg bg-crimson/10 px-4 py-2 text-sm font-medium text-crimson focus-ring">Assignments</a>
         </div>
@@ -22,7 +22,7 @@
         {{-- Filters --}}
         <form method="GET" class="flex flex-wrap items-end gap-3">
             <div>
-                <label for="f-course" class="block text-xs font-medium text-ink/60">Course</label>
+                <label for="f-course" class="block text-xs font-medium text-ink/65">Course</label>
                 <select id="f-course" name="course" onchange="this.form.submit()"
                         class="mt-1 block w-52 rounded-xl border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                     <option value="">All courses</option>
@@ -32,7 +32,7 @@
                 </select>
             </div>
             <div>
-                <label for="f-assignment" class="block text-xs font-medium text-ink/60">Assignment</label>
+                <label for="f-assignment" class="block text-xs font-medium text-ink/65">Assignment</label>
                 <select id="f-assignment" name="assignment" onchange="this.form.submit()"
                         class="mt-1 block w-52 rounded-xl border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                     <option value="">All assignments</option>
@@ -42,7 +42,7 @@
                 </select>
             </div>
             <div>
-                <label for="f-status" class="block text-xs font-medium text-ink/60">Status</label>
+                <label for="f-status" class="block text-xs font-medium text-ink/65">Status</label>
                 <select id="f-status" name="status" onchange="this.form.submit()"
                         class="mt-1 block w-56 rounded-xl border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                     @foreach (SubmissionStatus::cases() as $option)
@@ -89,7 +89,7 @@
                                     @endif
                                     <x-ui.badge :variant="$submission->status->badge()">{{ $submission->status->label() }}</x-ui.badge>
                                 </div>
-                                <p class="mt-0.5 text-sm text-ink/55">
+                                <p class="mt-0.5 text-sm text-ink/65">
                                     {{ $submission->user->name }} · {{ $submission->assignment->course->title }}
                                     · v{{ $submission->version }}
                                     · {{ $submission->media_count }} {{ \Illuminate\Support\Str::plural('file', $submission->media_count) }}

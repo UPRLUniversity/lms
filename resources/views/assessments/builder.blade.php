@@ -45,7 +45,7 @@
         {{-- Header --}}
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="min-w-0">
-                <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+                <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
                     <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to {{ $course->title }}
                 </a>
                 <div class="mt-2 flex flex-wrap items-center gap-3">
@@ -88,10 +88,10 @@
         <div class="mt-6 border-b border-line">
             <nav class="-mb-px flex gap-6" aria-label="Builder sections">
                 <button type="button" @click="tab = 'content'"
-                        :class="tab === 'content' ? 'border-crimson text-crimson' : 'border-transparent text-ink/60 hover:text-ink'"
+                        :class="tab === 'content' ? 'border-crimson text-crimson' : 'border-transparent text-ink/65 hover:text-ink'"
                         class="border-b-2 px-1 pb-3 text-sm font-medium focus-ring rounded-t">Questions</button>
                 <button type="button" @click="tab = 'settings'"
-                        :class="tab === 'settings' ? 'border-crimson text-crimson' : 'border-transparent text-ink/60 hover:text-ink'"
+                        :class="tab === 'settings' ? 'border-crimson text-crimson' : 'border-transparent text-ink/65 hover:text-ink'"
                         class="border-b-2 px-1 pb-3 text-sm font-medium focus-ring rounded-t">Settings</button>
             </nav>
         </div>
@@ -136,13 +136,13 @@
                                    class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                         </div>
                         <div>
-                            <label for="max_attempts" class="block text-sm font-medium text-ink">Max attempts <span class="text-ink/40">(blank = unlimited)</span></label>
+                            <label for="max_attempts" class="block text-sm font-medium text-ink">Max attempts <span class="text-ink/65">(blank = unlimited)</span></label>
                             <input id="max_attempts" name="max_attempts" type="number" min="1"
                                    value="{{ old('max_attempts', $assessment->max_attempts) }}"
                                    class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
                         </div>
                         <div>
-                            <label for="time_limit_minutes" class="block text-sm font-medium text-ink">Time limit (minutes) <span class="text-ink/40">(blank = untimed)</span></label>
+                            <label for="time_limit_minutes" class="block text-sm font-medium text-ink">Time limit (minutes) <span class="text-ink/65">(blank = untimed)</span></label>
                             <input id="time_limit_minutes" name="time_limit_minutes" type="number" min="1"
                                    value="{{ old('time_limit_minutes', $assessment->time_limit_minutes) }}"
                                    class="mt-1.5 block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
@@ -159,7 +159,7 @@
                                    class="mt-0.5 rounded border-line text-crimson focus:ring-crimson">
                             <span class="text-sm">
                                 <span class="font-medium text-ink">Required</span>
-                                <span class="block text-ink/60">Students must complete this to finish the course.</span>
+                                <span class="block text-ink/65">Students must complete this to finish the course.</span>
                             </span>
                         </label>
                         <label class="flex items-start gap-2.5">
@@ -169,14 +169,14 @@
                                    class="mt-0.5 rounded border-line text-crimson focus:ring-crimson">
                             <span class="text-sm">
                                 <span class="font-medium text-ink">Include this score in the course grade</span>
-                                <span class="block text-ink/60">Untick for a practice quiz — it still gates progress, but stays out of the gradebook.</span>
+                                <span class="block text-ink/65">Untick for a practice quiz — it still gates progress, but stays out of the gradebook.</span>
                             </span>
                         </label>
                     </div>
                 </x-ui.card>
 
                 <x-ui.card>
-                    <h3 class="font-display font-semibold text-ink">Availability window <span class="font-normal text-ink/40">(optional)</span></h3>
+                    <h3 class="font-display font-semibold text-ink">Availability window <span class="font-normal text-ink/65">(optional)</span></h3>
                     <div class="mt-4 grid gap-5 sm:grid-cols-2">
                         <div>
                             <label for="available_from" class="block text-sm font-medium text-ink">Opens</label>

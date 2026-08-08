@@ -13,7 +13,7 @@
     <div class="mx-auto max-w-7xl space-y-6">
         {{-- Header --}}
         <div>
-            <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-crimson focus-ring rounded">
+            <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
                 <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to course
             </a>
             <div class="mt-2 flex flex-wrap items-end justify-between gap-3">
@@ -46,13 +46,13 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/50">
+                            <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/65">
                                 <th scope="col" class="sticky left-0 z-10 bg-card px-5 py-3.5">Student</th>
                                 <th scope="col" class="px-5 py-3.5 w-40">Progress</th>
                                 <th scope="col" class="px-5 py-3.5 whitespace-nowrap">Last activity</th>
                                 <th scope="col" class="px-5 py-3.5">
                                     Lessons
-                                    <span class="ml-1 font-normal normal-case text-ink/40">({{ $lessons->count() }})</span>
+                                    <span class="ml-1 font-normal normal-case text-ink/65">({{ $lessons->count() }})</span>
                                 </th>
                             </tr>
                         </thead>
@@ -68,7 +68,7 @@
                                             <x-ui.avatar :user="$row['user']" size="sm" />
                                             <div class="min-w-0">
                                                 <p class="truncate font-medium text-ink">{{ $row['user']->name }}</p>
-                                                <p class="truncate text-xs text-ink/50">{{ $row['user']->email }}</p>
+                                                <p class="truncate text-xs text-ink/65">{{ $row['user']->email }}</p>
                                             </div>
                                         </div>
                                     </td>
@@ -77,10 +77,10 @@
                                             <div class="h-1.5 flex-1 overflow-hidden rounded-full bg-ink/5">
                                                 <div class="h-full rounded-full {{ $percent >= 100 ? 'bg-success' : 'bg-crimson' }}" style="width: {{ $percent }}%"></div>
                                             </div>
-                                            <span class="w-9 text-right text-xs font-medium text-ink/60">{{ $percent }}%</span>
+                                            <span class="w-9 text-right text-xs font-medium text-ink/65">{{ $percent }}%</span>
                                         </div>
                                     </td>
-                                    <td class="whitespace-nowrap px-5 py-4 text-ink/60">
+                                    <td class="whitespace-nowrap px-5 py-4 text-ink/65">
                                         {{ $row['lastActivity']?->diffForHumans() ?? '—' }}
                                     </td>
                                     <td class="px-5 py-4">
@@ -105,7 +105,7 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-4 text-xs text-ink/50">
+            <div class="flex items-center gap-4 text-xs text-ink/65">
                 <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-success"></span> Completed</span>
                 <span class="inline-flex items-center gap-1.5"><span class="h-3 w-3 rounded-sm bg-ink/10"></span> Not done</span>
             </div>

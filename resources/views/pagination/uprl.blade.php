@@ -11,7 +11,7 @@
 
 @if ($paginator->hasPages())
     <nav role="navigation" aria-label="Pagination" class="flex flex-wrap items-center justify-between gap-3">
-        <p class="text-sm text-ink/60">
+        <p class="text-sm text-ink/65">
             Showing <span class="font-medium text-ink">{{ $paginator->firstItem() }}</span>–<span class="font-medium text-ink">{{ $paginator->lastItem() }}</span>
             of <span class="font-medium text-ink">{{ $paginator->total() }}</span>
         </p>
@@ -19,7 +19,7 @@
         <div class="flex items-center gap-1">
             {{-- Previous --}}
             @if ($paginator->onFirstPage())
-                <span class="{{ $base }} cursor-not-allowed text-ink/30" aria-disabled="true">{{ __('Prev') }}</span>
+                <span class="{{ $base }} cursor-not-allowed text-ink/65" aria-disabled="true">{{ __('Prev') }}</span>
             @else
                 <a href="{{ $paginator->previousPageUrl() }}" data-nav rel="prev"
                    class="{{ $base }} text-ink/70 hover:bg-ink/5 hover:text-ink">{{ __('Prev') }}</a>
@@ -29,7 +29,7 @@
             @if ($start > 1)
                 <a href="{{ $paginator->url(1) }}" data-nav class="{{ $base }} text-ink/70 hover:bg-ink/5 hover:text-ink">1</a>
                 @if ($start > 2)
-                    <span class="{{ $base }} text-ink/30">…</span>
+                    <span class="{{ $base }} text-ink/65">…</span>
                 @endif
             @endif
 
@@ -45,7 +45,7 @@
             {{-- Trailing ellipsis --}}
             @if ($end < $last)
                 @if ($end < $last - 1)
-                    <span class="{{ $base }} text-ink/30">…</span>
+                    <span class="{{ $base }} text-ink/65">…</span>
                 @endif
                 <a href="{{ $paginator->url($last) }}" data-nav class="{{ $base }} text-ink/70 hover:bg-ink/5 hover:text-ink">{{ $last }}</a>
             @endif
@@ -55,7 +55,7 @@
                 <a href="{{ $paginator->nextPageUrl() }}" data-nav rel="next"
                    class="{{ $base }} text-ink/70 hover:bg-ink/5 hover:text-ink">{{ __('Next') }}</a>
             @else
-                <span class="{{ $base }} cursor-not-allowed text-ink/30" aria-disabled="true">{{ __('Next') }}</span>
+                <span class="{{ $base }} cursor-not-allowed text-ink/65" aria-disabled="true">{{ __('Next') }}</span>
             @endif
         </div>
     </nav>

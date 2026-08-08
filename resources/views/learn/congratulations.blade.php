@@ -19,7 +19,7 @@
         <x-brand.sunburst class="pointer-events-none absolute -bottom-40 -left-40 h-[34rem] w-[34rem] text-crimson/5" />
 
         <div class="relative mx-auto w-full max-w-xl">
-            <span class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gold/15 text-gold ring-8 ring-gold/5">
+            <span class="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gold/10 text-gold-ink ring-8 ring-gold/5">
                 <x-ui.icon name="sparkles" class="h-10 w-10" />
             </span>
 
@@ -35,15 +35,15 @@
             {{-- Summary stats --}}
             <dl class="mx-auto mt-10 grid max-w-md grid-cols-3 gap-3">
                 <div class="rounded-2xl border border-line bg-card p-5 shadow-sm">
-                    <dt class="text-xs font-medium text-ink/50">Lessons</dt>
+                    <dt class="text-xs font-medium text-ink/65">Lessons</dt>
                     <dd class="mt-1 font-display text-2xl font-semibold text-ink">{{ $snapshot->total() }}</dd>
                 </div>
                 <div class="rounded-2xl border border-line bg-card p-5 shadow-sm">
-                    <dt class="text-xs font-medium text-ink/50">Time spent</dt>
+                    <dt class="text-xs font-medium text-ink/65">Time spent</dt>
                     <dd class="mt-1 font-display text-2xl font-semibold text-ink">{{ $fmtTime($snapshot->totalSecondsSpent()) }}</dd>
                 </div>
                 <div class="rounded-2xl border border-line bg-card p-5 shadow-sm">
-                    <dt class="text-xs font-medium text-ink/50">Completed</dt>
+                    <dt class="text-xs font-medium text-ink/65">Completed</dt>
                     <dd class="mt-1 font-display text-lg font-semibold text-ink">
                         {{ $enrollment?->completed_at?->isoFormat('D MMM') ?? 'Today' }}
                     </dd>
@@ -62,7 +62,7 @@
                     </div>
 
                     <template x-if="!ready">
-                        <p class="mt-2 text-sm text-ink/60">Preparing your certificate — this only takes a moment…</p>
+                        <p class="mt-2 text-sm text-ink/65">Preparing your certificate — this only takes a moment…</p>
                     </template>
 
                     <template x-if="ready">

@@ -31,7 +31,7 @@
 @if ($isPaid && ! $enrolled)
     <div class="mb-5 border-b border-line pb-5">
         <p class="font-display text-3xl font-bold text-ink">{{ Money::format($price) }}</p>
-        <p class="mt-0.5 text-xs text-ink/55">
+        <p class="mt-0.5 text-xs text-ink/65">
             One-off payment · lifetime access
             @if ($programme = $course->primaryProgramme())
                 <span class="mt-1 block">Part of {{ $programme->name }}</span>
@@ -54,7 +54,7 @@
     <x-ui.button class="w-full" :href="route('courses.roster', $course)">
         <x-ui.icon name="users" class="h-5 w-5" /> Manage roster
     </x-ui.button>
-    <p class="mt-2 text-center text-xs text-ink/50">
+    <p class="mt-2 text-center text-xs text-ink/65">
         {{ $mode->label() }}@if ($isPaid) · {{ Money::format($price) }}@endif
     </p>
 
@@ -100,10 +100,10 @@
 @elseif ($isPaid && $hasPurchased)
     {{-- Paid for, but the enrolment did not land (a rare fulfilment failure). Say so
          plainly rather than offering to sell it again. --}}
-    <div class="rounded-xl bg-gold/15 px-4 py-3 text-center text-sm font-medium text-gold-ink">
+    <div class="rounded-xl bg-gold/10 px-4 py-3 text-center text-sm font-medium text-gold-ink">
         You have paid for this course
     </div>
-    <p class="mt-2 text-center text-xs text-ink/60">
+    <p class="mt-2 text-center text-xs text-ink/65">
         Your access is being set up. <a href="{{ route('orders.index') }}" class="text-crimson hover:underline focus-ring rounded">See your orders</a>.
     </p>
 
@@ -130,7 +130,7 @@
         <x-ui.button type="submit" variant="secondary" class="w-full">Buy now</x-ui.button>
     </form>
 
-    <p class="mt-3 text-center text-xs text-ink/60">
+    <p class="mt-3 text-center text-xs text-ink/65">
         @guest
             You can add this to your cart now and sign in when you check out.
         @else
@@ -141,16 +141,16 @@
 @elseif (! auth()->check())
     {{-- Free course, signed out --}}
     <x-ui.button class="w-full" :href="route('register')">Create an account to enrol</x-ui.button>
-    <p class="mt-2 text-center text-xs text-ink/50">
+    <p class="mt-2 text-center text-xs text-ink/65">
         Already a member? <a href="{{ route('login') }}" class="text-crimson hover:underline focus-ring rounded">Log in</a>
     </p>
 
 @elseif ($status === EnrollmentStatus::Pending)
     {{-- Awaiting approval --}}
-    <div class="flex items-center justify-center gap-2 rounded-xl bg-gold/15 px-4 py-3 text-sm font-medium text-gold-ink">
+    <div class="flex items-center justify-center gap-2 rounded-xl bg-gold/10 px-4 py-3 text-sm font-medium text-gold-ink">
         <x-ui.icon name="clock" class="h-4 w-4" /> Awaiting approval
     </div>
-    <p class="mt-2 text-center text-xs text-ink/60">We'll email you once a staff member reviews your request.</p>
+    <p class="mt-2 text-center text-xs text-ink/65">We'll email you once a staff member reviews your request.</p>
 
 @elseif ($status === EnrollmentStatus::Waitlisted)
     {{-- On the waitlist --}}
@@ -161,7 +161,7 @@
           x-data
           @submit.prevent="if (await window.uprlConfirm({ title: 'Leave the waitlist?', confirmText: 'Yes, leave' })) $el.submit()">
         @csrf @method('DELETE')
-        <button type="submit" class="w-full text-center text-xs text-ink/50 hover:text-crimson focus-ring rounded py-1">
+        <button type="submit" class="w-full text-center text-xs text-ink/65 hover:text-crimson focus-ring rounded py-1">
             Leave the waitlist
         </button>
     </form>
@@ -171,17 +171,17 @@
     <div class="flex items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 text-sm font-medium text-ink/70">
         <x-ui.icon name="shield" class="h-4 w-4" /> Enrolment by invitation
     </div>
-    <p class="mt-2 text-center text-xs text-ink/60">An administrator adds students to this course directly.</p>
+    <p class="mt-2 text-center text-xs text-ink/65">An administrator adds students to this course directly.</p>
 
 @elseif ($windowFuture)
     {{-- Window not open yet --}}
     <x-ui.button class="w-full" disabled>Enrolment opens {{ $course->enrollment_opens_at->isoFormat('D MMM') }}</x-ui.button>
-    <p class="mt-2 text-center text-xs text-ink/60">Check back soon to claim your place.</p>
+    <p class="mt-2 text-center text-xs text-ink/65">Check back soon to claim your place.</p>
 
 @elseif ($windowClosed)
     {{-- Window closed --}}
     <x-ui.button class="w-full" disabled>Enrolment closed</x-ui.button>
-    <p class="mt-2 text-center text-xs text-ink/60">Enrolment for this course has ended.</p>
+    <p class="mt-2 text-center text-xs text-ink/65">Enrolment for this course has ended.</p>
 
 @elseif ($full)
     {{-- Full → waitlist --}}
@@ -191,7 +191,7 @@
             <x-ui.icon name="users" class="h-5 w-5" /> Join the waitlist
         </x-ui.button>
     </form>
-    <p class="mt-2 text-center text-xs text-ink/60">This course is full — join the waitlist and we'll promote you automatically when a place frees up.</p>
+    <p class="mt-2 text-center text-xs text-ink/65">This course is full — join the waitlist and we'll promote you automatically when a place frees up.</p>
 
 @else
     {{-- Open self-enrol, free --}}
@@ -201,7 +201,7 @@
             {{ $mode === EnrollmentMode::Approval ? 'Request enrolment' : 'Enrol — start learning' }}
         </x-ui.button>
     </form>
-    <p class="mt-2 text-center text-xs text-ink/60">
+    <p class="mt-2 text-center text-xs text-ink/65">
         {{ $mode === EnrollmentMode::Approval
             ? 'A staff member will review your request.'
             : 'Free for '.config('brand.short').' learners.' }}

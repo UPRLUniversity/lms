@@ -22,7 +22,7 @@
 
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
-                <a href="{{ route('admin.certificate-templates.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+                <a href="{{ route('admin.certificate-templates.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
                     <x-ui.icon name="arrow-left" class="h-4 w-4" /> Certificate templates
                 </a>
                 <h2 class="mt-1 font-display text-2xl font-semibold text-ink">{{ $isNew ? 'New certificate template' : $template->name }}</h2>
@@ -98,7 +98,7 @@
                             </template>
                             {{-- sr-only, not hidden: a display:none input cannot be tabbed to, which made
                                  this the one control on the page a keyboard could not reach. --}}
-                            <label class="cursor-pointer rounded-lg border border-dashed border-line px-3 py-2 text-xs font-medium text-ink/60 hover:border-crimson/40 hover:text-crimson focus-within:ring-2 focus-within:ring-crimson focus-within:ring-offset-2">
+                            <label class="cursor-pointer rounded-lg border border-dashed border-line px-3 py-2 text-xs font-medium text-ink/65 hover:border-crimson/40 hover:text-crimson focus-within:ring-2 focus-within:ring-crimson focus-within:ring-offset-2">
                                 <span x-text="uploading.one ? 'Uploading…' : 'Upload'"></span>
                                 <input type="file" accept="image/png,image/webp" class="sr-only"
                                        aria-labelledby="signatory_one_signature_label"
@@ -106,11 +106,11 @@
                                        @change="uploadSignature('one', $event)">
                             </label>
                             <button type="button" x-show="one.previewUrl" @click="clearSignature('one')"
-                                    class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove signature image">
+                                    class="rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove signature image">
                                 <x-ui.icon name="x" class="h-4 w-4" />
                             </button>
                         </div>
-                        <p class="mt-1.5 text-xs text-ink/50" id="signature_requirements">PNG or WebP, under 1MB. A transparent PNG about 600px wide sits best on the certificate.</p>
+                        <p class="mt-1.5 text-xs text-ink/65" id="signature_requirements">PNG or WebP, under 1MB. A transparent PNG about 600px wide sits best on the certificate.</p>
                     </div>
                 </div>
                 <input type="hidden" name="signatory_one[signature_media_id]" :value="one.signatureMediaId">
@@ -118,13 +118,13 @@
 
             <x-ui.card>
                 <div class="flex items-center justify-between">
-                    <h3 class="font-display font-semibold text-ink">Signatory 2 <span class="font-normal text-ink/50">(optional)</span></h3>
+                    <h3 class="font-display font-semibold text-ink">Signatory 2 <span class="font-normal text-ink/65">(optional)</span></h3>
                     <button type="button" x-show="!hasTwo" @click="addSecondSignatory()"
-                            class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-line px-3 py-1.5 text-sm font-medium text-ink/60 hover:border-crimson/40 hover:text-crimson focus-ring">
+                            class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-line px-3 py-1.5 text-sm font-medium text-ink/65 hover:border-crimson/40 hover:text-crimson focus-ring">
                         <x-ui.icon name="plus" class="h-4 w-4" /> Add
                     </button>
                     <button type="button" x-show="hasTwo" @click="removeSecondSignatory()"
-                            class="inline-flex items-center gap-1.5 rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove second signatory">
+                            class="inline-flex items-center gap-1.5 rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove second signatory">
                         <x-ui.icon name="trash" class="h-4 w-4" />
                     </button>
                 </div>
@@ -143,7 +143,7 @@
                             <template x-if="two.previewUrl">
                                 <img :src="two.previewUrl" alt="" class="h-10 w-auto rounded border border-line bg-white p-1">
                             </template>
-                            <label class="cursor-pointer rounded-lg border border-dashed border-line px-3 py-2 text-xs font-medium text-ink/60 hover:border-crimson/40 hover:text-crimson focus-within:ring-2 focus-within:ring-crimson focus-within:ring-offset-2">
+                            <label class="cursor-pointer rounded-lg border border-dashed border-line px-3 py-2 text-xs font-medium text-ink/65 hover:border-crimson/40 hover:text-crimson focus-within:ring-2 focus-within:ring-crimson focus-within:ring-offset-2">
                                 <span x-text="uploading.two ? 'Uploading…' : 'Upload'"></span>
                                 <input type="file" accept="image/png,image/webp" class="sr-only"
                                        aria-labelledby="signatory_two_signature_label"
@@ -151,11 +151,11 @@
                                        @change="uploadSignature('two', $event)">
                             </label>
                             <button type="button" x-show="two.previewUrl" @click="clearSignature('two')"
-                                    class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove signature image">
+                                    class="rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove signature image">
                                 <x-ui.icon name="x" class="h-4 w-4" />
                             </button>
                         </div>
-                        <p class="mt-1.5 text-xs text-ink/50" id="signature_requirements_two">PNG or WebP, under 1MB. A transparent PNG about 600px wide sits best on the certificate.</p>
+                        <p class="mt-1.5 text-xs text-ink/65" id="signature_requirements_two">PNG or WebP, under 1MB. A transparent PNG about 600px wide sits best on the certificate.</p>
                     </div>
                 </div>
                 <input type="hidden" name="signatory_two[signature_media_id]" :value="hasTwo ? two.signatureMediaId : ''">

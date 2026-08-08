@@ -53,11 +53,11 @@
                                     @endunless
                                 </div>
                                 @if ($programme->tagline)
-                                    <p class="mt-0.5 text-sm text-ink/60">{{ $programme->tagline }}</p>
+                                    <p class="mt-0.5 text-sm text-ink/65">{{ $programme->tagline }}</p>
                                 @endif
 
                                 {{-- Fee schedule. Stacks on mobile, inline from sm up. --}}
-                                <dl class="mt-2 flex flex-col gap-x-4 gap-y-1 text-xs text-ink/60 sm:flex-row sm:flex-wrap">
+                                <dl class="mt-2 flex flex-col gap-x-4 gap-y-1 text-xs text-ink/65 sm:flex-row sm:flex-wrap">
                                     <div class="flex gap-1.5">
                                         <dt>Registration</dt>
                                         <dd class="font-medium text-ink/80">{{ Money::formatOrFree($programme->registration_fee) }}</dd>
@@ -71,7 +71,7 @@
                                         <dd class="font-medium text-ink/80">{{ Money::formatOrFree($programme->per_paper_fee) }}</dd>
                                     </div>
                                 </dl>
-                                <p class="mt-1 text-xs text-ink/45">
+                                <p class="mt-1 text-xs text-ink/65">
                                     {{ $programme->parts_count }} {{ Str::plural('part', $programme->parts_count) }}
                                 </p>
                             </div>
@@ -105,10 +105,10 @@
                                         <div class="min-w-0 flex-1">
                                             <p class="truncate font-medium text-ink">{{ $part->name }}</p>
                                             @if ($part->description)
-                                                <p class="truncate text-xs text-ink/50">{{ $part->description }}</p>
+                                                <p class="truncate text-xs text-ink/65">{{ $part->description }}</p>
                                             @endif
 
-                                            <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/55">
+                                            <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink/65">
                                                 <span>{{ $courseCount }} {{ Str::plural('course', $courseCount) }}</span>
 
                                                 @if ($part->credit_target !== null)
@@ -130,7 +130,7 @@
 
                                                 @if ($listed !== $counted && $part->credit_target !== null)
                                                     <span aria-hidden="true">·</span>
-                                                    <span class="text-ink/40">{{ $listed }} listed incl. electives</span>
+                                                    <span class="text-ink/65">{{ $listed }} listed incl. electives</span>
                                                 @endif
                                             </p>
                                         </div>
@@ -150,7 +150,7 @@
                                 @endforeach
                             </ul>
                         @else
-                            <p class="border-t border-line px-5 py-3 text-sm text-ink/40">
+                            <p class="border-t border-line px-5 py-3 text-sm text-ink/65">
                                 No parts yet.
                                 @if ($canManage)
                                     <a href="{{ route('admin.programme-parts.create', ['programme' => $programme->id]) }}"

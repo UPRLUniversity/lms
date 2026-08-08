@@ -49,7 +49,7 @@
                     </div>
                     <div class="flex flex-col items-center gap-3 rounded-xl bg-gradient-to-br from-crimson to-crimson-dark p-6">
                         <x-brand.logo variant="white" class="h-16 w-auto" />
-                        <span class="text-xs text-white/80">white · on crimson</span>
+                        <span class="text-xs text-white/85">white · on crimson</span>
                     </div>
                     <div class="flex flex-col items-center gap-3 rounded-xl border border-line bg-surface p-6">
                         <x-brand.logo variant="mark" class="h-16 w-16" />

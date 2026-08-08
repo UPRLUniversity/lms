@@ -36,7 +36,7 @@
                 @endforeach
             </div>
 
-            <p class="mt-10 text-center text-sm text-ink/60">
+            <p class="mt-10 text-center text-sm text-ink/65">
                 Not sure which to choose?
                 <a href="{{ route('catalogue.index') }}" class="rounded font-medium text-crimson hover:underline focus-ring">
                     Browse every course

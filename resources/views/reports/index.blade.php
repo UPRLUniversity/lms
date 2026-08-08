@@ -17,7 +17,7 @@
                             <h3 class="font-display text-lg font-semibold text-ink group-hover:text-crimson">{{ $report->label() }}</h3>
                             <p class="mt-1 text-sm text-ink/65">{{ $report->description() }}</p>
                         </div>
-                        <x-ui.icon name="arrow-right" class="ml-auto h-5 w-5 shrink-0 text-ink/30 transition group-hover:translate-x-0.5 group-hover:text-crimson" />
+                        <x-ui.icon name="arrow-right" class="ml-auto h-5 w-5 shrink-0 text-ink/65 transition group-hover:translate-x-0.5 group-hover:text-crimson" />
                     </div>
                 </a>
             @endforeach

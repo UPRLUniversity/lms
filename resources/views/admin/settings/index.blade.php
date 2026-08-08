@@ -147,7 +147,7 @@
                                                   rows="3"
                                                   @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
                                                   @if ($error) aria-invalid="true" @endif
-                                                  class="block w-full rounded-xl border-line bg-card text-ink shadow-sm placeholder:text-ink/40 focus:border-crimson focus:ring-crimson">{{ $value }}</textarea>
+                                                  class="block w-full rounded-xl border-line bg-card text-ink shadow-sm placeholder:text-ink/65 focus:border-crimson focus:ring-crimson">{{ $value }}</textarea>
 
                                     @else
                                         <x-ui.input :type="$type === 'int' ? 'number' : ($type === 'email' ? 'email' : 'text')"

@@ -9,7 +9,7 @@
     @else
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-                <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/50">
+                <thead class="border-b border-line text-xs uppercase tracking-wide text-ink/65">
                     <tr>
                         <th scope="col" class="px-5 py-3 font-medium">Invitee</th>
                         <th scope="col" class="px-5 py-3 font-medium">Role</th>
@@ -23,7 +23,7 @@
                         <tr class="hover:bg-surface/60">
                             <td class="px-5 py-3">
                                 <p class="font-medium text-ink">{{ $invitation->name }}</p>
-                                <p class="text-xs text-ink/60">{{ $invitation->email }}</p>
+                                <p class="text-xs text-ink/65">{{ $invitation->email }}</p>
                             </td>
                             <td class="px-5 py-3">
                                 <x-ui.role-badge :role="$invitation->role" />
@@ -40,7 +40,7 @@
                                         <x-ui.badge variant="crimson">Pending</x-ui.badge>
                                 @endswitch
                             </td>
-                            <td class="px-5 py-3 text-ink/60">
+                            <td class="px-5 py-3 text-ink/65">
                                 {{ $invitation->expires_at->diffForHumans() }}
                             </td>
                             <td class="px-5 py-3">
@@ -59,7 +59,7 @@
                                             </x-ui.button>
                                         </form>
                                     @else
-                                        <span class="text-xs text-ink/40">—</span>
+                                        <span class="text-xs text-ink/65">—</span>
                                     @endunless
                                 </div>
                             </td>

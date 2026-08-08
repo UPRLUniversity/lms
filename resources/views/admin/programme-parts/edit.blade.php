@@ -1,11 +1,11 @@
 <x-app-layout :title="$part->name">
     <div class="mx-auto max-w-xl space-y-6">
-        <a href="{{ route('admin.programmes.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+        <a href="{{ route('admin.programmes.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
             <x-ui.icon name="arrow-left" class="h-4 w-4" /> Programmes
         </a>
         <div>
             <h2 class="font-display text-2xl font-semibold text-ink">{{ $part->name }}</h2>
-            <p class="mt-0.5 text-sm text-ink/60">{{ $part->programme->name }}</p>
+            <p class="mt-0.5 text-sm text-ink/65">{{ $part->programme->name }}</p>
         </div>
 
         <x-ui.card>

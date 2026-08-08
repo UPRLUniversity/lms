@@ -21,11 +21,11 @@
                     </span>
                     <span class="min-w-0 flex-1">
                         <span class="block text-sm text-ink" x-text="q.prompt"></span>
-                        <span class="mt-0.5 block text-xs text-ink/45" x-text="`${q.type} · ${q.points} pts${q.category ? ' · ' + q.category : ''}`"></span>
+                        <span class="mt-0.5 block text-xs text-ink/65" x-text="`${q.type} · ${q.points} pts${q.category ? ' · ' + q.category : ''}`"></span>
                     </span>
                 </button>
             </template>
-            <p x-show="filteredBank.length === 0" class="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink/40">
+            <p x-show="filteredBank.length === 0" class="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink/65">
                 No questions. <a href="{{ route('questions.create', $course) }}" class="text-crimson">Add some to the bank.</a>
             </p>
         </div>
@@ -35,28 +35,28 @@
     <div>
         <div class="mb-3 flex items-center justify-between">
             <h3 class="font-display font-semibold text-ink">On this assessment</h3>
-            <span class="text-sm text-ink/60"><span x-text="selected.length"></span> questions · <span class="font-medium text-ink" x-text="totalPoints"></span> pts</span>
+            <span class="text-sm text-ink/65"><span x-text="selected.length"></span> questions · <span class="font-medium text-ink" x-text="totalPoints"></span> pts</span>
         </div>
         <div x-ref="selectedList" class="space-y-2">
             <template x-for="s in selected" :key="s.id">
                 <div :data-id="s.id" class="flex items-center gap-2 rounded-xl border border-line bg-card p-3">
-                    <button type="button" data-drag class="cursor-grab rounded p-1 text-ink/30 hover:text-ink/60 focus-ring" aria-label="Drag to reorder">
+                    <button type="button" data-drag class="cursor-grab rounded p-1 text-ink/65 hover:text-ink/65 focus-ring" aria-label="Drag to reorder">
                         <x-ui.icon name="arrows-up-down" class="h-4 w-4" />
                     </button>
                     <span class="min-w-0 flex-1 text-sm text-ink" x-text="bankById(s.id).prompt"></span>
                     <input type="number" min="0" step="0.5" x-model="s.points_override" @change="saveFixed()"
                            :placeholder="bankById(s.id).points"
                            class="w-16 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson" aria-label="Points override">
-                    <button type="button" @click="remove(s.id)" class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove">
+                    <button type="button" @click="remove(s.id)" class="rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove">
                         <x-ui.icon name="x" class="h-4 w-4" />
                     </button>
                 </div>
             </template>
         </div>
-        <p x-show="selected.length === 0" class="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink/40">
+        <p x-show="selected.length === 0" class="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink/65">
             Pick questions from the bank to add them here.
         </p>
-        <p class="mt-2 text-xs text-ink/40" x-show="saving">Saving…</p>
+        <p class="mt-2 text-xs text-ink/65" x-show="saving">Saving…</p>
     </div>
 </div>
 
@@ -65,7 +65,7 @@
     <div class="mb-3 flex items-center justify-between">
         <div>
             <h3 class="font-display font-semibold text-ink">Pool rules</h3>
-            <p class="text-sm text-ink/60">Each attempt draws a fresh random set obeying these rules.</p>
+            <p class="text-sm text-ink/65">Each attempt draws a fresh random set obeying these rules.</p>
         </div>
         <x-ui.button type="button" size="sm" @click="addRule()"><x-ui.icon name="plus" class="h-4 w-4" /> Add rule</x-ui.button>
     </div>
@@ -89,17 +89,17 @@
                 <div class="flex items-center gap-2">
                     <input type="number" min="1" x-model="rule.count" @change="updateRule(rule)"
                            class="w-20 rounded-lg border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson" aria-label="Count">
-                    <span class="text-sm text-ink/50">questions</span>
+                    <span class="text-sm text-ink/65">questions</span>
                 </div>
-                <span class="text-xs" :class="ruleShort(rule) ? 'text-crimson' : 'text-ink/45'">
+                <span class="text-xs" :class="ruleShort(rule) ? 'text-crimson' : 'text-ink/65'">
                     <span x-text="rule.available"></span> available
                 </span>
-                <button type="button" @click="deleteRule(rule)" class="ml-auto rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring" aria-label="Remove rule">
+                <button type="button" @click="deleteRule(rule)" class="ml-auto rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring" aria-label="Remove rule">
                     <x-ui.icon name="trash" class="h-4 w-4" />
                 </button>
             </div>
         </template>
-        <p x-show="rules.length === 0" class="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink/40">
+        <p x-show="rules.length === 0" class="rounded-xl border border-dashed border-line p-6 text-center text-sm text-ink/65">
             No rules yet. Add one to define the pool.
         </p>
     </div>

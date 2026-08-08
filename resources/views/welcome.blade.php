@@ -58,11 +58,11 @@
                       class="mt-8 rounded-2xl border border-white/20 bg-white/10 p-3 backdrop-blur-sm sm:flex sm:items-center sm:gap-3">
                     <div class="relative flex-1">
                         <label for="hero-q" class="sr-only">Search courses</label>
-                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/40">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/65">
                             <x-ui.icon name="search" class="h-5 w-5" />
                         </span>
                         <input id="hero-q" type="search" name="q" placeholder="Search a course or code…"
-                               class="block w-full rounded-xl border-0 bg-white py-2.5 pl-10 pr-3 text-ink placeholder:text-ink/45 focus-ring-inverse">
+                               class="block w-full rounded-xl border-0 bg-white py-2.5 pl-10 pr-3 text-ink placeholder:text-ink/65 focus-ring-inverse">
                     </div>
 
                     @if ($programmes->isNotEmpty())
@@ -272,7 +272,7 @@
             <div class="relative overflow-hidden rounded-3xl border border-line bg-card p-8 shadow-sm sm:p-10">
                 <x-brand.sunburst class="pointer-events-none absolute -right-12 -top-12 h-60 w-60 text-gold/10" />
                 <div class="relative">
-                    <span class="inline-flex items-center gap-2 rounded-full bg-gold/15 px-3 py-1 text-xs font-medium uppercase tracking-wide text-gold-ink">
+                    <span class="inline-flex items-center gap-2 rounded-full bg-gold/10 px-3 py-1 text-xs font-medium uppercase tracking-wide text-gold-ink">
                         Employers
                     </span>
                     <h2 class="mt-4 font-display text-2xl font-bold text-ink sm:text-3xl">Verify a certificate</h2>

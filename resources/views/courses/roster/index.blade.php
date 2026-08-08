@@ -11,11 +11,11 @@
         {{-- Header --}}
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0">
-                <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1 text-sm text-ink/60 hover:text-crimson focus-ring rounded">
+                <a href="{{ route('courses.edit', $course) }}" class="inline-flex items-center gap-1 text-sm text-ink/65 hover:text-crimson focus-ring rounded">
                     <x-ui.icon name="arrow-left" class="h-4 w-4" /> Back to course
                 </a>
                 <h2 class="mt-2 font-display text-2xl font-semibold text-ink">{{ $course->title }}</h2>
-                <p class="mt-1 text-sm text-ink/60">Roster · {{ $course->enrollmentMode()->label() }}</p>
+                <p class="mt-1 text-sm text-ink/65">Roster · {{ $course->enrollmentMode()->label() }}</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
@@ -132,7 +132,7 @@
         <form method="GET" action="{{ route('courses.roster', $course) }}" @submit.prevent="filter()">
             <label for="search" class="sr-only">Search by name or email</label>
             <div class="relative max-w-md">
-                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/40">
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-ink/65">
                     <x-ui.icon name="search" class="h-5 w-5" />
                 </span>
                 <x-ui.input id="search" name="search" type="search" value="{{ $search }}"

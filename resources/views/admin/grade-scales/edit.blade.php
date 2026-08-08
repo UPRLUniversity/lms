@@ -134,7 +134,7 @@
 
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
-                <a href="{{ route('admin.grade-scales.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/60 hover:text-ink focus-ring rounded">
+                <a href="{{ route('admin.grade-scales.index') }}" class="inline-flex items-center gap-1.5 text-sm text-ink/65 hover:text-ink focus-ring rounded">
                     <x-ui.icon name="arrow-left" class="h-4 w-4" /> Grade scales
                 </a>
                 <h2 class="mt-1 font-display text-2xl font-semibold text-ink">{{ $isNew ? 'New grade scale' : $scale->name }}</h2>
@@ -178,7 +178,7 @@
             {{-- Display settings --}}
             <x-ui.card>
                 <h3 class="font-display font-semibold text-ink">Display settings</h3>
-                <p class="mt-1 text-xs text-ink/60">Presentation only — never affects how anything is scored.</p>
+                <p class="mt-1 text-xs text-ink/65">Presentation only — never affects how anything is scored.</p>
 
                 <div class="mt-4 grid gap-5 sm:grid-cols-3">
                     <x-ui.field name="display_mode" label="Display mode" required>
@@ -206,7 +206,7 @@
                 </div>
 
                 <div class="mt-4 rounded-xl border border-line bg-surface/50 px-4 py-3 text-sm">
-                    <span class="text-ink/50">Preview:</span>
+                    <span class="text-ink/65">Preview:</span>
                     <span class="font-medium text-ink" x-text="previewLine(tryScore)"></span>
                 </div>
             </x-ui.card>
@@ -215,7 +215,7 @@
             <x-ui.card>
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <h3 class="font-display font-semibold text-ink">Coverage — 0 to 100%</h3>
-                    <span class="text-xs text-ink/50">Green = covered once · gold = overlap · crimson = gap</span>
+                    <span class="text-xs text-ink/65">Green = covered once · gold = overlap · crimson = gap</span>
                 </div>
                 <div class="mt-3 flex h-6 overflow-hidden rounded-lg border border-line">
                     <template x-for="(seg, i) in segments()" :key="i">
@@ -228,7 +228,7 @@
                              :title="`${seg.start}–${seg.end}% (${seg.state})`"></div>
                     </template>
                 </div>
-                <div class="mt-1 flex justify-between text-[11px] text-ink/40">
+                <div class="mt-1 flex justify-between text-[11px] text-ink/65">
                     <span>0%</span><span>100%</span>
                 </div>
 
@@ -257,14 +257,14 @@
                         </p>
                     </div>
                     <button type="button" @click="addBand()" x-show="bands.length < 15"
-                            class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-line px-3 py-1.5 text-sm font-medium text-ink/60 hover:border-crimson/40 hover:text-crimson focus-ring">
+                            class="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-line px-3 py-1.5 text-sm font-medium text-ink/65 hover:border-crimson/40 hover:text-crimson focus-ring">
                         <x-ui.icon name="plus" class="h-4 w-4" /> Add band
                     </button>
                 </div>
                 <div class="overflow-x-auto border-t border-line">
                     <table class="w-full min-w-[820px] text-sm">
                         <thead>
-                            <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/50">
+                            <tr class="border-b border-line text-left text-xs font-semibold uppercase tracking-wide text-ink/65">
                                 <th class="px-4 py-2.5">Label</th>
                                 <th class="px-4 py-2.5">Min %</th>
                                 <th class="px-4 py-2.5">Max %</th>
@@ -306,7 +306,7 @@
                                                    :aria-label="`${band.label || 'This band'} is a pass`"
                                                    class="rounded border-line text-success focus:ring-success">
                                             <span class="text-xs font-medium"
-                                                  :class="band.is_pass ? 'text-success' : 'text-ink/40'"
+                                                  :class="band.is_pass ? 'text-success' : 'text-ink/65'"
                                                   x-text="band.is_pass ? 'Pass' : 'Fail'"></span>
                                         </label>
                                     </td>
@@ -321,7 +321,7 @@
                                     </td>
                                     <td class="px-4 py-2.5 text-right">
                                         <button type="button" @click="removeBand(i)" x-show="bands.length > 2"
-                                                class="rounded-lg p-1.5 text-ink/40 hover:text-crimson focus-ring"
+                                                class="rounded-lg p-1.5 text-ink/65 hover:text-crimson focus-ring"
                                                 :aria-label="`Remove ${band.label || 'band ' + (i + 1)}`">
                                             <x-ui.icon name="trash" class="h-4 w-4" />
                                         </button>
@@ -336,12 +336,12 @@
             {{-- Try it --}}
             <x-ui.card>
                 <h3 class="font-display font-semibold text-ink">Try it</h3>
-                <p class="mt-1 text-xs text-ink/60">Enter a score to see which band it maps to, using the bands above.</p>
+                <p class="mt-1 text-xs text-ink/65">Enter a score to see which band it maps to, using the bands above.</p>
                 <div class="mt-3 flex flex-wrap items-center gap-3">
                     <label for="try-score" class="sr-only">Score to test, as a percentage</label>
                     <input id="try-score" type="number" min="0" max="100" x-model.number="tryScore"
                            class="block w-28 rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
-                    <span class="text-sm text-ink/50" aria-hidden="true">%</span>
+                    <span class="text-sm text-ink/65" aria-hidden="true">%</span>
                     <span class="font-display text-lg font-semibold text-crimson" x-text="previewLine(tryScore)"></span>
                     <template x-if="bandFor(tryScore)">
                         <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
