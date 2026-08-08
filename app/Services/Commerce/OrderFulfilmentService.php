@@ -6,7 +6,6 @@ use App\Enums\EnrollmentSource;
 use App\Enums\OrderStatus;
 use App\Exceptions\EnrollmentException;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Notifications\OrderPaidNotification;
 use App\Services\Courses\EnrollmentService;
 use Illuminate\Support\Facades\DB;
@@ -104,11 +103,19 @@ class OrderFulfilmentService
             }
 
             try {
+                // Progression is deliberately NOT enforced here. The money has already
+                // changed hands; refusing now would strand a paid order with no access —
+                // exactly the failure the cart and checkout checks exist to prevent
+                // before payment. If a rule changed between checkout and fulfilment, the
+                // buyer gets what they paid for and the override is recorded against the
+                // enrolment for staff to see.
                 $this->enrollments->adminEnroll(
                     student: $order->user,
                     course: $course,
                     actor: $order->user,
                     source: EnrollmentSource::Purchase,
+                    overridePrerequisites: true,
+                    overrideReason: "Paid order {$order->reference}",
                 );
             } catch (EnrollmentException $e) {
                 // alreadyEnrolled is the expected outcome of a replayed webhook, and is

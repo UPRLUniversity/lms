@@ -38,6 +38,10 @@
                                 :value="old('credit_target')" min="0" step="1"
                                 hint="The total the printed curriculum states for this part. Leave blank if it states none. Compulsory and required-elective credits are counted against it; pure electives and GNS are not." />
 
+                    <x-ui.field name="unlock_credits" label="Credits needed to unlock the next part" type="number"
+                                :value="old('unlock_credits')" min="0" step="1"
+                                hint="Only if the bar for progressing should differ from the stated total above. Leave blank — as it normally is — and the stated total is used." />
+
                     <x-ui.field name="description" label="Description" hint="Optional">
                         <textarea id="description" name="description" rows="2"
                                   class="block w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">{{ old('description') }}</textarea>

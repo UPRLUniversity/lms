@@ -1725,3 +1725,143 @@ the course pass mark of 40%. So the demo's third student is one who is part-way 
 currently failing ("Provisional · Fail") rather than a completed fail — honest, and it still
 puts both outcomes on screen. A course whose assessments pass at 30%, or one carrying a
 heavy assignment, reaches a failing final grade through exactly the same path.
+
+## Section 19 — Part progression (2026-08-08)
+
+Phases 1–4 of `docs/plans/prerequisites.md`, built on Section 18's pass verdict. A student
+may now be required to work through a programme's parts in order.
+
+### It ships switched off
+
+`programmes.progression_rule` defaults to `open`, so merging changed nothing. A migration
+that silently locked live students out of Part II courses they had already been sold would
+be the worst possible way to introduce this. `php artisan progression:audit` reports who
+*would* be blocked — and does it for `open` programmes too, because the question is only
+worth asking before somebody flips the switch, not after.
+
+On the seeded demo, `progression:audit CPR` reports 164 live enrolments that a sequential
+CPR would refuse today. That number is the argument for the default.
+
+### Two bars, and why the credit side counts what it counts
+
+A part is cleared when every compulsory course in it is passed AND — where the part states
+a target — the student has earned that many credits. Either bar alone is wrong: compulsory
+alone lets a student skip every required elective and arrive at graduation short of the
+published total; credits alone lets them reach 24 on electives while skipping a core paper,
+and is unavailable for the parts that state no target, which is most of them.
+
+Credits are counted through `CourseRequirement::countsTowardTarget()`, exactly as
+`ProgrammePart::creditsCounted()` does. Counting pure electives would let a student clear a
+24-credit bar with credits that do not count toward the advertised 24 — the same failure the
+two-bar design exists to prevent, reintroduced through the back door.
+
+### The first part is always open — a structural constraint, not a preference
+
+`PricingService::entryFeeLinesFor` charges a programme's registration and administration
+fees only when the cart already contains a paid course from that programme. There is no
+standalone "join CPR" purchase. So gating the first part on anything produces a deadlock:
+nobody can buy the first course, so nobody can pay the entry fee, so nobody can ever start.
+The entry fee stays enforced in the cart, where money actually moves.
+
+### The gate belongs where the student chooses, not where the system fulfils
+
+Six call sites, three of which deliberately do not enforce:
+
+| Entry point | Behaviour |
+|---|---|
+| `selfEnroll` | refuse |
+| add to cart | refuse — **the primary gate** |
+| checkout | refuse, naming the course |
+| purchase fulfilment | allow, record an override |
+| admin enrol | allow with an explicit override + required reason |
+| bulk import | allow, flagged in the preview |
+
+**The cart is the real enforcement point.** Every UPRL programme course is paid, so a
+purchase reaches the course through `adminEnroll` — which skips the paywall by design.
+A rule that only guarded `selfEnroll` would be bypassed by the simplest possible action:
+paying for a Part III course. Getting this backwards would have shipped a feature that
+never fires.
+
+**`adminEnroll`'s override parameter defaults to false.** All three exempt callers opt out
+explicitly at their own call site, so a caller added in a year's time inherits the enforcing
+behaviour. The check still runs when overriding — otherwise there is no way to know whether
+an override actually happened, and stamping every ordinary purchase would make the audit
+column worthless.
+
+### Waitlists
+
+The gate sits above the capacity branch, so a blocked student is refused rather than
+queued. Promotion is automatic when a seat frees, so waitlisting them would mean the system
+eventually enrols them past the gate with nobody in the loop. Re-checking at promotion was
+the alternative and is worse: the student holds a place for weeks and gets skipped when
+their turn comes.
+
+### Guests can still fill a cart
+
+A guest's history is unknowable, and demanding an account before anything can be added is
+the friction the public catalogue exists to remove. Checkout re-checks, and they must sign
+in before paying — so the first evaluation may happen at checkout, which is still before
+money moves.
+
+### Two things the tests caught
+
+**`verdictsFor` was handed a plain `collect()` by `check()`**, and `loadMissing` exists only
+on Eloquent collections. Normalised at the boundary.
+
+**`CourseGradeRecordFactory` produced a fail about one run in nine** — its default percent
+started at 40, which lands in the F band. Every test asserting "this student passed" was
+quietly flaky. Floor raised to 50; a fail is opt-in via `failed()`.
+
+## Accessibility audit — Sections 18/19 screens (2026-08-08)
+
+A Lighthouse pass over the new screens, run in a real browser. Three genuine defects, all
+of them violations of rules this file's own brand system already states.
+
+### Gold badge text was illegible — 2.08:1
+
+`<x-ui.badge variant="gold">` rendered `bg-gold/15 text-gold`: base gold `#C9A227` on a gold
+tint, measuring **2.08:1** against a 4.5:1 requirement. The brand system says this outright
+— "the base gold fails WCAG AA on white, so never use --uprl-gold for text on light" — and
+the shared primitive was doing exactly that.
+
+Fixed at the component: `bg-gold/10 text-gold-ink`, which measures **4.67:1**. Lightening
+the tint as well as darkening the text was necessary; `text-gold-ink` on the old `/15` tint
+still only reached 4.36:1.
+
+This changes every gold badge in the app (Provisional, System default, Required elective,
+In progress). Fixing only the Section 19 call site was not an option — the constitution
+requires going through the shared primitive, so the primitive had to be correct.
+
+### The grade-scale band grid had 31 unlabelled controls
+
+Every row of the band editor — label, min %, max %, grade point, colour — carried no
+accessible name at all, so a screen reader announced six identical unlabelled number
+fields. A static `<label for>` cannot work here: the rows come from `x-for`, so every row
+would reuse one id. Each control now takes an `:aria-label` naming its band ("A minimum
+percentage"), which is unique per row and speaks the way a person reads the grid.
+
+Pre-existing from Section 6.5, fixed because Section 18 extended that exact table and
+leaving half of it labelled would have been worse than either state.
+
+### Faded text below AA
+
+Small text at `text-ink/55` and `/60` measures 3.89:1 and 4.48:1 — both under 4.5:1. The
+eight instances these two sections introduced were raised to `text-ink/70` (≈5.9:1), the
+lightest step that clears AA on white.
+
+**Not fixed, and flagged deliberately:** this is an app-wide pattern — roughly 670 uses of
+`text-ink/30` through `/65` across the views, most of them below AA. Correcting that is a
+design-token decision affecting every screen, and burying it inside a progression PR would
+be exactly the "while I'm here" the constitution forbids. It wants its own pass.
+
+### Scores after
+
+| Screen | Before | After |
+|---|---|---|
+| Grade-scale editor | 86 | **96** |
+| Locked course page | 96 | 96 |
+| Programme ladder | 96 | 96 |
+| Roster + override | 96 | 96 |
+
+Everything still failing on those screens is the faded-text pattern above, plus one
+account-menu button in the app layout whose `aria-label` does not match its visible text.

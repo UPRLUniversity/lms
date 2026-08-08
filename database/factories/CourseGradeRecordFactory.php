@@ -16,7 +16,10 @@ class CourseGradeRecordFactory extends Factory
 
     public function definition(): array
     {
-        $percent = $this->faker->numberBetween(40, 100);
+        // 50 and up, so the default record is ALWAYS a pass. The old floor of 40 landed
+        // in the F band (below 50) about one run in nine, which made any test asserting
+        // "this student passed" quietly flaky. A fail is opt-in via failed().
+        $percent = $this->faker->numberBetween(50, 100);
 
         return [
             'user_id' => User::factory(),

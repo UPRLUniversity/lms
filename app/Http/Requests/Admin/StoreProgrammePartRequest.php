@@ -25,6 +25,9 @@ class StoreProgrammePartRequest extends FormRequest
             // when the prospectus doesn't state one — the UI then shows only the
             // computed sum rather than asserting a mismatch against nothing.
             'credit_target' => ['nullable', 'integer', 'min:0', 'max:500'],
+            // The bar for PROGRESSION only, when the registrar wants one different
+            // from the published total. Null (the norm) means "use credit_target".
+            'unlock_credits' => ['nullable', 'integer', 'min:0', 'max:500'],
         ];
     }
 }

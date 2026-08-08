@@ -26,6 +26,21 @@ class AdminEnrollRequest extends FormRequest
         return [
             'user_id' => ['required', 'integer', 'exists:users,id'],
             'course_id' => ['required', 'integer', 'exists:courses,id'],
+
+            // An override without a reason is an override nobody can account for later,
+            // so the reason is required exactly when the box is ticked.
+            'override_prerequisites' => ['nullable', 'boolean'],
+            'override_reason' => ['nullable', 'required_if_accepted:override_prerequisites', 'string', 'max:500'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'override_reason.required_if_accepted' => 'Give a reason for admitting this student past the prerequisite.',
         ];
     }
 }

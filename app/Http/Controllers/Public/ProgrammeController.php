@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\Programme;
+use App\Services\Courses\ProgressionService;
 use App\Services\Site\PublicSiteService;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
@@ -16,7 +18,10 @@ use Illuminate\View\View;
  */
 class ProgrammeController extends Controller
 {
-    public function __construct(private readonly PublicSiteService $site) {}
+    public function __construct(
+        private readonly PublicSiteService $site,
+        private readonly ProgressionService $progression,
+    ) {}
 
     public function index(): View
     {
@@ -25,12 +30,17 @@ class ProgrammeController extends Controller
         ]);
     }
 
-    public function show(Programme $programme): View
+    public function show(Request $request, Programme $programme): View
     {
         abort_unless($programme->is_active, 404);
 
+        $curriculum = $this->site->programmeCurriculum($programme);
+
         return view('public.programmes.show', [
-            'programme' => $this->site->programmeCurriculum($programme),
+            'programme' => $curriculum,
+            // Empty for a guest and for an `open` programme — there is no ladder to draw
+            // when nothing unlocks anything, and drawing one would invent a rule.
+            'partStates' => $this->progression->partStatesFor($request->user(), $curriculum),
         ]);
     }
 }

@@ -1,4 +1,9 @@
-@props(['course'])
+@props([
+    'course',
+    // The viewer's progression verdict, when there is a signed-in viewer to have one.
+    // Optional so every call site outside the catalogue keeps working unchanged.
+    'verdict' => null,
+])
 
 @php
     $cover = $course->coverUrl();
@@ -35,8 +40,13 @@
             <x-brand.sunburst class="pointer-events-none absolute -right-6 -top-6 h-40 w-40 text-white/10" />
             <span class="absolute bottom-3 left-4 font-display text-2xl font-bold text-white/90">{{ $course->code }}</span>
         @endif
-        <span class="absolute left-3 top-3">
+        <span class="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
             <x-ui.badge variant="gold" solid>{{ $course->level->label() }}</x-ui.badge>
+            @if ($verdict?->isBlocked())
+                {{-- A chip, not a hidden card. Seeing what you are working toward is the
+                     point; the course page carries the full reason. --}}
+                <x-ui.badge variant="neutral" solid :title="$verdict->message()">Locked</x-ui.badge>
+            @endif
         </span>
         <span class="absolute right-3 top-3 rounded-lg bg-ink/75 px-2.5 py-1 text-sm font-semibold text-white backdrop-blur-sm">
             {{ \App\Support\Money::formatOrFree($price) }}

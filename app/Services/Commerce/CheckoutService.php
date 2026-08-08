@@ -8,6 +8,7 @@ use App\Exceptions\CouponException;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\Courses\ProgressionService;
 use App\Support\Commerce\CartTotals;
 use App\Support\Commerce\PriceLine;
 use Illuminate\Support\Facades\DB;
@@ -31,6 +32,7 @@ class CheckoutService
         private readonly PricingService $pricing,
         private readonly CouponService $coupons,
         private readonly CartService $carts,
+        private readonly ProgressionService $progression,
     ) {}
 
     /**
@@ -75,6 +77,13 @@ class CheckoutService
             throw CheckoutException::emptyCart();
         }
 
+        // Re-checked here for the same reason every price is: a cart may be minutes or
+        // weeks old, and the buyer may have signed in only just now — so this can be the
+        // FIRST time the rule has been evaluated for them at all. After this point money
+        // moves and fulfilment stops enforcing, which makes this the last honest moment
+        // to refuse.
+        $this->assertProgressionAllows($cart, $user);
+
         return DB::transaction(function () use ($cart, $user, $paymentMethodKey, $billing, $couponCode) {
             // Re-resolved inside the transaction. Never trust the cart or the request.
             $lines = $this->pricing->linesFor($cart, $user);
@@ -111,6 +120,35 @@ class CheckoutService
 
             return $order;
         });
+    }
+
+    /**
+     * Refuse the whole checkout if any line is behind a progression gate, naming the
+     * course so the buyer knows which one to remove.
+     *
+     * The whole order, not just the line: silently dropping a course the buyer chose and
+     * charging them for the rest is a worse outcome than a clear refusal — they would
+     * discover it on the receipt.
+     *
+     * @throws CheckoutException
+     */
+    private function assertProgressionAllows(Cart $cart, User $user): void
+    {
+        $courses = $cart->items->map(fn ($item) => $item->course)->filter()->values();
+
+        if ($courses->isEmpty()) {
+            return;
+        }
+
+        $verdicts = $this->progression->verdictsFor($user, $courses);
+
+        foreach ($courses as $course) {
+            $verdict = $verdicts->get($course->id);
+
+            if ($verdict?->isBlocked()) {
+                throw CheckoutException::prerequisiteNotMet($course->title, (string) $verdict->message());
+            }
+        }
     }
 
     private function writeItem(Order $order, PriceLine $line): void

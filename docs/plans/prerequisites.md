@@ -1,24 +1,34 @@
 # Plan — Course prerequisites & part progression
 
-**Status:** DECIDED and approved by the human (2026-08-07). Ready to build — see §0.
+**Status:** BUILT, except Phase 5 — see the box below.
 **Written:** 2026-08-07, after investigating the current state at the human's request.
 
 > **Starting from a cold session? Read this box first.**
 >
-> Everything needed is in this file — no prior conversation is required. Section 17
-> (bulk imports) was the last section merged, so:
+> Everything needed is in this file — no prior conversation is required.
 >
-> | Build | Branch | Covers |
+> | Phase | Branch | State |
 > |---|---|---|
-> | **next** | `section/18-pass-fail` | Phase 0 only (§5) |
-> | then | `section/19-progression` | Phases 1–4 (§5) |
-> | later | — | Phase 5, needs curriculum input first |
+> | 0 — pass/fail on grade bands | `section/18-pass-fail` | ✅ **merged** (PR #28, 2026-08-07) |
+> | 1–4 — part progression | `section/19-progression` | ✅ **built**, PR #29 open |
+> | 5 — per-course prerequisites | — | ⛔ **blocked, not started** (§5, item 22–24) |
+>
+> **Phase 5 is blocked on people, not code.** It needs somebody at UPRL to decide which
+> course requires which — roughly 50 relationships that the published prospectus does not
+> state. Do not start it from this file alone; the table cannot be filled in without that
+> input. The design slots in as one extra gate inside `ProgressionService::check`, needing
+> no change to any caller.
+>
+> **Progression ships switched OFF.** Every programme seeds `progression_rule = open`, so
+> nothing is gated until a human switches one on. `php artisan progression:audit CPR`
+> reports who would be blocked first; on the seeded demo that is 164 live enrolments.
+>
+> **Known follow-up, unrelated to this plan:** roughly 670 uses of `text-ink/30`–`/65`
+> across the views fail WCAG AA contrast. Deliberately left alone — it is a design-token
+> pass of its own. See the accessibility entry in `docs/decisions.md` (2026-08-08).
 >
 > Follow CLAUDE.md as always: branch from a fresh `main`, one section at a time,
 > `php artisan test` green before reporting, then STOP.
->
-> **Phase 0 must merge before Phase 1 starts.** Progression asks "has this student
-> *passed*?", and the system cannot answer that until Phase 0 exists (§6.1).
 
 ---
 

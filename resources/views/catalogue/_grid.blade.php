@@ -19,7 +19,7 @@
 @else
     <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         @foreach ($courses as $course)
-            <x-courses.catalogue-card :course="$course" />
+            <x-courses.catalogue-card :course="$course" :verdict="($verdicts ?? collect())->get($course->id)" />
         @endforeach
     </div>
 

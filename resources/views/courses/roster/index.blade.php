@@ -40,26 +40,71 @@
 
         {{-- Add a student directly (staff) --}}
         @if ($canEnroll && ($enrollableStudents ?? collect())->isNotEmpty())
-            <div x-data="{ open: false }">
+            @php
+                // Set only after a refusal for THIS course, so the override never appears
+                // before the reason for it has been shown.
+                $block = session('prerequisite_block');
+                $block = ($block && (int) $block['course_id'] === $course->id) ? $block : null;
+            @endphp
+
+            <div x-data="{ open: {{ $block ? 'true' : 'false' }} }">
                 <x-ui.button variant="ghost" size="sm" @click="open = ! open" x-bind:aria-expanded="open.toString()">
                     <x-ui.icon name="plus" class="h-4 w-4" /> Add a student
                 </x-ui.button>
                 <div x-show="open" x-collapse x-cloak class="mt-2">
                     <x-ui.card>
-                        <form method="POST" action="{{ route('enrollment.admin.store') }}" class="flex flex-wrap items-end gap-3">
+                        <form method="POST" action="{{ route('enrollment.admin.store') }}" class="space-y-4">
                             @csrf
                             <input type="hidden" name="course_id" value="{{ $course->id }}">
-                            <div class="min-w-[18rem] flex-1">
-                                <label for="add-student" class="mb-1 block text-sm font-medium text-ink">Student</label>
-                                <select id="add-student" name="user_id" required
-                                        class="w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
-                                    <option value="">Choose a student…</option>
-                                    @foreach ($enrollableStudents as $student)
-                                        <option value="{{ $student->id }}">{{ $student->name }} — {{ $student->email }}</option>
-                                    @endforeach
-                                </select>
+
+                            <div class="flex flex-wrap items-end gap-3">
+                                <div class="min-w-[18rem] flex-1">
+                                    <label for="add-student" class="mb-1 block text-sm font-medium text-ink">Student</label>
+                                    <select id="add-student" name="user_id" required
+                                            class="w-full rounded-xl border-line bg-card text-ink shadow-sm focus:border-crimson focus:ring-crimson">
+                                        <option value="">Choose a student…</option>
+                                        @foreach ($enrollableStudents as $student)
+                                            <option value="{{ $student->id }}" @selected(old('user_id', $block['user_id'] ?? null) == $student->id)>
+                                                {{ $student->name }} — {{ $student->email }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @unless ($block)
+                                    <x-ui.button type="submit">Enrol student</x-ui.button>
+                                @endunless
                             </div>
-                            <x-ui.button type="submit">Enrol student</x-ui.button>
+
+                            @if ($block)
+                                {{-- The exception path. Staff must be able to admit a transfer
+                                     student or someone with prior credit — but it leaves a
+                                     trace, and the trace is worthless without a reason. --}}
+                                <div x-data="{ override: false }" class="rounded-xl border border-gold/40 bg-gold/5 p-4">
+                                    <p class="text-sm font-medium text-ink">{{ $block['student'] }} does not meet the prerequisite</p>
+                                    <p class="mt-1 text-sm leading-relaxed text-ink/70">{{ $block['message'] }}</p>
+
+                                    <label class="mt-3 flex items-start gap-2 text-sm text-ink">
+                                        <input type="hidden" name="override_prerequisites" value="0">
+                                        <input type="checkbox" name="override_prerequisites" value="1" x-model="override"
+                                               class="mt-0.5 rounded border-line text-crimson focus:ring-crimson">
+                                        <span>Enrol anyway <span class="text-ink/70">(records an override against this enrolment)</span></span>
+                                    </label>
+
+                                    <div x-show="override" x-collapse x-cloak class="mt-3">
+                                        <label for="override-reason" class="mb-1 block text-sm font-medium text-ink">
+                                            Reason <span class="text-crimson">*</span>
+                                        </label>
+                                        <textarea id="override-reason" name="override_reason" rows="2" maxlength="500"
+                                                  placeholder="e.g. Transfer student — Part I credit verified from Lagos campus."
+                                                  class="w-full rounded-xl border-line bg-card text-sm text-ink shadow-sm focus:border-crimson focus:ring-crimson">{{ old('override_reason') }}</textarea>
+                                        @error('override_reason')<p class="mt-1 text-sm text-crimson">{{ $message }}</p>@enderror
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <x-ui.button type="submit" x-text="override ? 'Enrol anyway' : 'Enrol student'">Enrol student</x-ui.button>
+                                    </div>
+                                </div>
+                            @endif
                         </form>
                     </x-ui.card>
                 </div>

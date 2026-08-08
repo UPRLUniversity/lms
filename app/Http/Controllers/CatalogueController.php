@@ -9,6 +9,7 @@ use App\Models\Programme;
 use App\Models\ProgrammePart;
 use App\Services\Commerce\CartService;
 use App\Services\Commerce\PricingService;
+use App\Services\Courses\ProgressionService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -26,6 +27,7 @@ class CatalogueController extends Controller
     public function __construct(
         private readonly PricingService $pricing,
         private readonly CartService $carts,
+        private readonly ProgressionService $progression,
     ) {}
 
     public function index(Request $request): View
@@ -101,6 +103,12 @@ class CatalogueController extends Controller
 
         $data = [
             'courses' => $courses,
+            // One batched pass for the whole page rather than a check per card. A guest
+            // gets none: their history is unknowable, and a lock chip we cannot justify
+            // would be worse than no chip at all.
+            'verdicts' => $request->user()
+                ? $this->progression->verdictsFor($request->user(), $courses->getCollection())
+                : collect(),
             'faculties' => Faculty::query()->with('departments')->orderBy('name')->get(),
             'programmes' => Programme::query()->active()->with('parts')->ordered()->get(),
             'levels' => CourseLevel::cases(),
@@ -144,6 +152,9 @@ class CatalogueController extends Controller
             'price' => $this->pricing->priceFor($course),
             'hasPurchased' => $user ? $this->pricing->hasPurchased($user, $course) : false,
             'inCart' => (bool) $this->carts->existing($user)?->has($course),
+            // Locked, never hidden: a student must be able to see what they are working
+            // toward, and the enrol card renders the reason instead of the buy path.
+            'verdict' => $user ? $this->progression->check($user, $course) : null,
         ]);
     }
 }

@@ -3,10 +3,11 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\MediaPurpose;
+use App\Enums\ProgressionRule;
 use App\Models\Programme;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class StoreProgrammeRequest extends FormRequest
 {
@@ -47,6 +48,11 @@ class StoreProgrammeRequest extends FormRequest
             'per_paper_fee' => ['nullable', 'numeric', 'min:0', 'max:99999999'],
 
             'is_active' => ['nullable', 'boolean'],
+            // Nullable, not required: an omitted value means `open`, which is the
+            // migration default and the do-nothing option. Making it required would
+            // break every caller that legitimately does not care, and the only value
+            // it could fall back to is the one it would have chosen anyway.
+            'progression_rule' => ['nullable', 'in:'.implode(',', ProgressionRule::values())],
             'cover' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:'.$cover->maxKb()],
         ];
     }

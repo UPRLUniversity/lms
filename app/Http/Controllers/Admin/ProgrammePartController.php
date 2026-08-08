@@ -38,6 +38,7 @@ class ProgrammePartController extends Controller
             'slug' => $this->uniqueSlugWithin($programme, $data['name']),
             'description' => $data['description'] ?? null,
             'credit_target' => $data['credit_target'] ?? null,
+            'unlock_credits' => $data['unlock_credits'] ?? null,
             'position' => (int) $programme->parts()->max('position') + 1,
         ]);
 
@@ -63,6 +64,7 @@ class ProgrammePartController extends Controller
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'credit_target' => $data['credit_target'] ?? null,
+            'unlock_credits' => $data['unlock_credits'] ?? null,
         ]);
 
         return redirect()

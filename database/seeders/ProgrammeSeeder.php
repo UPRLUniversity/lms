@@ -7,6 +7,7 @@ use App\Enums\CourseRequirement;
 use App\Enums\CourseStatus;
 use App\Enums\CourseVisibility;
 use App\Enums\LessonType;
+use App\Enums\ProgressionRule;
 use App\Enums\Role;
 use App\Models\Course;
 use App\Models\Department;
@@ -15,6 +16,8 @@ use App\Models\ProgrammePart;
 use App\Models\User;
 use App\Support\Slug;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * The NIPR qualification structure, seeded verbatim from the published
@@ -93,8 +96,14 @@ class ProgrammeSeeder extends Seeder
      */
     private function seedProgrammes(): array
     {
-        // [code, name, tagline, registration, administration, per paper, parts]
+        // [code, name, tagline, registration, administration, per paper, parts, rule]
         // Fees are the published schedule as at 25 August 2022.
+        //
+        // Every programme seeds as `open`, matching the migration default and today's
+        // behaviour: the parts exist and are ordered, but nothing gates enrolment until a
+        // human deliberately switches one on. Seeding CPR as sequential would silently
+        // lock the demo's Part II students out of courses they are already in, which is
+        // exactly the surprise Section 19 exists to avoid.
         $definitions = [
             [
                 'CPR', 'Professional Certificate in Public Relations',
@@ -142,12 +151,13 @@ class ProgrammeSeeder extends Seeder
                     'per_paper_fee' => $perPaper,
                     'position' => $position + 1,
                     'is_active' => true,
+                    'progression_rule' => ProgressionRule::Open->value,
                 ],
             );
 
             foreach ($partRows as $partPosition => [$key, $partName, $creditTarget]) {
                 $parts["{$code}:{$key}"] = ProgrammePart::updateOrCreate(
-                    ['programme_id' => $programme->id, 'slug' => \Illuminate\Support\Str::slug($partName)],
+                    ['programme_id' => $programme->id, 'slug' => Str::slug($partName)],
                     [
                         'name' => $partName,
                         'credit_target' => $creditTarget,
@@ -174,7 +184,7 @@ class ProgrammeSeeder extends Seeder
     */
 
     /**
-     * @param  \Illuminate\Support\Collection<string, int>  $departments
+     * @param  Collection<string, int>  $departments
      * @param  array{0: string, 1: string, 2: string, 3: string}  $meta  [title, department, level, summary]
      */
     private function upsertCourse(string $code, array $meta, $departments, User $lead): Course

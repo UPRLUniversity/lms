@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\RichHtml;
 use App\Enums\MediaPurpose;
+use App\Enums\ProgressionRule;
 use App\Models\Concerns\HasMedia;
 use App\Models\Concerns\LogsAuditActivity;
 use Database\Factories\ProgrammeFactory;
@@ -42,6 +43,17 @@ class Programme extends Model
         'per_paper_fee',
         'position',
         'is_active',
+        'progression_rule',
+    ];
+
+    /**
+     * Mirrors the database default so a newly created (un-refreshed) instance already
+     * knows its parts are open, rather than reading null until the model is reloaded.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'progression_rule' => 'open',
     ];
 
     protected function casts(): array
@@ -53,6 +65,7 @@ class Programme extends Model
             'per_paper_fee' => 'decimal:2',
             'position' => 'integer',
             'is_active' => 'boolean',
+            'progression_rule' => ProgressionRule::class,
         ];
     }
 

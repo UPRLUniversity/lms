@@ -2,7 +2,16 @@
     use App\Services\Courses\BulkEnrollmentService as Bulk;
 
     $counts = $report['counts'];
-    $badge = fn (string $problem) => $problem === Bulk::OK ? 'success' : 'crimson';
+
+    // Three states, not two: a prerequisite warning still imports, so it must not wear
+    // the same crimson as a row that will be thrown away.
+    $badge = fn (string $problem) => match (true) {
+        $problem === Bulk::OK => 'success',
+        $problem === Bulk::PREREQUISITE_NOT_MET => 'gold',
+        default => 'crimson',
+    };
+
+    $overrides = $counts[Bulk::PREREQUISITE_NOT_MET] ?? 0;
 @endphp
 
 <x-app-layout title="Preview import">
@@ -10,7 +19,10 @@
         <div class="flex flex-wrap items-end justify-between gap-3">
             <div>
                 <h2 class="font-display text-2xl font-semibold text-ink">Preview import</h2>
-                <p class="mt-1 text-ink/70">Review every row below. Only the rows marked <span class="font-medium text-success">ready</span> will be imported.</p>
+                <p class="mt-1 text-ink/70">
+                    Review every row below. Rows marked <span class="font-medium text-success">ready</span> will be imported,
+                    and so will <span class="font-medium text-gold-ink">prerequisite</span> warnings — as recorded overrides.
+                </p>
             </div>
             <x-ui.button variant="ghost" :href="route('enrollments.bulk.create')">
                 <x-ui.icon name="arrow-left" class="h-5 w-5" /> Upload a different file
@@ -30,6 +42,17 @@
             </div>
         @endif
 
+        @if ($overrides > 0)
+            <div class="rounded-xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm leading-relaxed text-ink/80">
+                <span class="font-medium text-ink">{{ $overrides }} {{ \Illuminate\Support\Str::plural('row', $overrides) }}</span>
+                {{ $overrides === 1 ? 'names a student who has not' : 'name students who have not' }} met the prerequisite for
+                {{ $overrides === 1 ? 'that course' : 'those courses' }}.
+                {{ $overrides === 1 ? 'It' : 'They' }} will still be imported, and each one records a prerequisite override
+                against the enrolment so the decision is traceable. Remove
+                {{ $overrides === 1 ? 'the row' : 'those rows' }} from the file if that is not what you intend.
+            </div>
+        @endif
+
         {{-- Preview table --}}
         <x-ui.card :padding="false">
             <div class="overflow-x-auto">
@@ -44,7 +67,11 @@
                     </thead>
                     <tbody class="divide-y divide-line">
                         @foreach ($report['rows'] as $row)
-                            <tr class="hover:bg-surface/60 {{ $row['problem'] !== Bulk::OK ? 'bg-crimson/[0.02]' : '' }}">
+                            <tr @class([
+                                'hover:bg-surface/60',
+                                'bg-crimson/[0.02]' => ! Bulk::isImportable($row['problem']),
+                                'bg-gold/[0.05]' => $row['problem'] === Bulk::PREREQUISITE_NOT_MET,
+                            ])>
                                 <td class="px-5 py-3 text-ink/40">{{ $row['line'] }}</td>
                                 <td class="px-5 py-3">
                                     <span class="font-medium text-ink">{{ $row['email'] ?: '—' }}</span>
@@ -60,6 +87,9 @@
                                 </td>
                                 <td class="px-5 py-3">
                                     <x-ui.badge :variant="$badge($row['problem'])">{{ Bulk::problemLabel($row['problem']) }}</x-ui.badge>
+                                    @if ($row['reason'] ?? null)
+                                        <span class="mt-1 block max-w-md text-xs leading-relaxed text-ink/70">{{ $row['reason'] }}</span>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

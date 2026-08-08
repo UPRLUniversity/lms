@@ -24,10 +24,38 @@ class AdminEnrollmentController extends Controller
         $student = User::findOrFail($request->integer('user_id'));
         $course = Course::findOrFail($request->integer('course_id'));
 
+        // Staff must be able to admit an exception — a transfer student, prior credit
+        // earned elsewhere — but never invisibly. The form only offers the override once
+        // it has shown the reason for the block, and a reason is required with it, so the
+        // recorded row always answers "why was this allowed?".
+        $override = $request->boolean('override_prerequisites');
+
         try {
-            $this->enrollments->adminEnroll($student, $course, $request->user());
+            $this->enrollments->adminEnroll(
+                $student,
+                $course,
+                $request->user(),
+                overridePrerequisites: $override,
+                overrideReason: $override ? $request->string('override_reason')->trim()->value() : null,
+            );
         } catch (EnrollmentException $e) {
-            return back()->with('error', $e->getMessage());
+            // A prerequisite refusal is the one failure staff can act on, so it comes back
+            // with enough context for the form to offer the override rather than just an
+            // error they can do nothing about. Deliberately two-step: showing the reason
+            // BEFORE the override exists is what makes ticking it a decision.
+            if ($e->verdict !== null) {
+                return back()
+                    ->with('error', $e->getMessage())
+                    ->with('prerequisite_block', [
+                        'user_id' => $student->id,
+                        'course_id' => $course->id,
+                        'student' => $student->name,
+                        'message' => $e->getMessage(),
+                    ])
+                    ->withInput();
+            }
+
+            return back()->with('error', $e->getMessage())->withInput();
         }
 
         return back()->with('status', "{$student->name} was enrolled in “{$course->title}”.");

@@ -76,6 +76,17 @@
                                             @endforeach
                                         </p>
 
+                                        @php $verdict = ($verdicts ?? collect())->get($course->id); @endphp
+                                        @if ($verdict?->isBlocked())
+                                            {{-- Flagged, never silently dropped: a rule may have
+                                                 changed while this sat in the cart, and removing
+                                                 the buyer's own choice without telling them is
+                                                 how a receipt ends up surprising somebody. --}}
+                                            <p class="mt-2 rounded-lg bg-crimson/5 px-2.5 py-1.5 text-xs leading-relaxed text-crimson">
+                                                {{ $verdict->message() }} Remove it to check out with the rest.
+                                            </p>
+                                        @endif
+
                                         <div class="mt-2 flex items-center justify-between gap-3 sm:justify-start sm:gap-4">
                                             <span class="font-semibold text-ink sm:hidden">{{ $line->formattedAmount() }}</span>
                                             @if ($item)

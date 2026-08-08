@@ -33,6 +33,8 @@ class Enrollment extends Model
         'approved_by',
         'decision_note',
         'pending_digested_at',
+        'prerequisite_override_by',
+        'prerequisite_override_reason',
     ];
 
     protected function casts(): array
@@ -113,6 +115,24 @@ class Enrollment extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * The staff member who admitted this student PAST the progression gate, if anyone.
+     *
+     * @return BelongsTo<User, $this>
+     */
+    public function prerequisiteOverrider(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'prerequisite_override_by');
+    }
+
+    /**
+     * Whether this enrolment was granted despite an unmet prerequisite.
+     */
+    public function overrodePrerequisites(): bool
+    {
+        return $this->prerequisite_override_by !== null;
     }
 
     /*

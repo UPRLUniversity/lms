@@ -119,13 +119,30 @@
                                 : $listed.' '.Str::plural('credit', $listed).' listed';
                         @endphp
 
-                        <section class="overflow-hidden rounded-2xl border border-line bg-card shadow-sm"
+                        @php
+                            // Only ever populated for a signed-in student on a sequential
+                            // programme; a guest sees the prospectus exactly as before.
+                            $state = ($partStates ?? collect())->get($part->id);
+                        @endphp
+
+                        <section id="{{ $part->slug }}" class="overflow-hidden rounded-2xl border border-line bg-card shadow-sm scroll-mt-24"
                                  aria-labelledby="part-{{ $part->id }}">
                             <header class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2 border-b border-line bg-surface/60 px-5 py-4">
                                 <div>
-                                    <h3 id="part-{{ $part->id }}" class="font-display text-lg font-semibold text-ink">
-                                        {{ $part->name }}
-                                    </h3>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <h3 id="part-{{ $part->id }}" class="font-display text-lg font-semibold text-ink">
+                                            {{ $part->name }}
+                                        </h3>
+                                        @if ($state)
+                                            @if ($state['cleared'])
+                                                <x-ui.badge variant="success">Completed</x-ui.badge>
+                                            @elseif ($state['unlocked'])
+                                                <x-ui.badge variant="gold">In progress</x-ui.badge>
+                                            @else
+                                                <x-ui.badge variant="neutral">Locked</x-ui.badge>
+                                            @endif
+                                        @endif
+                                    </div>
                                     @if ($part->description)
                                         <p class="mt-0.5 text-sm text-ink/65">{{ $part->description }}</p>
                                     @endif
@@ -138,6 +155,48 @@
                                     @endif
                                 </p>
                             </header>
+
+                            @if ($state && ! $state['cleared'])
+                                {{-- Your own standing in this part: both bars, always both
+                                     shown, so "on track" can never mean one of them. --}}
+                                <div class="border-b border-line bg-surface/30 px-5 py-3">
+                                    @php
+                                        $done = $part->courses->filter(fn ($c) =>
+                                            ($c->pivot->requirement instanceof CourseRequirement
+                                                ? $c->pivot->requirement
+                                                : CourseRequirement::tryFrom((string) $c->pivot->requirement)) === CourseRequirement::Compulsory
+                                        )->count() - $state['outstanding']->count();
+                                        $totalCompulsory = $done + $state['outstanding']->count();
+                                        $bar = $state['creditBar'];
+                                    @endphp
+
+                                    <div class="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm">
+                                        @if ($totalCompulsory > 0)
+                                            <span class="{{ $state['outstanding']->isEmpty() ? 'text-success' : 'text-ink/70' }}">
+                                                {{ $done }} of {{ $totalCompulsory }} compulsory {{ Str::plural('paper', $totalCompulsory) }} passed
+                                            </span>
+                                        @endif
+                                        @if ($bar !== null)
+                                            <span class="{{ $state['creditsEarned'] >= $bar ? 'text-success' : 'text-ink/70' }}">
+                                                {{ $state['creditsEarned'] }} of {{ $bar }} credits earned
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if ($bar !== null)
+                                        <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-ink/10">
+                                            <div class="h-full rounded-full bg-crimson transition-all"
+                                                 style="width: {{ min(100, (int) round($state['creditsEarned'] / max(1, $bar) * 100)) }}%"></div>
+                                        </div>
+                                    @endif
+
+                                    @unless ($state['unlocked'])
+                                        <p class="mt-2 text-xs text-ink/70">
+                                            Finish the earlier parts of this programme to open these papers.
+                                        </p>
+                                    @endunless
+                                </div>
+                            @endif
 
                             @if ($courses->isEmpty())
                                 <p class="px-5 py-8 text-center text-sm text-ink/55">
