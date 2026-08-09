@@ -108,8 +108,9 @@
                         @else
                             <div class="mt-3 space-y-2.5" role="radiogroup" aria-label="Payment method">
                                 @foreach ($methods as $method)
-                                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition focus-within:ring-2 focus-within:ring-crimson
-                                                  {{ $selected === $method->key ? 'border-crimson bg-crimson/5' : 'border-line hover:bg-surface/60' }}">
+                                    <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-line p-4 transition focus-within:ring-2 focus-within:ring-crimson
+                                                  has-[:checked]:border-crimson has-[:checked]:bg-crimson/5
+                                                  [&:not(:has(:checked))]:hover:bg-surface/60">
                                         <input type="radio" name="payment_method" value="{{ $method->key }}"
                                                class="mt-0.5 border-line text-crimson focus:ring-crimson"
                                                @checked($selected === $method->key)>
