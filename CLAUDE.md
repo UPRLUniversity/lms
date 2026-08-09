@@ -161,3 +161,46 @@ Faculties → Departments replace the spec's "Organizations".
 [ ] All new UI uses brand tokens, responsive (375px → 1440px), keyboard accessible
 [ ] Section report delivered: what was built, decisions made, files touched,
     exact manual verification steps, then STOP.
+
+## How pull requests and commits are written
+
+Write like an engineer telling a colleague what changed. The reviewer has the diff.
+The PR exists to carry what the diff cannot say — and nothing else.
+
+- **Say what changed, and why anything non-obvious was done that way.** A behaviour
+  that ships switched off, a default chosen deliberately, a trade-off accepted, a
+  caveat that will bite somebody later — those earn their place. Nothing else does.
+- **No ceremonial headings.** Never write a "Verification", "Validation", "Testing",
+  "Summary", "Overview", "What changed", "Impact", "Next steps" or "Known cost"
+  section. A heading breaks up genuinely long prose; it is not a form to fill in.
+  Most PRs need no headings at all.
+- **No test theatre.** Do not report suite sizes, assertion counts, which files gained
+  tests, or that the run was green — that is the baseline, not news. Mention a test
+  only when what it caught is itself worth knowing.
+- **No status decoration** — no ✅/❌, no emoji, no "all acceptance criteria met", no
+  checklist echoing the Definition of Done. A table earns its place only when the
+  information is genuinely tabular.
+- **Length follows the change.** A one-line fix gets two sentences. Do not pad a small
+  PR to look thorough; do not compress a genuinely complex one to look brisk.
+- Plain sentences beat bullet grids, and beat bolded label-colon-value lines.
+- Never mention Claude, AI assistance, or add Co-Authored-By trailers.
+- Commit subjects stay conventional (`feat:`, `fix:`, `test:`, `chore:`) and name the
+  behaviour that changed, not the files that moved.
+
+**Manual verification steps do not go in the PR.** They go to the human in the section
+report: numbered clicks from a named starting screen, each with a fallback URL, so
+nothing depends on guessing where a link lives.
+
+## Plans, decisions, and leaving the workspace clean
+
+- **Work bigger than one section gets a plan file in `docs/plans/`**, written so a cold
+  session can pick it up with no prior conversation: a status box naming each phase, its
+  branch and its state; what is already built; what is blocked and on whom; and every
+  decision already settled, with the reasoning that settled it. Update the status box as
+  phases land — a stale plan is worse than no plan.
+- **Every non-obvious decision goes in `docs/decisions.md`** under its section heading,
+  including the options refused and why they were refused.
+- **Release what you took.** Before reporting back: stop dev servers, queues and
+  schedulers you started, close any browser you drove, delete scratch files, and return
+  demo data to seeder state if you changed it. Leave nothing running for the human to
+  discover and kill.
