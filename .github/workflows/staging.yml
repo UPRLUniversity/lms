@@ -51,7 +51,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
           source: ".,!.git,!.github,!tests,!.env,!storage/logs/*,!.node_modules"
-          target: "/var/www/staging"
+          target: "/var/www/lms"
           rm: false
 
       # 8️⃣ Run Laravel commands on server
