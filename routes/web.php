@@ -76,6 +76,8 @@ use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Support\Facades\Route;
 
+use Illuminate\Support\Facades\Mail;
+
 /*
 |--------------------------------------------------------------------------
 | Public marketing site (Section 13) — homepage & programme landing pages
@@ -87,6 +89,16 @@ use Illuminate\Support\Facades\Route;
 | An inactive programme 404s, so switching one off in admin removes it from the
 | public site the same second.
 */
+
+
+Route::get('/test-email', function () {
+    Mail::raw('This is a test email from my Laravel application.', function ($message) {
+        $message->to('fogakater1@gmail.com')
+                ->subject('Laravel Email Test');
+    });
+
+    return 'Email sent successfully!';
+});
 Route::get('/', HomeController::class)->name('home');
 Route::get('/programmes', [PublicProgrammeController::class, 'index'])->name('programmes.index');
 Route::get('/programmes/{programme}', [PublicProgrammeController::class, 'show'])->name('programmes.show');
