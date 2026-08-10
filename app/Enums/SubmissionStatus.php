@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Enums;
-
 /**
  * State machine for one submission version:
  *
