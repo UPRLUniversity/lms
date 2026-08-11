@@ -28,9 +28,10 @@ use Illuminate\Support\Str;
  * site also shows a Master Class, but the schedule states no courses or fees for
  * it, so it is not invented here; an admin adds it from Programmes in one step.
  *
- * Runs AFTER CourseSeeder so the faculty/department hierarchy already exists —
- * these courses join it rather than duplicating it. Idempotent on course code and
- * programme code, so re-seeding never doubles anything up.
+ * Runs AFTER CourseSeeder in the demo seed, or after ProductionSeeder's academic
+ * structure step in production. The courses join the existing faculty/department
+ * hierarchy rather than duplicating it. Idempotent on course code and programme code,
+ * so re-seeding never doubles anything up.
  *
  * The case worth demonstrating: five papers are placed in TWO programmes at once
  * (CPR 112, CPR 115, CPR 216, CPR 219, DPR 411 all reappear in the Professional
@@ -41,9 +42,11 @@ class ProgrammeSeeder extends Seeder
 {
     public function run(): void
     {
-        $instructors = User::role(Role::Instructor->value)->orderBy('id')->get();
+        $instructors = $this->courseOwners();
         if ($instructors->isEmpty()) {
-            $instructors = collect([User::factory()->create()->assignRole(Role::Instructor->value)]);
+            $this->command?->warn('ProgrammeSeeder: no instructor, admin, or super-admin user exists to own the seeded courses.');
+
+            return;
         }
 
         $departments = Department::query()->pluck('id', 'name');
@@ -83,6 +86,30 @@ class ProgrammeSeeder extends Seeder
         }
 
         $this->placeExistingDemoCourses($parts);
+    }
+
+    /**
+     * Prefer lecturers as course owners, then a real admin account before any lecturers
+     * have been invited. Never create a factory user here: that would put a fake
+     * account into production.
+     *
+     * @return Collection<int, User>
+     */
+    private function courseOwners(): Collection
+    {
+        $instructors = User::role(Role::Instructor->value)->orderBy('id')->get();
+
+        if ($instructors->isNotEmpty()) {
+            return $instructors;
+        }
+
+        $admins = User::role(Role::Admin->value)->orderBy('id')->get();
+
+        if ($admins->isNotEmpty()) {
+            return $admins;
+        }
+
+        return User::role(Role::SuperAdmin->value)->orderBy('id')->get();
     }
 
     /*
