@@ -99,6 +99,7 @@ Route::get('/test-email', function () {
 
     return 'Email sent successfully!';
 });
+
 Route::get('/', HomeController::class)->name('home');
 Route::get('/programmes', [PublicProgrammeController::class, 'index'])->name('programmes.index');
 Route::get('/programmes/{programme}', [PublicProgrammeController::class, 'show'])->name('programmes.show');

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+
   workflow_dispatch:
 
 jobs:
@@ -11,113 +12,132 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️Checkout code
+
+      # 1. Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup PHP
+      # 2. Setup PHP
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, xml, ctype, json, curl, openssl, pdo, tokenizer, bcmath
+          extensions: mbstring, xml, ctype, json, curl, openssl, pdo, pdo_mysql, tokenizer, bcmath, gd, zip, intl
           coverage: none
 
-      # 3️⃣ Setup Node.js for frontend build
+      # 3. Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: npm
 
-      # 4️⃣ Install Node dependencies locally in Actions
+      # 4. Install Node dependencies
       - name: Install Node dependencies
-        run: npm install
-        working-directory: ./ # adjust if your package.json is in a subfolder like frontend/
+        run: npm ci
 
-      # 5️⃣ Build frontend assets locally
+      # 5. Build frontend
       - name: Build frontend assets
         run: npm run build
-        working-directory: ./ # same as above
 
-      # 6️⃣ Install Composer dependencies locally
+      # 6. SSL diagnostics
+      - name: Check SSL and Composer
+        run: |
+          echo "===== PHP ====="
+          php -v
+
+          echo "===== CURL ====="
+          curl --version
+
+          echo "===== OPENSSL ====="
+          openssl version
+
+          echo "===== SSL ENVIRONMENT ====="
+          env | grep -Ei 'SSL|CURL|CERT|PROXY' || true
+
+          echo "===== GITHUB API SSL TEST ====="
+          curl -Iv https://api.github.com
+
+          echo "===== COMPOSER ====="
+          composer --version
+
+          echo "===== COMPOSER DIAGNOSE ====="
+          composer diagnose
+
+      # 7. Install Composer dependencies
       - name: Install Composer dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction
+        run: |
+          composer install \
+            --no-dev \
+            --optimize-autoloader \
+            --no-interaction \
+            --prefer-dist \
+            -vvv
 
-      # 7️⃣ Deploy all files to VPS (Laravel + compiled frontend)
+      # 8. Deploy files to VPS
       - name: Deploy to Server
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
-          source: ".,!.git,!.github,!tests,!.env,!storage/logs/*,!.node_modules"
+          port: 22
+          source: ".,!.git,!.github,!tests,!.env,node_modules"
           target: "/var/www/lms"
           rm: false
 
-      # 8️⃣ Run Laravel commands on server
+      # 9. Run Laravel commands on VPS
       - name: Run deployment scripts on server
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
+          port: 22
+
           script: |
+            set -e
+
             cd /var/www/lms
-            export DEBIAN_FRONTEND=noninteractive
 
-            # .docx conversion now runs in the browser (mammoth.js) — no Pandoc
-            # or other system binaries are needed on the server.
+            echo "Starting Laravel deployment..."
 
-            # Set proper permissions
-            sudo chmod -R 775 storage bootstrap/cache
-
-            sudo chown -R apache:apache storage bootstrap/cache
-
-            # Run Laravel commands
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan migrate --force
-            php artisan cache:clear
-
-            # Resolve the PHP binary so both the systemd unit and the cron job use
-            # an absolute path (cron/systemd have a minimal PATH).
             PHP_BIN="$(command -v php || echo /usr/bin/php)"
 
-            # Primary: a persistent queue worker so background jobs (.docx import,
-            # figure migration) run immediately. queue:restart alone only signals
-            # an already-running worker.
-            sudo tee /etc/systemd/system/uprl_lms-worker.service >/dev/null <<UNIT
-            [Unit]
-            Description=UPRL_LMS queue worker
-            After=network.target
+            echo "PHP:"
+            ${PHP_BIN} -v
 
-            [Service]
-            User=www-data
-            Group=www-data
-            Restart=always
-            RestartSec=5
-            WorkingDirectory=/var/www/lms
-            ExecStart=${PHP_BIN} /var/www/lms/artisan queue:work --sleep=3 --tries=1 --timeout=900 --max-time=3600
+            # Permissions
+            sudo chmod -R 775 storage bootstrap/cache
 
-            [Install]
-            WantedBy=multi-user.target
-            UNIT
-            sudo systemctl daemon-reload || true
-            sudo systemctl enable uprl_lms-worker || true
-            sudo systemctl restart uprl_lms-worker || true
+            # AlmaLinux normally uses apache for PHP-FPM
+            sudo chown -R apache:apache storage bootstrap/cache
 
-            # Fallback: a cron entry runs Laravel's scheduler every minute, which
-            # drains the queue (queue:work --stop-when-empty) even if the systemd
-            # worker could not be installed/started. Safe alongside the worker —
-            # the DB queue reserves jobs so they are never processed twice.
-            echo "* * * * * www-data cd /var/www/lms && ${PHP_BIN} artisan schedule:run >> /dev/null 2>&1" | sudo tee /etc/cron.d/uprl_lms-scheduler >/dev/null || true
-            sudo chmod 644 /etc/cron.d/uprl_lms-scheduler || true
+            # Clear existing caches
+            ${PHP_BIN} artisan optimize:clear
 
-            php artisan queue:restart
+            # Database migrations
+            ${PHP_BIN} artisan migrate --force
 
-            # Restart PHP-FPM (ensure PHP 8.4 is installed on VPS)
-            sudo systemctl restart php8.4-fpm || sudo systemctl restart php-fpm
+            # Storage link
+            ${PHP_BIN} artisan storage:link || true
+
+            # Rebuild Laravel caches
+            ${PHP_BIN} artisan config:cache
+            ${PHP_BIN} artisan route:cache
+            ${PHP_BIN} artisan view:cache
+
+            # Clear application cache
+            ${PHP_BIN} artisan cache:clear
+
+            # Restart queue worker
+            sudo systemctl restart uprl_lms-worker
+
+            # Restart PHP-FPM
+            sudo systemctl restart php-fpm || true
+            sudo systemctl restart php8.4-fpm || true
 
             # Reload Nginx
-            sudo systemctl reload nginx || echo "Nginx not installed, skipping"
+            sudo systemctl reload nginx
+
+            echo "Laravel deployment completed successfully."
