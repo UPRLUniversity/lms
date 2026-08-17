@@ -104,7 +104,11 @@
                                 </div>
                             </td>
                             <td class="px-5 py-3">
-                                @can('update', $person)
+                                {{-- Gated on "may you manage users at all", not on "may you edit
+                                     THIS user" — otherwise losing the right to edit a super-admin
+                                     would take the Message button with it, and an admin has every
+                                     reason to write to one. Auditors still get no actions. --}}
+                                @if ($canManage)
                                     <div class="flex items-center justify-end gap-2">
                                         {{-- Opens (or reuses) the direct thread with this person. Not
                                              shown against your own row: you can't message yourself. --}}
@@ -117,9 +121,11 @@
                                             </form>
                                         @endif
 
-                                        <x-ui.button size="sm" variant="ghost" :href="route('admin.users.edit', $person)">
-                                            <x-ui.icon name="pencil" class="h-4 w-4" /> Edit
-                                        </x-ui.button>
+                                        @can('update', $person)
+                                            <x-ui.button size="sm" variant="ghost" :href="route('admin.users.edit', $person)">
+                                                <x-ui.icon name="pencil" class="h-4 w-4" /> Edit
+                                            </x-ui.button>
+                                        @endcan
 
                                         @can('setActiveStatus', $person)
                                             <form method="POST" action="{{ route('admin.users.status', $person) }}" data-ajax>
@@ -134,7 +140,7 @@
                                     </div>
                                 @else
                                     <span class="sr-only">No actions available</span>
-                                @endcan
+                                @endif
                             </td>
                         </tr>
                     @endforeach

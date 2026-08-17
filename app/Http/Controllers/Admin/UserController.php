@@ -185,6 +185,21 @@ class UserController extends Controller
 
         $request->validate(['is_active' => ['required', 'boolean']]);
 
+        // A backstop. Nothing reaches it today — only a super-admin gets past the policy
+        // onto another super-admin, and that means two are active, so the target is not
+        // the last. It lives here rather than in the policy because Gate::before waves a
+        // super-admin past every policy method, and because a refusal on a destructive
+        // action deserves a sentence rather than a bare 403.
+        if (! $request->boolean('is_active') && $user->isLastActiveSuperAdmin()) {
+            $message = 'That is the only active super-admin. Promote another account first, or nobody will be able to.';
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['message' => $message], 422);
+            }
+
+            return redirect()->route('admin.users.index')->with('error', $message);
+        }
+
         $user->update(['is_active' => $request->boolean('is_active')]);
 
         $verb = $user->is_active ? 'reactivated' : 'deactivated';
