@@ -1931,3 +1931,44 @@ Lighthouse accessibility, measured in a real browser:
 | Instructor gradebook | — | **100** |
 
 The floors are now recorded in CLAUDE.md so they are a rule rather than a memory.
+
+## The progression impact panel (2026-08-17)
+
+### The form answers its own question
+
+Switching a programme to sequential progression used to be accompanied by a note telling the
+administrator to go and run `php artisan progression:audit` first. That is not an
+instruction anybody on this deployment can follow: the people who configure programmes are
+registrars and academic staff on a hosted site, with no shell and no reason to have one.
+A precondition that only the developer can satisfy is not a precondition, it is a warning
+label nobody can read.
+
+So the audit moved into the screen. Selecting "Sequential" fetches
+`admin/programmes/{programme}/progression-impact` and the panel says, in the form, how many
+students are already enrolled in courses the rule would refuse, with the list behind a
+disclosure. The command survives unchanged in behaviour because it can still sweep every
+programme at once with `--all`, which a form cannot, but nobody has to reach for it.
+
+The shared logic is `ProgressionAuditService`, returning a `ProgressionImpact`. Both surfaces
+read the same numbers, which is the point: a panel that disagreed with the command would be
+worse than no panel.
+
+### Fetched on selection, not on page load
+
+The audit walks every live enrolment in the programme, which on the seeded CPR data is 467
+enrolments and about a second. An administrator who opened the form to change a fee should
+not pay that, so the fetch is lazy and cached for the life of the page. Flicking between the
+two radios does not re-run the sweep.
+
+### Rows are capped at 100, counts are not
+
+A programme with four hundred affected students needs the number to make the decision, not
+four hundred rows inside a form. The response carries every count honestly and truncates
+only the list, with "and N more" where it stops.
+
+### Failure is not silent, and not a blocker
+
+If the fetch fails the panel says so and offers a retry, and states that saving is still
+safe. It is: the rule applies at enrolment time only, so nobody loses access they already
+have whether or not the audit ran. Refusing to save because a read-only preview failed would
+be inventing a constraint the system does not have.

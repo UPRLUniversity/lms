@@ -2,22 +2,19 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\EnrollmentStatus;
 use App\Enums\ProgressionRule;
-use App\Models\Enrollment;
 use App\Models\Programme;
-use App\Models\User;
-use App\Services\Courses\ProgressionService;
+use App\Services\Courses\ProgressionAuditService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
 
 /**
  * Who would this rule have blocked?
  *
- * Switching a programme to `sequential` never revokes access anybody already has — the
- * gate applies at enrolment time only. But "nothing breaks" is not the same as "nothing
- * changes", and an administrator deserves to see the blast radius BEFORE they flip the
- * switch rather than after a student writes in.
+ * The estate-wide form of the impact panel the programme form shows inline: same numbers,
+ * same service, but able to sweep every programme at once, which is the thing a terminal is
+ * better at than a form. An administrator never has to run this — the screen where they
+ * make the decision already answers the question for the programme in front of them.
  *
  * Reports live enrolments the rule would refuse today. Changes nothing, ever.
  */
@@ -98,73 +95,28 @@ class ProgressionAuditCommand extends Command
             $rule === ProgressionRule::Sequential ? '<fg=yellow>sequential</>' : '<fg=gray>open (hypothetical)</>',
         );
 
-        $courseIds = $programme->parts->flatMap(fn ($part) => $part->courses->pluck('id'))->unique();
+        $impact = app(ProgressionAuditService::class)->forProgramme($programme);
 
-        if ($courseIds->isEmpty()) {
-            $this->components->twoColumnDetail('  no courses placed', '');
-
-            return 0;
-        }
-
-        // Live enrolments only. A withdrawn or rejected student is not "in" anything, and
-        // reporting them would inflate the number the admin is trying to judge.
-        $enrollments = Enrollment::query()
-            ->whereIn('course_id', $courseIds)
-            ->whereIn('status', [
-                EnrollmentStatus::Active->value,
-                EnrollmentStatus::Pending->value,
-                EnrollmentStatus::Waitlisted->value,
-                EnrollmentStatus::Completed->value,
-            ])
-            ->with(['user', 'course'])
-            ->get();
-
-        $rows = [];
-
-        // Grouped by student so each one's passed-course set is resolved once, however
-        // many of this programme's courses they are enrolled in.
-        foreach ($enrollments->groupBy('user_id') as $forStudent) {
-            $student = $forStudent->first()->user;
-
-            if (! $student instanceof User) {
-                continue;
-            }
-
-            $courses = $forStudent->map(fn (Enrollment $e) => $e->course)->filter()->unique('id')->values();
-
-            // A fresh service per student: the memo is per-instance and per-user, and this
-            // command may walk thousands of students in one run.
-            //
-            // assumeSequential makes an `open` programme answer the hypothetical the admin
-            // is actually asking — "what would happen if I switched this on?" — which is
-            // only useful BEFORE the switch.
-            $verdicts = app(ProgressionService::class)->verdictsFor($student, $courses, $programme);
-
-            foreach ($forStudent as $enrollment) {
-                $verdict = $verdicts->get($enrollment->course_id);
-
-                if (! $verdict?->isBlocked()) {
-                    continue;
-                }
-
-                $rows[] = [
-                    $student->name,
-                    $enrollment->course->code,
-                    $enrollment->status->value,
-                    $verdict->blockingPart?->name ?? '—',
-                    $enrollment->overrodePrerequisites() ? 'yes' : '',
-                ];
-            }
-        }
-
-        if ($rows === []) {
-            $this->components->twoColumnDetail('  <fg=green>nothing would be blocked</>', (string) $enrollments->count().' live enrolments checked');
+        if ($impact->isClear()) {
+            $this->components->twoColumnDetail(
+                '  <fg=green>nothing would be blocked</>',
+                $impact->checked.' live enrolments checked',
+            );
 
             return 0;
         }
 
-        $this->table(['Student', 'Course', 'Status', 'Blocked by', 'Override'], $rows);
+        $this->table(
+            ['Student', 'Course', 'Status', 'Blocked by', 'Override'],
+            $impact->rows->map(fn (array $row) => [
+                $row['student'],
+                $row['course'],
+                $row['status'],
+                $row['blockedBy'] ?? '—',
+                $row['override'] ? 'yes' : '',
+            ])->all(),
+        );
 
-        return count($rows);
+        return $impact->blockedCount();
     }
 }

@@ -42,12 +42,12 @@ use App\Http\Controllers\Communication\MessageController;
 use App\Http\Controllers\Courses\AdminEnrollmentController;
 use App\Http\Controllers\Courses\AnnouncementController;
 use App\Http\Controllers\Courses\BulkEnrollmentController;
-use App\Http\Controllers\Courses\CourseController;
 use App\Http\Controllers\Courses\CourseChangeController;
+use App\Http\Controllers\Courses\CourseController;
 use App\Http\Controllers\Courses\CourseCurriculumController;
-use App\Http\Controllers\Courses\CurriculumVisibilityController;
 use App\Http\Controllers\Courses\CourseProgressController;
 use App\Http\Controllers\Courses\CourseWorkflowController;
+use App\Http\Controllers\Courses\CurriculumVisibilityController;
 use App\Http\Controllers\Courses\EnrollmentApprovalController;
 use App\Http\Controllers\Courses\EnrollmentController;
 use App\Http\Controllers\Courses\LearnController;
@@ -74,9 +74,8 @@ use App\Models\UserInvitation;
 use App\Notifications\UserInvitationNotification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
-use Illuminate\Support\Facades\Route;
-
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,11 +89,10 @@ use Illuminate\Support\Facades\Mail;
 | public site the same second.
 */
 
-
 Route::get('/test-email', function () {
     Mail::raw('This is a test email from my Laravel application.', function ($message) {
-        $message->to('fogakater1@gmail.com')
-                ->subject('Laravel Email Test');
+        $message->to('olasquareconsults@gmail.com')
+            ->subject('Laravel Email Test');
     });
 
     return 'Email sent successfully!';
@@ -444,6 +442,10 @@ Route::middleware(['auth', 'verified', 'permission:programmes.view'])
         Route::get('programmes/create', [ProgrammeController::class, 'create'])->name('programmes.create');
         Route::post('programmes', [ProgrammeController::class, 'store'])->name('programmes.store');
         Route::get('programmes/{programme}/edit', [ProgrammeController::class, 'edit'])->name('programmes.edit');
+        // Read-only: what switching this programme to sequential progression would do to
+        // the students already in it. Answered on the form so nobody has to reach for a
+        // terminal to find out.
+        Route::get('programmes/{programme}/progression-impact', [ProgrammeController::class, 'progressionImpact'])->name('programmes.progression-impact');
         Route::put('programmes/{programme}', [ProgrammeController::class, 'update'])->name('programmes.update');
         Route::delete('programmes/{programme}', [ProgrammeController::class, 'destroy'])->name('programmes.destroy');
 
