@@ -90,7 +90,52 @@ audit retention (if you enable it) never prunes.
   certificate PDFs. It must not be served directly by nginx — everything reaches it
   through signed, policy-gated routes. If you add a static-file rule to nginx, exclude it.
 
-## 6. TLS and proxies
+## 5a. Upload limits — REQUIRED, and the default will break uploads
+
+The web server and PHP both cap request bodies, and both defaults are smaller than what
+this app legitimately accepts. When the web server's cap is the one that bites, the request
+never reaches PHP at all: nginx returns its own `413 Request Entity Too Large` page, with no
+Laravel styling, no CSRF handling and nothing in `laravel.log`. That page is the signature
+of this setting and nothing else.
+
+What the app allows, from `config/media.php`:
+
+| Upload | Largest single file | Files per request | Largest request |
+| --- | --- | --- | --- |
+| Lesson media (video/audio/slides) | 25 MB | 1 | 25 MB |
+| Assignment submission | 20 MB | 5 | 100 MB |
+| Lesson and assignment resources | 20 MB | 1 | 20 MB |
+| Covers, avatars, branding | 4 MB | 1 | 4 MB |
+
+So the server must accept a 100 MB body, and PHP must accept a 25 MB single file.
+
+nginx, in the `server` block for the site (or in `http` to cover every site):
+
+```nginx
+client_max_body_size 128M;
+client_body_timeout  300s;   # a 100MB upload over a slow Nigerian link takes minutes
+```
+
+`nginx -t && systemctl reload nginx`.
+
+PHP, in the `php.ini` the FPM pool actually loads (`php --ini` under the web user, not the
+CLI's, they are usually different files):
+
+```ini
+upload_max_filesize = 32M
+post_max_size       = 128M    ; must exceed upload_max_filesize, and cover 5 files at once
+max_file_uploads    = 20
+memory_limit        = 256M    ; must be at least post_max_size
+max_execution_time  = 300
+```
+
+`systemctl reload php-fpm`.
+
+The two caps fail differently, which is how to tell which one is misconfigured: nginx's
+produces the bare `413` page above, while PHP's silently discards the file and Laravel
+reports it as an ordinary validation failure on a branded page. If a 413 survives after
+raising both, check for a CDN or WAF in front (Cloudflare's free plan caps request bodies
+at 100 MB regardless of origin configuration).
 
 TLS terminates at the load balancer, so `TRUSTED_PROXIES` must be set or Laravel generates
 `http://` URLs — which breaks payment-gateway callbacks, password-reset links and every

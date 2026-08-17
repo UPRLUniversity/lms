@@ -14,6 +14,7 @@ import certificateStatus from './certificate-status';
 import { certificateTemplateEditor } from './certificate-template-editor';
 import { contactPicker } from './contact-picker';
 import notificationBell from './notification-bell';
+import progressionImpact from './progression-impact';
 
 window.Alpine = Alpine;
 
@@ -51,6 +52,9 @@ Alpine.data('contactPicker', contactPicker);
 
 // The topbar bell (Section 8): polls for unread count + recent items.
 Alpine.data('notificationBell', notificationBell);
+
+// Programme form: shows who sequential progression would block, on selecting it.
+Alpine.data('progressionImpact', progressionImpact);
 
 Alpine.start();
 

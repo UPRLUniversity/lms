@@ -236,6 +236,91 @@ class ProgressionUiTest extends TestCase
 
     /*
     |--------------------------------------------------------------------------
+    | The impact panel on the form
+    |--------------------------------------------------------------------------
+    |
+    | An administrator must never be sent to a terminal to find out what a switch on the
+    | screen in front of them is about to do. The form answers it.
+    */
+
+    public function test_the_programme_form_answers_who_the_rule_would_block_without_a_terminal(): void
+    {
+        Enrollment::factory()->status(EnrollmentStatus::Active)->create([
+            'user_id' => $this->student->id, 'course_id' => $this->blocked->id,
+        ]);
+
+        $response = $this->actingAs($this->userWithRole(Role::Admin->value))
+            ->getJson(route('admin.programmes.progression-impact', $this->programme));
+
+        $response->assertOk()
+            ->assertJsonPath('blocked', 1)
+            ->assertJsonPath('students', 1)
+            ->assertJsonPath('rows.0.student', $this->student->name)
+            ->assertJsonPath('rows.0.course', $this->blocked->code)
+            ->assertJsonPath('rows.0.blockedBy', 'Part I')
+            ->assertJsonPath('truncated', 0);
+
+        // Reads only. Nobody loses the access they already have.
+        $this->assertDatabaseHas('enrollments', [
+            'user_id' => $this->student->id,
+            'course_id' => $this->blocked->id,
+            'status' => EnrollmentStatus::Active->value,
+        ]);
+    }
+
+    public function test_the_impact_panel_answers_the_hypothetical_for_a_programme_still_set_to_open(): void
+    {
+        // The only moment the question is worth asking is before the switch is flipped.
+        $this->programme->update(['progression_rule' => 'open']);
+
+        Enrollment::factory()->status(EnrollmentStatus::Active)->create([
+            'user_id' => $this->student->id, 'course_id' => $this->blocked->id,
+        ]);
+
+        $this->actingAs($this->userWithRole(Role::Admin->value))
+            ->getJson(route('admin.programmes.progression-impact', $this->programme))
+            ->assertOk()
+            ->assertJsonPath('blocked', 1)
+            ->assertJsonPath('rows.0.student', $this->student->name);
+    }
+
+    public function test_the_impact_panel_reports_a_clean_bill_when_nobody_would_be_blocked(): void
+    {
+        // A first-part enrolment is never gated, so this one counts as checked, not blocked.
+        Enrollment::factory()->status(EnrollmentStatus::Active)->create([
+            'user_id' => $this->student->id, 'course_id' => $this->firstPartCourse->id,
+        ]);
+
+        $this->actingAs($this->userWithRole(Role::Admin->value))
+            ->getJson(route('admin.programmes.progression-impact', $this->programme))
+            ->assertOk()
+            ->assertJsonPath('blocked', 0)
+            ->assertJsonPath('students', 0)
+            ->assertJsonPath('checked', 1);
+    }
+
+    public function test_a_student_cannot_read_who_a_programme_would_block(): void
+    {
+        $this->actingAs($this->student)
+            ->getJson(route('admin.programmes.progression-impact', $this->programme))
+            ->assertForbidden();
+    }
+
+    public function test_the_programme_form_no_longer_tells_the_admin_to_run_a_command(): void
+    {
+        $response = $this->actingAs($this->userWithRole(Role::Admin->value))
+            ->get(route('admin.programmes.edit', $this->programme));
+
+        // The URL is embedded through @js, so it arrives slash-escaped; the path segment is
+        // what survives that intact and is what proves the panel is wired to this programme.
+        $response->assertOk()
+            ->assertDontSee('php artisan progression:audit')
+            ->assertSee('progressionImpact(', escape: false)
+            ->assertSee($this->programme->slug.'\/progression-impact', escape: false);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | The audit command
     |--------------------------------------------------------------------------
     */
