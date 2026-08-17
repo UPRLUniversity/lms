@@ -1931,3 +1931,66 @@ Lighthouse accessibility, measured in a real browser:
 | Instructor gradebook | — | **100** |
 
 The floors are now recorded in CLAUDE.md so they are a rule rather than a memory.
+
+## Super-admin protection (2026-08-17)
+
+### The hole was the e-mail field, not the role field
+
+Reported as "an admin can delete or manipulate a super-admin". Probed against a real
+admin/super-admin pair rather than read off the policies, because the policies looked
+right and were not.
+
+There is no delete route for users at all, so nothing could be deleted. Three other things
+could:
+
+1. **An admin could change a super-admin's e-mail address.** Point it at an inbox you
+   control, use the ordinary password-reset flow, and the account is yours.
+   `email_verified_at` is not cleared on the way through, so it arrives already verified.
+   This was the serious one, and it never touches a role, which is why the role guards
+   did not see it.
+2. **An admin could demote a super-admin to student.** `grantRole` asked only "may you
+   hand out this role?", and student is a role an admin may perfectly well hand out. It
+   never asked "may you take away what this person holds". The super-admin count went from
+   one to zero, and since only a super-admin may grant the role back, that state cannot be
+   repaired from any screen in the app.
+3. **The deactivate guard was bypassable in two clicks.** It read the target's role at the
+   moment of the click, so demoting first made the second click legitimate. The guard
+   itself was written correctly; it was simply the only one, and the attack routed around
+   it rather than through it.
+
+All three share one cause: `UserPolicy::update()` asked whether the actor holds
+`users.manage`, never who they were pointing it at. `setActiveStatus` was the one method
+that checked the target, which is exactly why the chain had to begin somewhere else.
+
+### Guarding the role alone would not have been enough
+
+The obvious fix is to defend the role field. That leaves takeover-by-e-mail wide open, so
+`update()` now refuses a super-admin target outright for anyone who is not one. Coarse on
+purpose: enumerating which fields an admin may safely change on a super-admin is a list
+that would need revisiting every time a column is added, and would be wrong the first time
+somebody forgot.
+
+`changeRole` is a separate ability from `grantRole` for the same reason. Granting and
+revoking are different questions and only the first was being asked. Taking a privileged
+role away now needs the same standing as handing one out, which also stops an admin
+stripping another admin, one rung down from the reported bug.
+
+### The last-super-admin guard is unreachable, and stays
+
+Demoting or deactivating the final active super-admin would leave an institution where the
+roles only a super-admin may grant can never be granted again: unrecoverable without
+database access. So both paths check for it.
+
+Neither check can currently fire. Getting past the policy onto a super-admin means being
+one, and acting on your own account is refused separately, so two are always active and
+the target is never the last. Kept anyway, at a cost of one query, because "unreachable"
+is a property of today's screens rather than of the rule, and the next screen or artisan
+command will not remember this reasoning. Tested against the model helper rather than
+through HTTP, since pretending to drive it through a request would be a fiction.
+
+### One UI change that is not authorization
+
+The row-action cell was gated on `@can('update', $person)` as a whole, so tightening
+`update` would have taken the Message button with it, and an admin has every reason to
+write to a super-admin. The cell is now gated on "may you manage users at all" with the
+Edit button carrying its own check. Auditors still get no actions, as before.

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\MediaPurpose;
 use App\Enums\NotificationType;
+use App\Enums\Role;
 use App\Models\Concerns\HasMedia;
 use App\Models\Concerns\LogsAuditActivity;
 use App\Notifications\Auth\QueuedResetPassword;
@@ -83,6 +84,27 @@ class User extends Authenticatable implements MustVerifyEmail
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
+    }
+
+    /**
+     * Is this the only super-admin who could still sign in?
+     *
+     * Guards the one mistake nobody can undo from inside the app. Demoting or
+     * deactivating the final super-admin leaves an institution where the roles only a
+     * super-admin may grant can never be granted again, so the account cannot be
+     * recreated through any screen — it would take a developer with database access.
+     *
+     * Counts ACTIVE super-admins only, because a deactivated one cannot sign in and so
+     * cannot rescue anybody. Someone already deactivated is not the last one by this
+     * measure: removing their role changes nothing about who can get in.
+     */
+    public function isLastActiveSuperAdmin(): bool
+    {
+        if (! $this->is_active || ! $this->hasRole(Role::SuperAdmin->value)) {
+            return false;
+        }
+
+        return static::role(Role::SuperAdmin->value)->active()->count() <= 1;
     }
 
     /**

@@ -44,8 +44,30 @@ class UpdateUserRequest extends FormRequest
                         return;
                     }
 
+                    // Two separate questions, and both have to be answered yes. May you
+                    // take away what they hold, and may you hand out what you are giving
+                    // them? Only the second used to be asked, which let an admin demote a
+                    // super-admin by moving them to a role admins are allowed to grant.
+                    if (Gate::denies('changeRole', $target)) {
+                        $fail(__('You are not allowed to change this user’s role.'));
+
+                        return;
+                    }
+
                     if (Gate::denies('grantRole', $value)) {
                         $fail(__('You are not allowed to grant the :role role.', ['role' => $value]));
+
+                        return;
+                    }
+
+                    // A backstop, and deliberately kept even though nothing can currently
+                    // reach it: to get this far you must be a super-admin acting on a
+                    // DIFFERENT super-admin, which means two of you are active and the
+                    // target is by definition not the last. It costs one query and it is
+                    // the check that stops the one mistake no screen here can undo, so it
+                    // stays for whatever screen or command comes next.
+                    if ($target->isLastActiveSuperAdmin()) {
+                        $fail(__('This is the only active super-admin. Promote another account first, or the institution will be left with nobody who can.'));
                     }
                 },
             ],
