@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UPRL LMS — Course Creation Guide &amp; Intake Template</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm 18mm 14mm; }
+  @page :first { margin: 0; }
+
+  :root {
+    --crimson: #C8102E;
+    --crimson-dark: #9E0B22;
+    --ink: #1C1917;
+    --ink-70: #44403C;
+    --ink-55: #6B6560;
+    --surface: #FAF9F6;
+    --card: #FFFFFF;
+    --green: #0F6B3E;
+    --gold: #C9A227;
+    --gold-ink: #8A6A12;
+    --border: #E7E5E4;
+  }
+
+  * { box-sizing: border-box; }
+  html { background: #E9E7E2; }
+  body {
+    font-family: "Segoe UI", Inter, -apple-system, Arial, sans-serif;
+    font-size: 10.2pt;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  /* ---------- Cover ---------- */
+  .cover {
+    min-height: 297mm;
+    background: linear-gradient(150deg, #C8102E 0%, #9E0B22 55%, #6E0718 100%);
+    color: #fff;
+    padding: 34mm 22mm 20mm;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+  }
+  .cover::after {
+    content: "";
+    position: absolute;
+    top: -60mm; right: -60mm;
+    width: 150mm; height: 150mm;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,162,39,.35) 0%, rgba(201,162,39,0) 68%);
+  }
+  .cover .kicker {
+    font-size: 10pt; letter-spacing: .22em; text-transform: uppercase;
+    opacity: .85; margin-bottom: 8mm; position: relative;
+  }
+  .cover h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 34pt; line-height: 1.12; margin: 0 0 6mm; font-weight: 700;
+    max-width: 150mm; position: relative;
+  }
+  .cover .sub { font-size: 12.5pt; opacity: .93; max-width: 125mm; line-height: 1.5; position: relative; }
+  .cover .badge-row { margin-top: 14mm; display: flex; gap: 3mm; flex-wrap: wrap; position: relative; }
+  .cover .badge-row span {
+    border: 1px solid rgba(255,255,255,.45); border-radius: 999px;
+    padding: 1.8mm 4.5mm; font-size: 8.5pt;
+  }
+  .cover .motto {
+    position: absolute; bottom: 26mm; left: 22mm;
+    font-family: Georgia, serif; font-style: italic;
+    font-size: 12pt; color: #F0D67E;
+  }
+  .cover .meta {
+    position: absolute; bottom: 16mm; left: 22mm; right: 22mm;
+    font-size: 9pt; opacity: .82;
+    border-top: 1px solid rgba(255,255,255,.25); padding-top: 4mm;
+    display: flex; justify-content: space-between;
+  }
+
+  /* ---------- Structure ---------- */
+  .page { max-width: 190mm; margin: 0 auto; padding: 14mm 12mm; }
+  .page + .page { page-break-before: always; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 8mm; margin-bottom: 6mm; break-inside: avoid;
+  }
+  h2 {
+    font-family: Georgia, serif; font-size: 17pt; color: var(--crimson);
+    margin: 0 0 2mm; padding-bottom: 2.5mm; border-bottom: 2px solid var(--crimson);
+  }
+  h2 .part-eyebrow { display: block; font-family: Inter, sans-serif; font-size: 8.5pt; letter-spacing: .16em; text-transform: uppercase; color: var(--gold-ink); font-weight: 700; margin-bottom: 1.5mm; }
+  h3 { font-size: 12pt; color: var(--ink); margin: 6mm 0 2mm; }
+  h3.step { color: var(--crimson-dark); }
+  p { margin: 0 0 3mm; }
+  .lede { color: var(--ink-70); font-size: 10pt; margin-bottom: 6mm; }
+  .toc { list-style: none; padding: 0; margin: 0; }
+  .toc li { padding: 2.5mm 0; border-bottom: 1px dotted var(--border); display: flex; justify-content: space-between; font-size: 10pt; }
+  .toc .tag { color: var(--ink-55); font-size: 8.5pt; }
+
+  /* ---------- Callouts ---------- */
+  .note, .tip, .warn, .example {
+    border-radius: 8px; padding: 4mm 5mm; margin: 3mm 0 5mm; font-size: 9.3pt; break-inside: avoid;
+  }
+  .note { background: #FAF7EF; border: 1px solid #E7DCC2; }
+  .note::before { content: "Where this goes in the system: "; font-weight: 700; color: var(--gold-ink); }
+  .tip { background: #F0F8F4; border: 1px solid #CDE7DA; }
+  .tip::before { content: "Tip: "; font-weight: 700; color: var(--green); }
+  .warn { background: #FDF1EF; border: 1px solid #F3CFC7; }
+  .warn::before { content: "Current limitation: "; font-weight: 700; color: var(--crimson-dark); }
+  .example { background: #F7F6F3; border: 1px dashed #C7C2B8; }
+  .example .example-label { font-weight: 700; font-size: 8.3pt; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-55); display: block; margin-bottom: 1.5mm; }
+
+  /* ---------- Form fields ---------- */
+  .field { margin-bottom: 4.5mm; }
+  .field label { display: block; font-size: 9pt; font-weight: 700; color: var(--ink-70); margin-bottom: 1mm; }
+  .field label .req { color: var(--crimson); }
+  .field label .opt { color: var(--ink-55); font-weight: 400; font-style: italic; }
+  .field .hint { font-size: 8.3pt; color: var(--ink-55); margin-top: 1mm; }
+  .field input[type=text], .field input[type=number], .field input[type=date], .field input[type=datetime-local], .field input[type=url], .field textarea, .field select {
+    width: 100%; border: none; border-bottom: 1.4px solid var(--ink); background: transparent;
+    font-family: inherit; font-size: 10pt; padding: 1.5mm 1mm; color: var(--ink);
+  }
+  .field select { border: 1.4px solid var(--ink); border-radius: 4px; background: #fff; padding: 1.8mm 2mm; }
+  .field textarea { border: 1.4px solid var(--border); border-radius: 6px; resize: none; }
+  .field input:focus, .field textarea:focus, .field select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; }
+  .choice-group { display: flex; flex-wrap: wrap; gap: 4mm; margin-top: 1mm; }
+  .choice { display: flex; align-items: center; gap: 1.5mm; font-size: 9.3pt; }
+  .choice input { accent-color: var(--crimson); }
+
+  table.grid { width: 100%; border-collapse: collapse; font-size: 9pt; margin: 2mm 0 4mm; }
+  table.grid th { background: #F5F3EF; text-align: left; padding: 2mm 2.5mm; border: 1px solid var(--border); font-size: 8.3pt; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-70); }
+  table.grid td { border: 1px solid var(--border); padding: 1mm 2.5mm; height: 8mm; }
+  table.grid td input, table.grid td select { width: 100%; border: none; font-family: inherit; font-size: 9pt; background: transparent; }
+
+  .repeat-block { border: 1px solid var(--border); border-radius: 8px; padding: 5mm; margin-bottom: 5mm; break-inside: avoid; }
+  .repeat-block .repeat-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3mm; }
+  .repeat-block .repeat-title strong { color: var(--crimson-dark); font-size: 10.3pt; }
+  .repeat-block .repeat-title span { font-size: 8.3pt; color: var(--ink-55); }
+  .clone-note { text-align: center; font-size: 8.5pt; color: var(--ink-55); font-style: italic; margin: -2mm 0 6mm; }
+
+  .fieldset-legend { font-size: 8.5pt; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gold-ink); margin: 5mm 0 1.5mm; }
+
+  .signoff { display: grid; grid-template-columns: 1fr 1fr; gap: 8mm; margin-top: 6mm; }
+  .signoff .sig-line { border-top: 1.4px solid var(--ink); margin-top: 12mm; padding-top: 1.5mm; font-size: 8.5pt; color: var(--ink-55); }
+
+  .footer-strip { text-align: center; font-size: 8pt; color: var(--ink-55); margin-top: 10mm; padding-top: 4mm; border-top: 1px solid var(--border); }
+
+  @media print {
+    html { background: #fff; }
+    .no-print { display: none !important; }
+    .page { padding: 0; max-width: none; }
+    a { color: inherit; text-decoration: none; }
+  }
+  .print-bar { position: sticky; top: 0; z-index: 10; background: var(--ink); color: #fff; padding: 3mm 6mm; display: flex; justify-content: space-between; align-items: center; font-size: 9.5pt; }
+  .print-bar button { background: var(--crimson); color: #fff; border: none; border-radius: 6px; padding: 2mm 5mm; font-size: 9.5pt; font-weight: 600; cursor: pointer; }
+  .print-bar button:hover { background: var(--crimson-dark); }
+</style>
+</head>
+<body>
+
+<div class="print-bar no-print">
+  <span>UPRL LMS — Course Creation Guide (fillable — type directly into the fields, then print or save as PDF)</span>
+  <button onclick="window.print()">Print / Save as PDF</button>
+</div>
+
+<!-- ================= COVER ================= -->
+<div class="cover">
+  <div class="kicker">University of Public Relations &amp; Leadership · Learning Management System</div>
+  <h1>Course Creation Guide<br>&amp; Content Intake Template</h1>
+  <div class="sub">
+    Everything a lecturer needs to prepare a course before it goes live on the LMS —
+    what to write, what to upload, and exactly where each piece lands in the system.
+    Fill this in, hand it to your course administrator, and your course is ready to build.
+  </div>
+  <div class="badge-row">
+    <span>Course basics</span>
+    <span>Programme placement</span>
+    <span>Curriculum &amp; lessons</span>
+    <span>Assignments &amp; rubrics</span>
+    <span>Quizzes &amp; question bank</span>
+    <span>Files &amp; media</span>
+  </div>
+  <div class="motto">"Creativity, Competence, Character"</div>
+  <div class="meta">
+    <span>UPRL LMS · Course Intake Template v1.0</span>
+    <span>For lecturers, instructors &amp; course administrators</span>
+  </div>
+</div>
+
+<!-- ================= INTRO / HOW TO USE ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Before you start</span>How to use this document</h2>
+  <p class="lede">This template mirrors the actual course-builder screens in the LMS, section for section. Fill it in
+  offline — on paper, in a PDF reader, or in a browser — then either enter it yourself in the builder or hand it to
+  your course administrator to enter for you. Nothing you write here is submitted anywhere automatically.</p>
+
+  <div class="tip">Work through the parts in order: <strong>A → B → C → D → E → F</strong>. A course cannot be
+  published until it has at least one module, one lesson, a summary, and a cover image (Part A + C) — everything
+  else (assignments, quizzes, programme placement) can be added later, even after the course is live.</div>
+
+  <h3>What a course is built from</h3>
+  <p>A course is a single, ongoing offering (there is no term/semester in this LMS — a course stays open across
+  enrolment periods, not tied to a particular session). Its content is organised as:</p>
+  <p style="margin-left:4mm">
+  <strong>Course</strong> → one or more <strong>Modules</strong> → each module holds an ordered mix of
+  <strong>Lessons</strong>, <strong>Assignments</strong> and <strong>Quizzes/Exams</strong> in a single sequence
+  (so a quiz can sit between two lessons, or an assignment can stand entirely on its own, outside any module).
+  </p>
+
+  <table class="toc">
+    <tr><td colspan="2"><strong>Contents</strong></td></tr>
+  </table>
+  <ul class="toc">
+    <li>Part A — Course basics &amp; settings <span class="tag">required to create the course</span></li>
+    <li>Part B — Programme &amp; fee placement <span class="tag">controls price and credit</span></li>
+    <li>Part C — Curriculum: modules &amp; lessons <span class="tag">required to publish</span></li>
+    <li>Part D — Assignments &amp; rubrics <span class="tag">optional</span></li>
+    <li>Part E — Quizzes, exams &amp; question bank <span class="tag">optional</span></li>
+    <li>Part F — Files &amp; media checklist <span class="tag">reference</span></li>
+    <li>Appendix 1 — Field &amp; option reference</li>
+    <li>Appendix 2 — Worked example (a real course, filled in)</li>
+    <li>Appendix 3 — What the platform cannot do yet</li>
+    <li>Sign-off</li>
+  </ul>
+</div>
+
+<!-- ================= PART A ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Part A · Step 1 of the builder</span>Course basics</h2>
+  <p class="lede">These five fields create the course as a <strong>draft</strong>. You (the creator) are
+  automatically made the course's lead instructor.</p>
+
+  <div class="card">
+    <div class="field">
+      <label>Course title <span class="req">*</span></label>
+      <input type="text" maxlength="200" placeholder="e.g. Foundations of Public Relations">
+      <div class="hint">Max 200 characters. This is the headline learners see everywhere.</div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Course code <span class="req">*</span></label>
+        <input type="text" maxlength="20" placeholder="e.g. PRL101">
+        <div class="hint">Max 20 characters, must be unique across the whole LMS. Automatically capitalised — write it however, it will be stored UPPERCASE.</div>
+      </div>
+      <div class="field">
+        <label>Level <span class="req">*</span></label>
+        <select>
+          <option value="">Select…</option>
+          <option>Certificate</option>
+          <option>Undergraduate</option>
+          <option>Postgraduate</option>
+          <option>Professional</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Department <span class="req">*</span></label>
+      <input type="text" placeholder="e.g. Department of Public Relations">
+      <div class="hint">Must already exist under a Faculty. If your department isn't listed in the builder's dropdown, ask an admin to create it first (Faculty → Department is separate from Programme, see Part B).</div>
+    </div>
+    <div class="field">
+      <label>Summary <span class="req">*</span></label>
+      <textarea rows="2" maxlength="500" placeholder="One or two sentences for the course catalogue card."></textarea>
+      <div class="hint">Max 500 characters, plain text (no formatting). Required before the course can be published.</div>
+    </div>
+  </div>
+
+  <div class="note">This is <em>Step 1 — Create</em> (route <code>courses.create</code>). Submitting it opens the
+  full course builder for everything below.</div>
+
+  <h2 style="margin-top:8mm"><span class="part-eyebrow">Part A · Course settings tab</span>Full course details</h2>
+  <p class="lede">Everything below lives in the builder's <strong>Settings</strong> tab and can be filled in or
+  changed any time before or after publishing.</p>
+
+  <div class="card">
+    <div class="field">
+      <label>Cover image <span class="req">*</span> — required to publish</label>
+      <div class="hint">JPEG, PNG or WebP, up to 4&nbsp;MB. Recommended 1200×630px (it is cropped/filled to that ratio for the catalogue card and social sharing). Attach the file separately — write the filename here: </div>
+      <input type="text" placeholder="filename, e.g. prl101-cover.jpg">
+    </div>
+    <div class="field">
+      <label>Estimated duration <span class="opt">optional</span></label>
+      <input type="number" placeholder="total minutes, e.g. 180">
+      <div class="hint">Whole-course estimate in minutes. Leave blank if unsure — it does not auto-calculate from lesson lengths in the live product, so set it deliberately or leave it off.</div>
+    </div>
+    <div class="fieldset-legend">Visibility &amp; enrolment</div>
+    <div class="field">
+      <label>Catalogue visibility</label>
+      <div class="choice-group">
+        <label class="choice"><input type="radio" name="vis"> Public catalogue — anyone browsing the site can see it</label>
+        <label class="choice"><input type="radio" name="vis"> Enrolled only — hidden from the public catalogue</label>
+      </div>
+    </div>
+    <div class="field">
+      <label>Enrolment mode</label>
+      <div class="choice-group">
+        <label class="choice"><input type="radio" name="enr"> Open — students enrol instantly</label>
+        <label class="choice"><input type="radio" name="enr"> Approval required — an instructor/admin approves each request</label>
+        <label class="choice"><input type="radio" name="enr"> Invite only</label>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Capacity <span class="opt">optional</span></label>
+        <input type="number" placeholder="max students, blank = unlimited">
+      </div>
+      <div class="field">
+        <label>Progression</label>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="prog"> Free — any order</label>
+          <label class="choice"><input type="radio" name="prog"> Sequential — must complete in order</label>
+        </div>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Enrolment opens <span class="opt">optional</span></label>
+        <input type="date">
+      </div>
+      <div class="field">
+        <label>Enrolment closes <span class="opt">optional</span></label>
+        <input type="date">
+      </div>
+    </div>
+    <div class="fieldset-legend">Grading &amp; certification (leave blank for institution defaults)</div>
+    <div class="row2">
+      <div class="field">
+        <label>Grade scale <span class="opt">optional override</span></label>
+        <input type="text" placeholder="blank = system default scale">
+      </div>
+      <div class="field">
+        <label>Certificate template <span class="opt">optional override</span></label>
+        <input type="text" placeholder="blank = system default template">
+      </div>
+    </div>
+    <div class="fieldset-legend">Learning objectives <span style="text-transform:none;font-weight:400;color:var(--ink-55)">— plain text, up to 25 lines, one idea each</span></div>
+    <table class="grid">
+      <tr><th style="width:8mm">#</th><th>By the end of this course, students will be able to…</th></tr>
+      <tr><td>1</td><td><input type="text" maxlength="255"></td></tr>
+      <tr><td>2</td><td><input type="text" maxlength="255"></td></tr>
+      <tr><td>3</td><td><input type="text" maxlength="255"></td></tr>
+      <tr><td>4</td><td><input type="text" maxlength="255"></td></tr>
+    </table>
+    <div class="fieldset-legend">Full description <span style="text-transform:none;font-weight:400;color:var(--ink-55)">— rich text, formatting allowed</span></div>
+    <textarea rows="6" placeholder="The long-form 'About this course' page. Headings, bold, bullet lists and links are all fine — this is the one field on the course that supports rich formatting; everything else on this page is plain text."></textarea>
+  </div>
+</div>
+
+<!-- ================= PART B ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Part B</span>Programme &amp; fee placement</h2>
+  <p class="lede">This is what makes the course <strong>count toward a qualification and what it costs</strong> —
+  a separate question from which department teaches it (Part A). A course can sit in several programmes/parts at
+  once (up to 10); exactly one placement must be marked <strong>primary</strong>.</p>
+
+  <div class="warn">There is no manual "set a price" field anywhere in the builder. Price is <strong>always</strong>
+  derived automatically from the course's <em>primary</em> programme placement: it takes that programme's published
+  per-paper fee. If a course has no primary placement, it is free. Registration and administration fees are charged
+  once per student, per programme — never per course, never discounted.</div>
+
+  <table class="grid">
+    <tr>
+      <th style="width:8mm">#</th>
+      <th>Programme</th>
+      <th>Part</th>
+      <th style="width:22mm">Credit load</th>
+      <th style="width:38mm">Requirement type</th>
+      <th style="width:18mm">Primary?</th>
+    </tr>
+    <tr><td>1</td><td><input type="text" placeholder="e.g. CPR"></td><td><input type="text" placeholder="e.g. Part I"></td><td><input type="number"></td><td><input type="text" placeholder="compulsory / elective / …"></td><td style="text-align:center"><input type="radio" name="primary"></td></tr>
+    <tr><td>2</td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td><td><input type="text"></td><td style="text-align:center"><input type="radio" name="primary"></td></tr>
+    <tr><td>3</td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td><td><input type="text"></td><td style="text-align:center"><input type="radio" name="primary"></td></tr>
+  </table>
+  <div class="hint" style="margin-bottom:5mm">Requirement type is one of: <strong>Compulsory</strong>, <strong>Required elective</strong>, <strong>Elective</strong>, or <strong>GNS</strong> (general studies). All except Elective count toward the part's stated credit target.</div>
+
+  <div class="note">This is the <em>Programme placement</em> repeater at the bottom of the Settings tab. Ask your
+  course administrator for the exact list of current programmes, parts and published fees — the reference figures
+  in Appendix 2 are illustrative examples, not a live price list.</div>
+</div>
+
+<!-- ================= PART C ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Part C · required to publish</span>Curriculum: modules &amp; lessons</h2>
+  <p class="lede">A course needs <strong>at least one module and one lesson</strong> before it can be published.
+  Fill in one block per module below; duplicate the block for additional modules. Inside each module, list its
+  lessons (and, if this module has a quiz or assignment attached, note that in the sequence too — see Parts D/E).</p>
+
+  <div class="repeat-block">
+    <div class="repeat-title"><strong>Module 1</strong><span>duplicate this block for each further module</span></div>
+    <div class="row2">
+      <div class="field"><label>Module title <span class="req">*</span></label><input type="text" maxlength="200"></div>
+      <div class="field"><label>Order position</label><input type="number" placeholder="1"></div>
+    </div>
+    <div class="field"><label>Module description <span class="opt">optional, plain text</span></label><textarea rows="2" maxlength="1000"></textarea></div>
+
+    <div class="fieldset-legend">Lessons in this module</div>
+    <table class="grid">
+      <tr>
+        <th style="width:7mm">#</th><th>Title</th><th style="width:26mm">Type</th>
+        <th>Content (see key below)</th><th style="width:16mm">Minutes</th><th style="width:14mm">Free preview?</th>
+      </tr>
+      <tr><td>1</td><td><input type="text" maxlength="200"></td><td><input type="text" placeholder="video"></td><td><input type="text" placeholder="YouTube/Vimeo URL"></td><td><input type="number"></td><td style="text-align:center"><input type="checkbox"></td></tr>
+      <tr><td>2</td><td><input type="text" maxlength="200"></td><td><input type="text" placeholder="text"></td><td><input type="text" placeholder="see rich text notes"></td><td><input type="number"></td><td style="text-align:center"><input type="checkbox"></td></tr>
+      <tr><td>3</td><td><input type="text" maxlength="200"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td><td style="text-align:center"><input type="checkbox"></td></tr>
+    </table>
+    <div class="hint"><strong>Lesson type key</strong> — choose one per lesson:<br>
+    <strong>video</strong>: paste a YouTube or Vimeo URL, or attach a video file (mp4/webm/mov) if it must be uploaded directly &nbsp;·&nbsp;
+    <strong>text</strong>: write the lesson content itself (rich text — formatting, images, links all supported) &nbsp;·&nbsp;
+    <strong>pdf / document / audio</strong>: attach the file (see Part F for size limits) &nbsp;·&nbsp;
+    <strong>external_link</strong>: paste any external URL the lesson should send students to.</div>
+  </div>
+
+  <div class="clone-note">— duplicate the block above for Module 2, Module 3, etc. —</div>
+
+  <div class="repeat-block">
+    <div class="repeat-title"><strong>Module 2</strong><span></span></div>
+    <div class="row2">
+      <div class="field"><label>Module title <span class="req">*</span></label><input type="text" maxlength="200"></div>
+      <div class="field"><label>Order position</label><input type="number" placeholder="2"></div>
+    </div>
+    <div class="field"><label>Module description <span class="opt">optional, plain text</span></label><textarea rows="2" maxlength="1000"></textarea></div>
+    <div class="fieldset-legend">Lessons in this module</div>
+    <table class="grid">
+      <tr>
+        <th style="width:7mm">#</th><th>Title</th><th style="width:26mm">Type</th>
+        <th>Content</th><th style="width:16mm">Minutes</th><th style="width:14mm">Free preview?</th>
+      </tr>
+      <tr><td>1</td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td><td style="text-align:center"><input type="checkbox"></td></tr>
+      <tr><td>2</td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td><td style="text-align:center"><input type="checkbox"></td></tr>
+    </table>
+  </div>
+
+  <div class="tip">"Free preview" lets a non-enrolled visitor view that one lesson from the public catalogue page —
+  useful for a taster/trailer lesson at the start of Module 1.</div>
+  <div class="note">This is the builder's <em>Curriculum</em> tab. Modules and lessons can be dragged into any order
+  after entry, and a quiz or assignment can be dropped between any two lessons — the whole module (lessons + quiz +
+  assignment) shares one running order, not separate lists.</div>
+</div>
+
+<!-- ================= PART D ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Part D · optional</span>Assignments &amp; rubrics</h2>
+  <p class="lede">An assignment is graded work a student hands in — a file, typed text, or either. Add as many as
+  the course needs; each one attaches to a module (appears in that module's sequence) or stands alone outside any
+  module.</p>
+
+  <div class="repeat-block">
+    <div class="repeat-title"><strong>Assignment 1</strong><span>duplicate for each further assignment</span></div>
+    <div class="field"><label>Title <span class="req">*</span></label><input type="text" maxlength="255"></div>
+    <div class="field"><label>Instructions <span class="req">*</span> — required to publish, rich text</label><textarea rows="4" placeholder="What must the student do, in what format, by when — write it as you'd say it to the class."></textarea></div>
+    <div class="row3">
+      <div class="field">
+        <label>Students hand in</label>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="a1type"> File</label>
+          <label class="choice"><input type="radio" name="a1type"> Text</label>
+          <label class="choice"><input type="radio" name="a1type"> Either</label>
+        </div>
+      </div>
+      <div class="field"><label>Placement</label><input type="text" placeholder="module name, or 'standalone'"></div>
+      <div class="field"><label>Due date <span class="opt">optional</span></label><input type="datetime-local"></div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>Graded out of <span class="req">*</span> — required to publish, &gt; 0</label><input type="number" step="0.5" placeholder="e.g. 30"></div>
+      <div class="field">
+        <label>Allow late submissions?</label>
+        <div class="choice-group"><label class="choice"><input type="checkbox"> Yes</label></div>
+      </div>
+      <div class="field">
+        <label>Required to complete course?</label>
+        <div class="choice-group"><label class="choice"><input type="checkbox"> Yes</label></div>
+      </div>
+    </div>
+    <div class="field">
+      <label>Counts toward the course grade?</label>
+      <div class="choice-group"><label class="choice"><input type="checkbox"> Yes — include this score in the gradebook</label></div>
+      <div class="hint">Independent of "Required": an assignment can gate course completion without affecting the grade, or count toward the grade without being mandatory.</div>
+    </div>
+    <div class="field"><label>Rubric to grade against <span class="opt">optional — leave blank for plain marks</span></label><input type="text" placeholder="name of rubric, see below"></div>
+    <div class="field"><label>Resource files to attach <span class="opt">optional — briefs, templates, readings</span></label><input type="text" placeholder="filenames"></div>
+  </div>
+
+  <h3>Rubric criteria <span style="font-weight:400;font-size:9pt;color:var(--ink-55)">(only if you named a rubric above — build it once, reuse across assignments)</span></h3>
+  <table class="grid">
+    <tr><th>Rubric name</th><th colspan="4"><input type="text" placeholder="e.g. PR writing rubric"></th></tr>
+    <tr><th style="width:14mm">Criterion</th><th>Excellent</th><th>Good</th><th>Needs work</th><th style="width:16mm">Points</th></tr>
+    <tr><td><input type="text" placeholder="e.g. Message clarity"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td></tr>
+    <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td></tr>
+    <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td></tr>
+  </table>
+  <div class="hint">Each cell is that performance level's description at that criterion. You can use any number of
+  levels and criteria — three of each is just a common shape.</div>
+
+  <div class="note">This is the <em>Assignments</em> builder. Rubrics are authored once per instructor and can be
+  reused across any of that instructor's own assignments; grading later locks in a snapshot of the rubric used, so
+  editing it afterward never rewrites a grade already given.</div>
+</div>
+
+<!-- ================= PART E ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Part E · optional</span>Quizzes, exams &amp; question bank</h2>
+  <p class="lede">A quiz/exam ("assessment") draws either a <strong>fixed</strong> list of questions you choose, or a
+  <strong>pooled</strong> random selection from categories you define. Where you place it in the module sequence
+  decides whether it's a pre-module check, a post-module test, or a standalone exam — this is worked out
+  automatically from its position, not a separate setting.</p>
+
+  <div class="repeat-block">
+    <div class="repeat-title"><strong>Quiz / exam 1</strong><span>duplicate for each further quiz</span></div>
+    <div class="field"><label>Title <span class="req">*</span></label><input type="text" maxlength="255"></div>
+    <div class="field"><label>Instructions <span class="opt">optional, rich text</span></label><textarea rows="2"></textarea></div>
+    <div class="row2">
+      <div class="field">
+        <label>Question selection</label>
+        <div class="choice-group">
+          <label class="choice"><input type="radio" name="e1sel"> Fixed — I choose exact questions (below)</label>
+          <label class="choice"><input type="radio" name="e1sel"> Pooled — random from a category each attempt</label>
+        </div>
+      </div>
+      <div class="field"><label>Placement</label><input type="text" placeholder="module name, or 'standalone'"></div>
+    </div>
+    <div class="fieldset-legend">Scoring &amp; attempts</div>
+    <div class="row3">
+      <div class="field"><label>Passing score <span class="req">*</span> — 0 to 100%</label><input type="number" min="0" max="100"></div>
+      <div class="field"><label>Max attempts <span class="opt">blank = unlimited</span></label><input type="number"></div>
+      <div class="field"><label>Time limit <span class="opt">minutes, blank = untimed</span></label><input type="number" max="1440"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Available from <span class="opt">optional</span></label><input type="datetime-local"></div>
+      <div class="field"><label>Available until <span class="opt">optional</span></label><input type="datetime-local"></div>
+    </div>
+    <div class="choice-group" style="margin-top:2mm">
+      <label class="choice"><input type="checkbox"> Shuffle questions</label>
+      <label class="choice"><input type="checkbox"> Shuffle answer options</label>
+      <label class="choice"><input type="checkbox"> Show explanations after answering</label>
+      <label class="choice"><input type="checkbox"> Required to complete course</label>
+      <label class="choice"><input type="checkbox"> Counts toward course grade</label>
+    </div>
+    <div class="field">
+      <label>Review policy — when can students see correct answers?</label>
+      <div class="choice-group">
+        <label class="choice"><input type="radio" name="e1rev"> Immediately</label>
+        <label class="choice"><input type="radio" name="e1rev"> After the quiz closes</label>
+        <label class="choice"><input type="radio" name="e1rev"> Never</label>
+      </div>
+    </div>
+  </div>
+
+  <h3>Question bank</h3>
+  <p class="lede" style="margin-bottom:2mm">Group questions into categories first (e.g. "Fundamentals",
+  "Application", "Advanced") — categories are what pooled quizzes draw from, and they help you reuse questions
+  across several quizzes.</p>
+  <table class="grid">
+    <tr><th style="width:7mm">#</th><th style="width:22mm">Category</th><th style="width:22mm">Type</th><th style="width:16mm">Difficulty</th><th>Question / prompt</th><th style="width:12mm">Points</th></tr>
+    <tr><td>1</td><td><input type="text"></td><td><input type="text" placeholder="mcq_single"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td></tr>
+    <tr><td>2</td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td></tr>
+    <tr><td>3</td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td></tr>
+    <tr><td>4</td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="number"></td></tr>
+  </table>
+  <div class="hint">
+  <strong>Question types:</strong> multiple-choice (single answer), multiple-choice (multiple answers), true/false,
+  fill-in-the-blank, matching pairs, essay (marked by hand), scenario (a passage with several sub-questions).<br>
+  <strong>Difficulty:</strong> easy / medium / hard.<br>
+  For each question you'll also need, depending on type: the answer options and which is/are correct (MCQ/true-false);
+  the accepted answer(s) and whether spelling case matters (fill-in-the-blank); the matching pairs (matching); marking
+  guidance for the grader (essay); the sub-questions (scenario) — and, optionally, an explanation shown after
+  answering, and one inline image per question if useful.
+  </div>
+
+  <div class="note">This is the <em>Assessment builder</em>'s Settings and Content tabs. Publishing is blocked if a
+  fixed quiz has zero attached questions, or a pooled quiz's requested count for any category/difficulty exceeds how
+  many live questions actually exist there — check your bank covers what you've promised before publishing.</div>
+</div>
+
+<!-- ================= PART F ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Part F · reference</span>Files &amp; media checklist</h2>
+  <p class="lede">Every file uploaded anywhere in the course is size- and format-checked automatically. Use this as
+  a pre-flight checklist before you try to attach something.</p>
+
+  <table class="grid">
+    <tr><th>Used for</th><th>Accepted formats</th><th style="width:26mm">Max size</th><th>Visibility</th></tr>
+    <tr><td>Course cover image</td><td>JPEG, PNG, WebP</td><td>4 MB</td><td>Public</td></tr>
+    <tr><td>Images inside rich text (lesson content, questions, etc.)</td><td>JPEG, PNG, WebP, GIF</td><td>4 MB</td><td>Public</td></tr>
+    <tr><td>Lesson file — PDF, document, audio or uploaded video</td><td>PDF, DOC/DOCX, PPT/PPTX, MP3/WAV/OGG audio, MP4/WebM/MOV video</td><td>25 MB <span style="color:var(--ink-55)">(admin-configurable)</span></td><td>Private — signed link only</td></tr>
+    <tr><td>Extra downloadable lesson resources</td><td>PDF, DOCX, PPTX, ZIP</td><td>20 MB</td><td>Private — signed link only</td></tr>
+    <tr><td>Assignment brief / resource attachments</td><td>PDF, DOCX, PPTX, XLSX, ZIP, JPEG, PNG</td><td>20 MB</td><td>Private — signed link only</td></tr>
+    <tr><td>Student submissions <span style="color:var(--ink-55)">(students upload these, not you)</span></td><td>PDF, DOCX, ZIP, TXT, JPEG, PNG, WebP</td><td>20 MB</td><td>Private — signed link only</td></tr>
+  </table>
+  <div class="hint">"Private — signed link only" means the file is never on a public URL; it's served through a
+  time-limited link gated by enrolment, the same way for both instructors and students.</div>
+
+  <div class="tip">Video is embed-first by design: pasting a YouTube or Vimeo link (Part C) is strongly preferred
+  over uploading a raw video file. Reserve a direct upload for content that genuinely cannot go through YouTube/Vimeo.</div>
+</div>
+
+<!-- ================= APPENDIX 1 ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Appendix 1</span>Field &amp; option reference</h2>
+
+  <h3>Course level</h3>
+  <p>Certificate · Undergraduate · Postgraduate · Professional</p>
+
+  <h3>Course requirement type (per programme placement)</h3>
+  <p>Compulsory · Required elective · Elective · GNS (general studies) — all except Elective count toward the part's credit target.</p>
+
+  <h3>Lesson types</h3>
+  <p>Video · Text · PDF · Document · Audio · External link</p>
+
+  <h3>Assignment "hand in" types</h3>
+  <p>File · Text · Either</p>
+
+  <h3>Question types</h3>
+  <p>Multiple choice (single) · Multiple choice (multiple) · True/false · Fill in the blank · Matching · Essay · Scenario</p>
+
+  <h3>Question difficulty</h3>
+  <p>Easy · Medium · Hard</p>
+
+  <h3>Review policy (quizzes)</h3>
+  <p>Immediately · After the quiz closes · Never</p>
+
+  <h3>Course lifecycle (for your information — not something you set directly)</h3>
+  <p>Draft → Review → Published → Archived. A course starts life as Draft the moment Part A is submitted; it moves
+  through Review on the way to Published, which is the only state visible to students in the catalogue.</p>
+</div>
+
+<!-- ================= APPENDIX 2 ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Appendix 2</span>Worked example — a real course, filled in</h2>
+  <p class="lede">This is an actual course from the LMS's demo data, shown here as a model of how much detail to
+  aim for in each field.</p>
+
+  <div class="example">
+    <span class="example-label">Part A — Course basics</span>
+    <strong>Title:</strong> Foundations of Public Relations &nbsp;·&nbsp; <strong>Code:</strong> PRL101 &nbsp;·&nbsp;
+    <strong>Level:</strong> Undergraduate &nbsp;·&nbsp; <strong>Department:</strong> Department of Public Relations
+    (Faculty of Communication &amp; Media Studies)<br><br>
+    <strong>Summary:</strong> "Master the principles, history and practice of modern public relations in a Nigerian context."<br><br>
+    <strong>Description:</strong> "An introduction to the discipline of public relations: its theories, publics,
+    tools and ethics. You will build the vocabulary and core skills every PR practitioner needs."<br><br>
+    <strong>Learning objectives:</strong> Define public relations and its role in organisations · Identify and
+    segment publics · Draft a basic press release · Apply the RACE planning model
+  </div>
+
+  <div class="example">
+    <span class="example-label">Part C — Curriculum (shape, not full text)</span>
+    3 modules, 2–3 lessons each, 6–20 minutes per lesson. Mix of types: a YouTube video (the first one marked as a
+    free preview so visitors can sample the course), rich-text lessons, and one external-link lesson. Total course
+    runs a little over an hour of content.
+  </div>
+
+  <div class="example">
+    <span class="example-label">Part D — Assignments</span>
+    <strong>"Crisis communication case study"</strong> — attached to a module, hand in File or Text, due in 7 days,
+    late submissions not allowed, graded out of 30 against the "PR writing rubric" (Message clarity / Audience fit /
+    Craft &amp; accuracy — each Excellent / Good / Needs work), required to complete the course.<br><br>
+    <strong>"Personal reflection brief"</strong> — standalone (not tied to a module), hand in Text, due date already
+    passed but late submissions allowed, graded out of 20, not required, not rubric-graded.
+  </div>
+
+  <div class="example">
+    <span class="example-label">Part E — Quizzes</span>
+    Three question categories (Fundamentals / Application / Advanced) holding ~30 questions across all seven
+    question types. A pre-module quiz and a post-module quiz pair (passing score 50%), a timed 20-minute standalone
+    "Final exam" (2 attempts allowed, questions shuffled, answers shown immediately after each attempt), a pooled
+    "Practice pool" quiz, and an essay-only "Reflection essay" quiz marked by hand.
+  </div>
+
+  <div class="example">
+    <span class="example-label">Part B — Programme placement (illustrative fee structure)</span>
+    Example programme ladder from the demo data — <strong>ask your administrator for the current published
+    figures</strong>, these are shown only to illustrate the shape:
+    <table class="grid" style="margin-top:2mm">
+      <tr><th>Programme</th><th>Registration fee</th><th>Administration fee</th><th>Per-paper fee</th></tr>
+      <tr><td>Certificate in Public Relations (CPR)</td><td>₦20,000</td><td>₦25,000</td><td>₦7,000</td></tr>
+      <tr><td>Diploma in Public Relations (DPR)</td><td>₦25,000</td><td>₦30,000</td><td>₦10,000</td></tr>
+      <tr><td>Professional Variant (NPV)</td><td>₦30,000</td><td>₦35,000</td><td>₦15,000</td></tr>
+      <tr><td>Master Class (NMC — short courses)</td><td>₦0</td><td>₦0</td><td>₦0 (free)</td></tr>
+    </table>
+    Registration and administration fees are charged once per student for the whole programme, not per course.
+    A course's price is always its <em>primary</em> placement's per-paper fee — a course placed primarily in CPR
+    costs ₦7,000 even if it's also cross-listed as a non-primary elective elsewhere.
+  </div>
+</div>
+
+<!-- ================= APPENDIX 3 ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Appendix 3</span>What the platform cannot do yet</h2>
+  <p class="lede">Worth knowing before you plan around them — these are honest current gaps, not settings you missed.</p>
+
+  <div class="warn">There is no term/semester/academic-session concept. A course is evergreen: it opens for
+  enrolment and stays open according to its own enrolment window (Part A), not a shared academic calendar.</div>
+  <div class="warn">There is no "prerequisite course" field. Sequencing within a course is possible (Progression
+  mode → Sequential, Part A), but the LMS cannot yet require "Course X before Course Y."</div>
+  <div class="warn">Co-instructors cannot be added through the product yet. Whoever creates the course becomes its
+  sole lead instructor; adding a second instructor currently requires a database change by an engineer, not a
+  self-serve step. Plan single-instructor courses for now.</div>
+  <div class="warn">There is no manual per-course price field in any form. Price is 100% derived from programme
+  placement (Part B) — if you need a one-off discount or a free promotional course outside programme pricing,
+  that has to be handled outside this template, by an administrator.</div>
+
+  <div class="tip">None of the above block you from building a complete, publishable course today — they're just
+  edges to route around (e.g. put prerequisite context in the description, or note "recommended order" in module
+  titles) until the corresponding feature ships.</div>
+</div>
+
+<!-- ================= SIGN-OFF ================= -->
+<div class="page">
+  <h2><span class="part-eyebrow">Final step</span>Sign-off &amp; handover</h2>
+  <p class="lede">Once every part you need is filled in, hand this document (with attached files: cover image,
+  lesson files, assignment briefs, question images) to your course administrator for entry into the LMS, or use it
+  as your own working reference while building the course yourself.</p>
+
+  <div class="card">
+    <div class="row2">
+      <div class="field"><label>Course title</label><input type="text"></div>
+      <div class="field"><label>Course code</label><input type="text"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Prepared by (lecturer)</label><input type="text"></div>
+      <div class="field"><label>Date prepared</label><input type="date"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label>Attached files, count</label><input type="text" placeholder="e.g. 1 cover image, 4 lesson PDFs, 2 assignment briefs"></div>
+      <div class="field"><label>Handed to (admin/instructor entering it)</label><input type="text"></div>
+    </div>
+    <div class="signoff">
+      <div class="sig-line">Lecturer signature / date</div>
+      <div class="sig-line">Received &amp; entered into LMS by / date</div>
+    </div>
+  </div>
+
+  <div class="footer-strip">
+    UPRL Learning Management System · Course Creation Guide &amp; Intake Template · "Creativity, Competence, Character"
+  </div>
+</div>
+
+</body>
+</html>

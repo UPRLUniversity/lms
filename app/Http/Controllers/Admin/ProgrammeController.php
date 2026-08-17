@@ -8,8 +8,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProgrammeRequest;
 use App\Http\Requests\Admin\UpdateProgrammeRequest;
 use App\Models\Programme;
+use App\Services\Courses\ProgressionAuditService;
 use App\Services\Media\MediaUploadService;
 use App\Support\Slug;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -21,6 +23,9 @@ use Illuminate\View\View;
  */
 class ProgrammeController extends Controller
 {
+    /** How many affected students the inline impact panel lists before it summarises. */
+    private const IMPACT_ROW_LIMIT = 100;
+
     public function index(): View
     {
         $this->authorize('viewAny', Programme::class);
@@ -80,6 +85,30 @@ class ProgrammeController extends Controller
         $this->authorize('update', $programme);
 
         return view('admin.programmes.edit', ['programme' => $programme]);
+    }
+
+    /**
+     * "Who would sequential progression block?", answered on the form itself.
+     *
+     * Fetched when the admin selects the sequential option, not on page load: the audit
+     * walks every live enrolment in the programme, and an admin editing a fee has no reason
+     * to pay for it. The row list is capped while the counts stay honest, because a
+     * programme with four hundred affected students needs the number to make the decision,
+     * not four hundred rows inside a form.
+     */
+    public function progressionImpact(Programme $programme, ProgressionAuditService $audit): JsonResponse
+    {
+        $this->authorize('update', $programme);
+
+        $impact = $audit->forProgramme($programme);
+
+        return response()->json([
+            'checked' => $impact->checked,
+            'blocked' => $impact->blockedCount(),
+            'students' => $impact->studentCount(),
+            'rows' => $impact->rows->take(self::IMPACT_ROW_LIMIT)->values(),
+            'truncated' => max(0, $impact->blockedCount() - self::IMPACT_ROW_LIMIT),
+        ]);
     }
 
     public function update(UpdateProgrammeRequest $request, Programme $programme, MediaUploadService $media): RedirectResponse

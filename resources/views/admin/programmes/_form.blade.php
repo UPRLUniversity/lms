@@ -90,11 +90,14 @@
     </fieldset>
 
     {{-- Progression --}}
-    <fieldset class="rounded-xl border border-line bg-surface/40 p-4"
-              x-data="{ rule: '{{ old('progression_rule', $programme?->progression_rule?->value ?? 'open') }}' }">
-        <legend class="px-1.5 text-sm font-medium text-ink">Progression between parts</legend>
+    @php $selectedRule = old('progression_rule', $programme?->progression_rule?->value ?? 'open'); @endphp
 
-        @php $selectedRule = old('progression_rule', $programme?->progression_rule?->value ?? 'open'); @endphp
+    <fieldset class="rounded-xl border border-line bg-surface/40 p-4"
+              x-data="progressionImpact({
+                  rule: @js($selectedRule),
+                  impactUrl: @js($programme ? route('admin.programmes.progression-impact', $programme) : null),
+              })">
+        <legend class="px-1.5 text-sm font-medium text-ink">Progression between parts</legend>
 
         <div class="mt-1 space-y-2">
             @foreach (\App\Enums\ProgressionRule::cases() as $rule)
@@ -112,15 +115,97 @@
             @endforeach
         </div>
 
-        {{-- The blast radius is invisible from this form, so point at the command that
-             shows it BEFORE the switch rather than after somebody complains. --}}
-        <p x-show="rule === 'sequential'" x-cloak
-           class="mt-3 rounded-xl bg-gold/10 px-3 py-2.5 text-xs leading-relaxed text-ink/75">
-            <span class="font-medium text-ink">Before you switch this on:</span>
-            run <code class="rounded bg-ink/5 px-1 py-0.5 font-mono">php artisan progression:audit</code> to see which
-            students are already enrolled in courses this rule would have blocked. Nobody loses access they already
-            have — the rule applies to new enrolments only — but it is worth knowing who is affected.
-        </p>
+        {{-- The blast radius is invisible from a form, so the form answers it. Selecting
+             the rule audits the programme's live enrolments and says who it would have
+             stopped, here, before the admin saves anything. --}}
+        <div x-show="sequential" x-cloak x-collapse class="mt-3">
+            @if ($programme)
+                <div x-show="state === 'loading'" aria-busy="true" class="rounded-xl border border-line bg-card p-3">
+                    <p class="text-xs font-medium text-ink/65">Checking who this would affect…</p>
+                    <div class="mt-2 space-y-2">
+                        <x-ui.skeleton class="h-3 w-3/4" />
+                        <x-ui.skeleton class="h-3 w-1/2" />
+                    </div>
+                </div>
+
+                {{-- Nobody blocked. Worth saying out loud: silence would read as "not checked". --}}
+                <template x-if="state === 'ready' && impact.blocked === 0">
+                    <div class="flex items-start gap-2.5 rounded-xl border border-success/25 bg-success/5 p-3">
+                        <x-ui.icon name="check-circle" class="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                        <p class="text-xs leading-relaxed text-ink/75">
+                            <span class="font-medium text-success">Nobody is affected.</span>
+                            <span x-text="clearDetail"></span>
+                        </p>
+                    </div>
+                </template>
+
+                <template x-if="state === 'ready' && impact.blocked > 0">
+                    <div class="rounded-xl bg-gold/10 p-3">
+                        <div class="flex items-start gap-2.5">
+                            <x-ui.icon name="lock" class="mt-0.5 h-4 w-4 shrink-0 text-gold-ink" />
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs leading-relaxed text-ink/75">
+                                    <span class="font-medium text-gold-ink" x-text="headline"></span>
+                                    They keep the access they already have. The rule applies to new enrolments only.
+                                </p>
+
+                                <button type="button" @click="expanded = ! expanded"
+                                        :aria-expanded="expanded"
+                                        class="mt-1.5 rounded font-medium text-xs text-crimson underline underline-offset-2 hover:text-crimson-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-crimson">
+                                    <span x-text="expanded ? 'Hide the list' : 'See who is affected'"></span>
+                                </button>
+
+                                <div x-show="expanded" x-collapse class="mt-2">
+                                    {{-- Capped height: a hundred rows must not push the Save
+                                         button off the end of the form. --}}
+                                    <div class="max-h-64 overflow-auto rounded-lg border border-line bg-card">
+                                        <table class="w-full text-left text-xs">
+                                            <thead class="sticky top-0 border-b border-line bg-card text-ink/65">
+                                                <tr>
+                                                    <th scope="col" class="px-2.5 py-1.5 font-medium">Student</th>
+                                                    <th scope="col" class="px-2.5 py-1.5 font-medium">Course</th>
+                                                    <th scope="col" class="px-2.5 py-1.5 font-medium">Blocked by</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-line">
+                                                <template x-for="(row, i) in impact.rows" :key="i">
+                                                    <tr>
+                                                        <td class="px-2.5 py-1.5 text-ink" x-text="row.student"></td>
+                                                        <td class="px-2.5 py-1.5 text-ink/75" x-text="row.course"></td>
+                                                        <td class="px-2.5 py-1.5 text-ink/65" x-text="row.blockedBy ?? '—'"></td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p x-show="impact.truncated > 0" class="mt-1.5 text-xs text-ink/65">
+                                        and <span x-text="impact.truncated"></span> more, not listed here.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <div x-show="state === 'failed'" x-cloak
+                     class="flex items-start justify-between gap-3 rounded-xl border border-line bg-card p-3">
+                    <p class="text-xs leading-relaxed text-ink/75">
+                        We could not check who this would affect just now. Saving is still safe: nobody
+                        loses access they already have.
+                    </p>
+                    <button type="button" @click="retry()"
+                            class="shrink-0 rounded text-xs font-medium text-crimson underline underline-offset-2 hover:text-crimson-dark focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-crimson">
+                        Try again
+                    </button>
+                </div>
+            @else
+                <p class="rounded-xl bg-gold/10 px-3 py-2.5 text-xs leading-relaxed text-ink/75">
+                    <span class="font-medium text-gold-ink">Nobody is affected yet.</span>
+                    A new programme has no students, so this rule will only ever apply to enrolments made
+                    from now on.
+                </p>
+            @endif
+        </div>
 
         <x-input-error :messages="$errors->get('progression_rule')" class="mt-2" />
     </fieldset>
