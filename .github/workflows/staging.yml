@@ -101,20 +101,21 @@ jobs:
               storage/logs \
               bootstrap/cache
 
-            # Set proper permissions
-            sudo chmod -R 775 storage bootstrap/cache
-
-            sudo chown -R apache:apache storage bootstrap/cache
-
-            # config/route/view cache write into bootstrap/cache and
-            # storage/framework/views, which now belong to apache:apache (see
-            # chown above). Run them as apache so the write actually succeeds
-            # instead of failing silently and leaving a stale cache in place.
-            sudo -u apache php artisan config:cache
-            sudo -u apache php artisan route:cache
-            sudo -u apache php artisan view:cache
+            # Run the cache warmers and migration as the deploy user, while these
+            # directories are still owned by that user, so the writes succeed.
+            # (sudo here is only configured passwordless for root, not for
+            # impersonating apache, so this has to happen before the chown below
+            # rather than via "sudo -u apache".)
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
             php artisan migrate --force
             php artisan cache:clear
+
+            # Hand the tree to the web server user now that everything Laravel
+            # needed to generate has been written.
+            sudo chmod -R 775 storage bootstrap/cache
+            sudo chown -R apache:apache storage bootstrap/cache
 
             # Resolve the PHP binary so both the systemd unit and the cron job use
             # an absolute path (cron/systemd have a minimal PATH).
