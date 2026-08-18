@@ -79,6 +79,12 @@ jobs:
             cd /var/www/lms
             export DEBIAN_FRONTEND=noninteractive
 
+            # Without this, any command below that fails (e.g. a permission error
+            # writing bootstrap/cache) is silently swallowed and the deploy still
+            # reports success. Steps that are allowed to fail already say so
+            # explicitly with "|| true".
+            set -e
+
             # .docx conversion now runs in the browser (mammoth.js) — no Pandoc
             # or other system binaries are needed on the server.
 
@@ -100,10 +106,13 @@ jobs:
 
             sudo chown -R apache:apache storage bootstrap/cache
 
-            # Run Laravel commands
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
+            # config/route/view cache write into bootstrap/cache and
+            # storage/framework/views, which now belong to apache:apache (see
+            # chown above). Run them as apache so the write actually succeeds
+            # instead of failing silently and leaving a stale cache in place.
+            sudo -u apache php artisan config:cache
+            sudo -u apache php artisan route:cache
+            sudo -u apache php artisan view:cache
             php artisan migrate --force
             php artisan cache:clear
 
@@ -120,8 +129,8 @@ jobs:
             After=network.target
 
             [Service]
-            User=www-data
-            Group=www-data
+            User=apache
+            Group=apache
             Restart=always
             RestartSec=5
             WorkingDirectory=/var/www/lms
@@ -138,7 +147,7 @@ jobs:
             # drains the queue (queue:work --stop-when-empty) even if the systemd
             # worker could not be installed/started. Safe alongside the worker —
             # the DB queue reserves jobs so they are never processed twice.
-            echo "* * * * * www-data cd /var/www/lms && ${PHP_BIN} artisan schedule:run >> /dev/null 2>&1" | sudo tee /etc/cron.d/uprl_lms-scheduler >/dev/null || true
+            echo "* * * * * apache cd /var/www/lms && ${PHP_BIN} artisan schedule:run >> /dev/null 2>&1" | sudo tee /etc/cron.d/uprl_lms-scheduler >/dev/null || true
             sudo chmod 644 /etc/cron.d/uprl_lms-scheduler || true
 
             php artisan queue:restart
