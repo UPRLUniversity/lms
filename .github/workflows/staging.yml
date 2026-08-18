@@ -79,6 +79,22 @@ jobs:
             cd /var/www/lms
             export DEBIAN_FRONTEND=noninteractive
 
+            # Without this, a real failure (a broken composer/artisan step) is
+            # silently swallowed and the deploy still reports success.
+            #
+            # sudo on this server has no passwordless rule for this deploy user,
+            # so every "sudo ..." call below fails with "a password is required" —
+            # it always has, this just used to go unnoticed with set -e off. None
+            # of those calls are things Laravel needs to boot (the directories
+            # they'd create/chown/restart already exist from initial server setup),
+            # so they're marked "|| true" deliberately, not to hide a problem, but
+            # they are a real gap: PHP-FPM/nginx are never actually reloaded by
+            # this workflow, so OPcache can go on serving old code after a deploy
+            # until the process happens to restart some other way. Fixing that for
+            # real means adding a NOPASSWD sudoers rule for this user on the
+            # server; ask a human to do that rather than exec()'ing a fix from CI.
+            set -e
+
             # .docx conversion now runs in the browser (mammoth.js) — no Pandoc
             # or other system binaries are needed on the server.
 
@@ -93,19 +109,25 @@ jobs:
               storage/framework/sessions \
               storage/framework/views \
               storage/logs \
-              bootstrap/cache
+              bootstrap/cache \
+              || true
 
-            # Set proper permissions
-            sudo chmod -R 775 storage bootstrap/cache
-
-            sudo chown -R apache:apache storage bootstrap/cache
-
-            # Run Laravel commands
+            # Run the cache warmers and migration as the deploy user, while these
+            # directories are still owned by that user, so the writes succeed.
+            # (sudo here is only configured passwordless for root, not for
+            # impersonating apache, so this has to happen before the chown below
+            # rather than via "sudo -u apache".)
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
             php artisan migrate --force
             php artisan cache:clear
+
+            # Hand the tree to the web server user now that everything Laravel
+            # needed to generate has been written. (No-ops today, see the sudo
+            # note above — ownership stays whatever it was from initial setup.)
+            sudo chmod -R 775 storage bootstrap/cache || true
+            sudo chown -R apache:apache storage bootstrap/cache || true
 
             # Resolve the PHP binary so both the systemd unit and the cron job use
             # an absolute path (cron/systemd have a minimal PATH).
@@ -114,14 +136,14 @@ jobs:
             # Primary: a persistent queue worker so background jobs (.docx import,
             # figure migration) run immediately. queue:restart alone only signals
             # an already-running worker.
-            sudo tee /etc/systemd/system/uprl_lms-worker.service >/dev/null <<UNIT
+            sudo tee /etc/systemd/system/uprl_lms-worker.service >/dev/null <<UNIT || true
             [Unit]
             Description=UPRL_LMS queue worker
             After=network.target
 
             [Service]
-            User=www-data
-            Group=www-data
+            User=apache
+            Group=apache
             Restart=always
             RestartSec=5
             WorkingDirectory=/var/www/lms
@@ -138,13 +160,17 @@ jobs:
             # drains the queue (queue:work --stop-when-empty) even if the systemd
             # worker could not be installed/started. Safe alongside the worker —
             # the DB queue reserves jobs so they are never processed twice.
-            echo "* * * * * www-data cd /var/www/lms && ${PHP_BIN} artisan schedule:run >> /dev/null 2>&1" | sudo tee /etc/cron.d/uprl_lms-scheduler >/dev/null || true
+            echo "* * * * * apache cd /var/www/lms && ${PHP_BIN} artisan schedule:run >> /dev/null 2>&1" | sudo tee /etc/cron.d/uprl_lms-scheduler >/dev/null || true
             sudo chmod 644 /etc/cron.d/uprl_lms-scheduler || true
 
             php artisan queue:restart
 
-            # Restart PHP-FPM (ensure PHP 8.4 is installed on VPS)
-            sudo systemctl restart php8.4-fpm || sudo systemctl restart php-fpm
+            # Restart PHP-FPM so OPcache picks up this deploy's code, including the
+            # route/config/view caches just written above. See the sudo note near
+            # the top of this script: until a NOPASSWD sudoers rule exists for
+            # this deploy user, this fails every time and the warning below is the
+            # only signal that it did.
+            sudo systemctl restart php8.4-fpm || sudo systemctl restart php-fpm || echo "::warning::PHP-FPM was not restarted (sudo requires a password on this host) — OPcache is likely still serving pre-deploy code."
 
             # Reload Nginx
-            sudo systemctl reload nginx || echo "Nginx not installed, skipping"
+            sudo systemctl reload nginx || echo "::warning::nginx was not reloaded (sudo requires a password on this host)."
